@@ -1,5 +1,4 @@
-#!/usr/bin/perl
-# fnode 
+# google search
 
 use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
 use strict;
@@ -18,11 +17,11 @@ sub do_google {
 	my $res;
 
 	if (!$query) {
-		#$server->command("MSG $chan gimme somethin to feed the beast");
+		sayit($server,$chan,"gimme somethin to feed the beast");
 		return;
 	} 
 	if ($query =~ /techmez/i) {
-		$server->command("MSG $chan No lo vi primero en techmez!");
+		sayit($server, $chan,"No lo vi primero en techmez!");
 		return;
 	}
 
@@ -38,17 +37,11 @@ sub do_google {
 		#return if ( !$& );
 	}
 			
-#	my $res = REST::Google::Search->new( 
-#		q => $query,
-#		hl => 'en',
-#		rsz => 'small'
-#	);
 	eval { $res->responseStatus };
 	return if ( $@ );
 	return if ( $res->responseStatus != 200);  
 	my $content = $res->responseData;
 	my @results = $content->results;
-	#my $links = "[gugl] ";
 	my @links; 
 	for my $r (0..3) {
 		eval { $results[$r]->url }; next if ( $@ );	#testear si encontro algo o no, otherwise accediendo url method will crash
@@ -56,14 +49,17 @@ sub do_google {
 		$@ == 0; 
 	}
 	if ( ! @links ) {
-	       $server->command("MSG $chan no encontre nada en gugl :|");
+	       sayit($server,$chan, "no encontre nada en gugl :|");
        } else { 
 	       for my $i (0..3) {
 		       return if ( ! $links[$i]);
-		       $server->command("MSG $chan [gugl] $links[$i]"); 
+		       sayit($server,$chan,"[gugl] $links[$i]"); 
 	       }
        }
 }
+sub sayit { 
+        my ($server, $target, $msg) = @_;
+	$server->command("MSG $target $msg");
+}                                         
 sub print_msg { active_win()->print("@_"); }
 signal_add("message public","msg_pub");
-
