@@ -1,5 +1,8 @@
 #gtranslate v3
 #http://code.google.com/apis/language/translate/v2/using_rest.html
+#country codes: http://code.google.com/apis/language/translate/v2/using_rest.html#language-params
+# to do: a big case with reverse translate !howtosay !comosedice, parsing the target 
+
 use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
 use strict;
 use LWP::UserAgent;
@@ -42,15 +45,19 @@ sub do_translate {
 	my $got = $ua->get($queryurl);
 
 	my $content = $got->decoded_content;
-	my $a = Dumper($content);
-	print_msg("$a");
 	my ($detected) = $content =~ m{"detectedSourceLanguage": "([^"]+)"};
 	my ($translated) = $content =~ m{"translatedText": "([^"]+)"};
-
-	sayit($server, $chan, "significa: $translated") if ($target8 =~ /(es)|(it)/i); 
-	sayit($server, $chan, "means: $translated") if ($target8 eq 'en');
-	sayit($server, $chan, "意思是: $translated") if ($target8 eq 'zh-CN');
-	return;
+	
+	if (!$translated) {
+		sayit($server,$chan,"NSUFFICIENT DATA FOR A MEANINGFUL ANSWER");
+		return;
+	} 
+	else {
+		sayit($server, $chan, "significa: $translated") if ($target8 =~ /(es)|(it)/i); 
+		sayit($server, $chan, "means: $translated") if ($target8 eq 'en');
+		sayit($server, $chan, "意思是: $translated") if ($target8 eq 'zh-CN');
+		return;
+	}
 }
 sub sayit { 
         my ($server, $target, $msg) = @_;

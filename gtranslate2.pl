@@ -1,3 +1,5 @@
+## OLD DONOT USE
+# 
 use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
 use strict;
 use WebService::Google::Language;
