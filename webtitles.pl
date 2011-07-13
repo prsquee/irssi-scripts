@@ -25,7 +25,7 @@ sub do_fetch {
 
 	my $ua = new LWP::UserAgent;
 	$ua->agent('Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/533.4 (KHTML, like Gecko) Chrome/5.0.375.70 Safari/533.4'); #overkill? 
-#	$ua->protocols_allowed( [ 'http', 'https'] );
+	$ua->protocols_allowed( [ 'http', 'https'] );
 	$ua->max_redirect( 3 );
 	$ua->timeout( 30 );
 
