@@ -6,8 +6,6 @@ use strict;
 use Net::Twitter::Lite; 
 use HTML::Entities;
 use Data::Dumper;
-use Date::Manip;
-use DateTime;
 use WWW::Shorten::Googl;
 
 
