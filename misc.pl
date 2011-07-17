@@ -1,5 +1,3 @@
-#!/usr/bin/perl
-
 use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
 use strict;
 
@@ -13,6 +11,7 @@ sub msg_pub {
 		{
 			/^!h[ea]lp$/ 	and do {
 				my $cmds = Irssi::settings_get_str('halpcommands');
+				print_msg("$mask");
 				sayit($server,$chan,$cmds);
 				return;
 			};
@@ -23,16 +22,22 @@ sub msg_pub {
 				return; 
 			};
 			/^!say$/	and do {
-				if ($nick =~ /^sQuEE`?$/) {
-					$text =~ s/^!say\s//;
-					$server->command("MSG $chan $text");
+				my $itsme = 0;
+				$itsme = 1 if ($server->{tag} eq 'fnode' and $nick =~ /^sQuEE`?$/ and $mask =~ m{unaffiliated/sq/x-\d+}i);
+				$itsme = 1 if ($server->{tag} eq '3dg' and $nick =~ /^sQuEE`?$/ and $mask =~ m{^~sq@}i);
+				if ($itsme) {
+					$text =~ s/^!say\s+//;
+					sayit($server,$chan,$text);
 					return;
 				}
 			};
 			/^!do$/		and do {
-				if ($nick =~ /^sQuEE`?$/) {
-					$text =~ s/^!do\s//;
-					$server->command("ACTION $chan $text");
+				my $itsme = 0;
+				$itsme = 1 if ($server->{tag} eq 'fnode' and $nick =~ /^sQuEE`?$/ and $mask =~ m{unaffiliated/sq/x-\d+}i);
+				$itsme = 1 if ($server->{tag} eq '3dg' and $nick =~ /^sQuEE`?$/ and $mask =~ m{^~sq@}i);
+				if ($itsme) {
+					$text =~ s/^!do\s+//;
+					doit($server,$chan,$text);
 					return;
 				}
 			};
@@ -53,7 +58,8 @@ sub get_uptime {
 	my $day = "day"; $day .= "s" if ($upD > 1);
 	my $hs = "h"; $hs .= "s" if ($upH > 1);
 	my $min = "min"; $min .= "s" if ($upM > 1);
-	$server->command("MSG $chan $upD $day $upH $hs $upM $min");
+	my $msg = "$upD $day $upH $hs $upM $min";
+	sayit($server,$chan,$msg);
 
 }
 
