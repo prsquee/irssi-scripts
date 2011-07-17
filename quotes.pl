@@ -1,33 +1,23 @@
 #quotes.pl
-use Irssi;
+use Irssi qw( settings_add_str settings_get_str );
 use strict;
 
-our $friends = ":sQuEE`:sQuEE:F:Fenix:BodyG:KNiXEUR:BigK:KSlappy:SaMRoX:ElPirania:broz;";
-our $qfile = "/home/squee/.irssi/scripts/quotes.txt";
 
 sub msg_pub {
 	my ($server, $text, $nick, $mask, $chan) = @_;
 	return if $server->{tag} !~ /3dg|fnode|lia/;
 	return if $text !~ /^!q/;
 	
+	my $qfile = settings_get_str("qfile");
+	my $fwends = settings_get_str('fwends');
 	CASE: {
-		if ( $text =~ /^!q(?:uote)?$/) { 
-			randq($server, $chan); last CASE; 
-		}
-		if ( $text =~ /^!qadd\b/ and $friends =~ /:$nick:/ ) {
-			add_quote($text,$server,$chan,$nick); last CASE;
-		}
-		if ( $text =~ /^!qs\b/) { 
-			search_quote($text,$server,$chan); last CASE; 
-		}
-		if ( $text =~ /^!qdel\b/) {
-			delete_quote($text,$server,$chan) if $friends =~ /:$nick:/i; last CASE; 
-		}
-		if ( $text =~ /^!qlast (\d+)?$/ ) {
-			last_quotes($text,$server,$chan); last CASE;
-		}
+		if ( $text =~ /^!q(?:uote)?$/) { randq($server, $chan,$qfile); last CASE; }
+		if ( $text =~ /^!qadd\b/ and $fwends =~ /:$nick:/ ) { add_quote($text,$server,$chan,$nick); last CASE; }
+		if ( $text =~ /^!qs\b/) { search_quote($text,$server,$chan); last CASE; }
+		if ( $text =~ /^!qdel\b/) { delete_quote($text,$server,$chan,$qfile) if $fwends =~ /:$nick:/i; last CASE; }
+		if ( $text =~ /^!qlast (\d+)?$/ ) { last_quotes($text,$server,$chan,$qfile); last CASE; }
 		if ( $text =~ /^!qtotal\b/ ) {
-			my @buf = open_quotes();
+			my @buf = openq($qfile);
 			my $total = $#buf + 1 ;
 			$server->command("msg $chan total quotes: $total");
 			last CASE;
@@ -37,9 +27,9 @@ sub msg_pub {
 
 
 sub last_quotes {
-	my ($text,$server,$chan) = @_;
+	my ($text,$server,$chan,$qfile) = @_;
 	#open; read the last \d lines , msg and close, GO
-	my @buf = open_quotes();
+	my @buf = openq($qfile);
 	@buf = reverse(@buf);
 	my $c; 
 	if ($text =~ /^!qlast$/) {
@@ -55,7 +45,7 @@ sub last_quotes {
 	}
 }
 sub delete_quote { 
-	my ($text,$server,$chan) = @_;
+	my ($text,$server,$chan,$qfile) = @_;
 	if ($text eq '!qdel') {
 		$server->command("msg $chan pone una parte del quote y lo borro");
 		return;
@@ -64,7 +54,7 @@ sub delete_quote {
 	my ($deleteme) = $text =~ /^!qdel\s(.*)/;
 	$deleteme =~ s/\W/\\W/g;
 
-	my @buf = open_quotes();
+	my @buf = openq();
 	my $found = 1;
 	my @toBeDeleted; 
 
@@ -73,7 +63,7 @@ sub delete_quote {
 	if ( @toBeDeleted ) {
 		if ( $#toBeDeleted == 0 ) {
 			@buf = grep { !/($deleteme)/i } @buf;
-			open FH, ">$qfile" or die;
+			openq FH, ">$qfile" or die;
 			print FH @buf; 
 			close (FH) or die;
 			$server->command("msg $chan $_ >> deleted!") for (@toBeDeleted);
@@ -89,11 +79,11 @@ sub search_quote {
 		return;
 	}
 	my ($searchme) = $text =~ /^!qs\s(.*)/;
-	#my @buf = open_quotes();
+	#my @buf = openq();
 	
 	my @words2search = split(" ", $searchme);
 	my $bingo = 0;
-	my @found = open_quotes();
+	my @found = openq();
 	#my @found = @buf;
 	
 	foreach my $n (0 .. $#words2search) {
@@ -128,14 +118,14 @@ sub search_quote {
 }
 	
 sub randq {
-	my ($server,$chan) = @_;
-	my @buf = open_quotes();
+	my ($server,$chan,$qfile) = @_;
+	my @buf = openq($qfile);
 	my $q = $buf[int(rand(@buf))];
-	$server->command("msg $chan [quote] $q");
+	sayit($server,$chan,"[rand] $q");
 }
 
 sub add_quote {
-	my ($text,$server,$chan,$nick) = @_;
+	my ($text,$server,$chan,$nick,$qfile) = @_;
 	if ($text eq '!qadd') {
 		$server->command("msg $chan que agrego??");
 		return;
@@ -158,11 +148,18 @@ sub strip_all {
 		return $text;
 }
 
-sub open_quotes { 
-	open (LOG, "$qfile") or die;
+sub openq { 
+	my ($qfile) = @_;
+	open (LOG, "$qfile") or die "$@";
 	my @buf = <LOG>;
 	close (LOG) or die;
 	return @buf;
 }
 sub print_msg { Irssi::active_win()->print("@_"); }
+sub sayit {
+        my ($server, $target, $msg) = @_;
+        $server->command("MSG $target $msg");
+}
 Irssi::signal_add("message public","msg_pub");
+Irssi::settings_add_str("quotes", "qfile", '');
+Irssi::settings_add_str("quotes", "fwends", '');
