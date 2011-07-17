@@ -7,7 +7,7 @@ use strict;
 sub msg_pub {
 	my($server, $text, $nick, $mask,$chan) = @_;
 
-	my ($urlmatch) = $text =~ m{(http://[^ ]+)};
+	my ($urlmatch) = $text =~ m{(https?://[^ ]+)};
 #	print_msg("$urlmatch") if ($urlmatch);
 	return if ($text =~ /^!\w+/);
 	return if ($urlmatch =~ /bolibot/i);
