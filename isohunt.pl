@@ -16,7 +16,7 @@ sub do_ihq {
 	my ($text, $chan, $server) = @_;
 	my ($searchme) = $text =~ /^!ihq (\w.*)$/;
 	if (!$searchme) {
-		$server->command("MSG $chan que busco en isohunt?");
+		sayit($server,$chan,"que busco en isohunt?");
 		return;
 	} 
 	#bold
@@ -44,10 +44,14 @@ sub do_ihq {
 		my $SL = 'S/L: ' . $result->{Seeds} . '/' . $result->{leechers} ; 
 		my $cat = $result->{category};
 
-		$server->command("MSG $chan [isohunt] $title - $SL - $cat - $short");
+		sayit($server,$chan,"[isohunt] $title - $SL - $cat - $short");
 	}
 
 }
 sub print_msg { active_win()->print("@_"); }
+sub sayit { 
+        my ($server, $target, $msg) = @_;
+        $server->command("MSG $target $msg");
+}   
 signal_add("message public","msg_pub");
 
