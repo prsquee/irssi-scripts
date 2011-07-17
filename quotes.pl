@@ -9,11 +9,11 @@ sub msg_pub {
 	return if $text !~ /^!q/;
 	
 	my $qfile = settings_get_str("qfile");
-	my $fwends = settings_get_str('fwends');
+	my $fwends = settings_get_str("fwends");
 	CASE: {
 		if ( $text =~ /^!q(?:uote)?$/) { randq($server, $chan,$qfile); last CASE; }
-		if ( $text =~ /^!qadd\b/ and $fwends =~ /:$nick:/ ) { add_quote($text,$server,$chan,$nick); last CASE; }
-		if ( $text =~ /^!qs\b/) { search_quote($text,$server,$chan); last CASE; }
+		if ( $text =~ /^!qadd\b/ and $fwends =~ /:$nick:/ ) { add_quote($text,$server,$chan,$nick,$qfile); last CASE; }
+		if ( $text =~ /^!qs\b/) { search_quote($text,$server,$chan,$qfile); last CASE; }
 		if ( $text =~ /^!qdel\b/) { delete_quote($text,$server,$chan,$qfile) if $fwends =~ /:$nick:/i; last CASE; }
 		if ( $text =~ /^!qlast (\d+)?$/ ) { last_quotes($text,$server,$chan,$qfile); last CASE; }
 		if ( $text =~ /^!qtotal\b/ ) {
@@ -30,19 +30,12 @@ sub last_quotes {
 	my ($text,$server,$chan,$qfile) = @_;
 	#open; read the last \d lines , msg and close, GO
 	my @buf = openq($qfile);
-	@buf = reverse(@buf);
-	my $c; 
-	if ($text =~ /^!qlast$/) {
-		$c = 1;
-	} else { ($c) = $text =~ /^!qlast (\d+)/; }
-	
-#	if ($c > $#buf) { 
-#		$server->command("msg $chan $c is over 9000!");
-#		return;
-#	}
-	if ($c and @buf) { 
-		$server->command("msg $chan [last $c] $buf[$c-1]");
+	my ($c) = $text =~ /^!qlast\s+(\d+)/;
+	if ($c > $#buf) {
+		sayit($server,$chan,"you can't handle that much truth");
+		return;
 	}
+	sayit($server,$chan,"[last $c] $buf[-${c}]") if ($c and @buf);
 }
 sub delete_quote { 
 	my ($text,$server,$chan,$qfile) = @_;
@@ -54,7 +47,7 @@ sub delete_quote {
 	my ($deleteme) = $text =~ /^!qdel\s(.*)/;
 	$deleteme =~ s/\W/\\W/g;
 
-	my @buf = openq();
+	my @buf = openq($qfile);
 	my $found = 1;
 	my @toBeDeleted; 
 
@@ -63,7 +56,7 @@ sub delete_quote {
 	if ( @toBeDeleted ) {
 		if ( $#toBeDeleted == 0 ) {
 			@buf = grep { !/($deleteme)/i } @buf;
-			openq FH, ">$qfile" or die;
+			open FH, ">$qfile" or die;
 			print FH @buf; 
 			close (FH) or die;
 			$server->command("msg $chan $_ >> deleted!") for (@toBeDeleted);
@@ -73,17 +66,16 @@ sub delete_quote {
 }
 
 sub search_quote {
-	my ($text,$server,$chan) = @_;
+	my ($text,$server,$chan,$qfile) = @_;
 	if ($text eq '!qs') {
 		$server->command("msg $chan que busco??");
 		return;
 	}
 	my ($searchme) = $text =~ /^!qs\s(.*)/;
-	#my @buf = openq();
 	
 	my @words2search = split(" ", $searchme);
 	my $bingo = 0;
-	my @found = openq();
+	my @found = openq($qfile);
 	#my @found = @buf;
 	
 	foreach my $n (0 .. $#words2search) {
@@ -127,13 +119,13 @@ sub randq {
 sub add_quote {
 	my ($text,$server,$chan,$nick,$qfile) = @_;
 	if ($text eq '!qadd') {
-		$server->command("msg $chan que agrego??");
+		sait($server,$chan,"que agrego??");
 		return;
 	}
 	$text =~ s/^!qadd\s//;
 	$text = strip_all($text);
 	eval {
-		open (QAPPND, ">>$qfile") or die ;
+		open QAPPND, ">>$qfile" or die ;
 		print QAPPND "$text\n"; 
 		close (QAPPND) or die;
 	} and $server->command("msg $chan agregado");
@@ -150,7 +142,7 @@ sub strip_all {
 
 sub openq { 
 	my ($qfile) = @_;
-	open (LOG, "$qfile") or die "$@";
+	open LOG, "$qfile" or die "$@";
 	my @buf = <LOG>;
 	close (LOG) or die;
 	return @buf;
