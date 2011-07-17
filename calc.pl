@@ -20,11 +20,14 @@ sub msg_pub {
 		} 
 		else {
 			$msg = $answer;
-		} 
-		$server->command("MSG $chan $msg");
+		}
+		sayit($server,$chan,$msg); 
 	}	
 }
-
+sub sayit { 
+	my ($server, $target, $msg) = @_;
+	$server->command("MSG $target $msg");
+}   
 signal_add("message public","msg_pub");
 
 
