@@ -11,7 +11,6 @@ sub msg_pub {
 		{
 			/^!h[ea]lp$/ 	and do {
 				my $cmds = Irssi::settings_get_str('halpcommands');
-				print_msg("$mask");
 				sayit($server,$chan,$cmds);
 				return;
 			};
