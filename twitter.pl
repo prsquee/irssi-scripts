@@ -11,12 +11,13 @@ use WWW::Shorten::Googl;
 
 sub msg_pub {
 	my($server, $text, $nick, $mask,$chan) = @_;
-	#clean this up? nah
-	do_twittr($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ m{twitter\.com(/#!)?/[^/]+/status/\d+}i ); 
-	do_search($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!searchtwt/ );
-	do_showuser($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^\@user/ );
-	do_last($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!lasttweet/ );
-	do_find($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!findpeople/ );
+	if ($server->{tag} =~ /3dg|fnode|gsg/) {
+		do_twittr($text, $chan, $server) 	if ($text =~ m{twitter\.com(/#!)?/[^/]+/status/\d+}i ); 
+		do_search($text, $chan, $server) 	if ($text =~ /^!searchtwt/ );
+		do_showuser($text, $chan, $server) 	if ($text =~ /^\@user/ );
+		do_last($text, $chan, $server) 		if ($text =~ /^!lasttweet/ );
+		do_find($text, $chan, $server) 		if ($text =~ /^!findpeople/ );
+	}
 }
 sub do_find {
 	my ($text, $chan, $server) = @_;
@@ -29,12 +30,14 @@ sub do_find {
 
 		if ($unsub) {
 			my $twitter = newtwitter();
+			##l2handle undef here 
 			eval {
 				my $r = $twitter->users_search($unsub);
 				my $a = Dumper($r);
 				print_msg("$a");
 			};
-			print_msg("$@") if $@;
+			sayit($server,$chan,"sorry, no relevant info on twitter") if ($@);
+			return if $@;
 		}
 	}
 }
