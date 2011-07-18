@@ -11,6 +11,7 @@ use WWW::Shorten::Googl;
 
 sub msg_pub {
 	my($server, $text, $nick, $mask,$chan) = @_;
+	#clean this up? nah
 	do_twittr($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ m{twitter\.com(/#!)?/[^/]+/status/\d+}i ); 
 	do_search($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!searchtwt/ );
 	do_showuser($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^\@user/ );
@@ -154,18 +155,23 @@ sub newtwitter {
 	my $apikey = Irssi::settings_get_str('twitter_apikey');
 	my $secret = Irssi::settings_get_str('twitter_secret');
 	my $twitter = Net::Twitter::Lite->new(
-		consumer_key        => $apikey,
-		consumer_secret     => $secret,
+		#edit Lite.pm to make this permanent? 
+		oauth_urls => {
+			request_token_url 	=> 	'https://api.twitter.com/oauth/request_token',
+			access_token_url 	=> 	'https://api.twitter.com/oauth/access_token',
+			authorization_url 	=> 	'https://api.twitter.com/oauth/authorize',
+		},
+		consumer_key		=> 	$apikey,
+		consumer_secret		=> 	$secret,
+		apiurl			=>	'http://api.twitter.com',
+		ssl			=>	1,
+		source 			=> 	'squeebot',
 	);
-	#my ($access_token, $access_token_secret) = restore_tokens();
-#	my $a = Dumper($twitter);
-#	print_msg("$a");
-#	print_msg($twitter->authorized); 
-		#print "Authorize this app at ", $nt->get_authorization_url, " and enter the PIN#\n";
-		#my $url = $twitter->{get_authorization_url};
-		#print_msg("$url");
-		#}
-#	print_msg("$access_token || $access_token_secret");
+	my ($at, $ats) = restore_tokens(); #this seems like forever
+	if ($at && $ats) {
+		$twitter->access_token($at);
+		$twitter->access_token_secret($ats);
+	}
 	return $twitter;
 }
 
@@ -175,6 +181,14 @@ sub restore_tokens {
 	return ($at, $ats);
 }
 
+
+
+#dont really need this, do the tokens manually
+sub save_tokens {
+	my ($at, $ats) = @_;
+	Irssi::settings_set_str('twitter_access_token',$at);
+	Irssi::settings_set_str('twitter_access_token_secret',$ats);
+}
 
 sub sayit { 
 	my ($server, $target, $msg) = @_;
