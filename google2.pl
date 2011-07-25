@@ -4,10 +4,12 @@ use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
 use strict;
 use REST::Google::Search; 
 use REST::Google::Search::Images; 
+use REST::Google::Search::News;
+use URI::Escape qw( uri_unescape);
 
 sub msg_pub {
 	my($server, $text, $nick, $mask,$chan) = @_;
-	do_google($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!(?:g(?:oogle|ugl)?)|(?:pic) /);
+	do_google($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!(?:g(?:oogle|ugl)?)|(?:pic)|(?:news)|(?:noticias)/);
 	
 }
 
@@ -33,6 +35,8 @@ sub do_google {
 		{
 			/^(?:g(?:oogle|ugl)?)$/	and do { $res = REST::Google::Search->new( q => $query, service => 'web', hl => 'en', rsz => 'small' ); };
 			/^pic$/			and do { $res = REST::Google::Search::Images->new( q => $query, rsz => 'small' ); };
+			/^news$/		and do { $res = REST::Google::Search::News->new( q => $query, hl => 'en' ); };
+			/^noticias$/		and do { $res = REST::Google::Search::News->new( q => $query, hl => 'es' ); };
 		}
 		#return if ( !$& );
 	}
@@ -53,7 +57,8 @@ sub do_google {
        } else { 
 	       for my $i (0..3) {
 		       return if ( ! $links[$i]);
-		       sayit($server,$chan,"[gugl] $links[$i]"); 
+		       my $link = uri_unescape($links[$i]);
+		       sayit($server,$chan,"[gugl] $link"); 
 	       }
        }
 }
