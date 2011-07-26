@@ -10,7 +10,7 @@ use URI::Escape qw( uri_unescape);
 
 sub msg_pub {
 	my($server, $text, $nick, $mask,$chan) = @_;
-	do_google($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!(?:g(?:oogle|ugl)?)|(?:pic)|(?:news)|(?:noticias)/);
+	do_google($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!(g(oogle)?)|(pic)|(news)|(noticias)/);
 	
 }
 
