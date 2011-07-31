@@ -28,38 +28,57 @@ use JSON;
 
 sub msg_pub {
 	my($server, $text, $nick, $mask,$chan) = @_;
+	sayit($server,$chan,"I will tell ya everything about a movie!") and return if ($text eq "!imdb");
 	do_imdb($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!imdb/);
+	my ($id) = $text =~ m{http://www\.imdb\.com/title/(tt\d+)};
+	do_imdb($id,$chan,$server) if ($id);
+	
 }
+
 
 sub do_imdb {
 	my ($text, $chan, $server) = @_;
-	my ($query) = $text =~ /^!imdb\s+(.*)/;
-	if (!$query) {
-		sayit($server,$chan, "I will tell ya everything about a movie!");
-		return;
-	} 
-	else {
-		my $ua = new LWP::UserAgent;
-		$ua->timeout(20);
-		my $url =  "http://www.imdbapi.com/?t=";
-		my $query8 = uri_escape($query);
-		my $url2get = $url . $query8;
-		my $got = $ua->get($url2get);
-		my $content = $got->decoded_content;
-		my $json = new JSON;
-		my $imdb = $json->allow_nonref->decode($content);
-		if ($imdb->{Response} !~ /True/ ) {
-			sayit($server,$chan,"sorry, doesn't ring a bell, try again");
-			return;
-		}
-		my $title = "Title: [$imdb->{Title}] - [http://www.imdb.com/title/$imdb->{ID}]";
-		my $genre = "Genre: $imdb->{Genre} - Rating: $imdb->{Rating} - Year: $imdb->{Year}";
-		my $plot = "Plot: $imdb->{Plot}";
-		sayit($server,$chan,$title);
-		sayit($server,$chan,$genre);
-		sayit($server,$chan,$plot);
+	my $param; my $query;
+
+	if ($text =~ /^tt/) {
+		$param = 'i';
+	} elsif ($text =~ /^!imdb/) {
+		$param = 't';
+	}
+		
+	if ($text =~ /^!imdb\s+(.*)/) {
+		$query = $1;
+		$query = uri_escape($query);
+	} elsif ($text =~ /^tt\d+/) {
+		$query = $text;
+	}
+	return if (!$query);
+	my $url = "http://www.imdbapi.com/?${param}=${query}" if ($param and $query);
+	
+	my $ua = new LWP::UserAgent;
+	$ua->timeout(20);
+	my $got = $ua->get($url);
+	my $content = $got->decoded_content;
+	my $json = new JSON;
+	my $imdb = $json->allow_nonref->decode($content);
+	if ($imdb->{Response} !~ /True/ ) {
+		sayit($server,$chan,"sorry, doesn't ring a bell, try again");
 		return;
 	}
+	my $link;
+	if ($text =~ /^!imdb/) {
+		$link = "- [http://www.imdb.com/title/$imdb->{ID}]";
+	} else {
+		$link = '';
+	}
+
+	my $title = "Title: [$imdb->{Title}] $link";
+	my $genre = "Genre: $imdb->{Genre} - Rating: $imdb->{Rating} - Year: $imdb->{Year}";
+	my $plot = "Plot: $imdb->{Plot}";
+	sayit($server,$chan,$title);
+	sayit($server,$chan,$genre);
+	sayit($server,$chan,$plot);
+	return;
 }
 
 sub sayit { 

@@ -11,7 +11,7 @@ sub msg_pub {
 #	print_msg("$urlmatch") if ($urlmatch);
 	return if ($text =~ /^!\w+/);
 	return if ($urlmatch =~ /bolibot/i);
-	return if ($urlmatch =~ /(wikipedia)|(twitter)|(facebook)|(youtu(?:\.be)|be\.com)/i);
+	return if ($urlmatch =~ /(imdb)|(wikipedia)|(twitter)|(facebook)|(youtu(?:\.be)|be\.com)/i);
 	if ($urlmatch =~ /techmez/i) {
 		$server->command("MSG $chan Failmez - Lo \"\"último\"\" en ciencia y tecnología");
 		return;
