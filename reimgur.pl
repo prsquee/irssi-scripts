@@ -12,6 +12,9 @@ sub msg_pub {
 	my($server, $text, $nick, $mask,$chan) = @_;
 	if ($server->{tag} =~ /3dg|fnode|lia|gsg/) {
 			my ($url) = $text =~ m{^!imgur (https?://[^ ]+)};
+			if ($text =~ /^!imgur/ and not $url) {
+				sayit($server,$chan,"dame un link a una imagen y lo reuploadeo a imgur!");
+			}
 			reupload($url,$server,$chan) if ($url);
 	}
 }
