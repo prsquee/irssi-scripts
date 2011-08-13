@@ -24,7 +24,7 @@ sub do_temp {
 	my $req = $ua->request( $url );
 	if ($req->decoded_content) {
 		my $temp = $req->decoded_content;
-		$temp =~ s/\|TRUE//;
+		$temp =~ s/\|\w+//;
 		$server->command("MSG $chan $temp");
 		return;
 
