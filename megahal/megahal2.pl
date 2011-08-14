@@ -310,16 +310,16 @@ sub public_responder {
 
         $data =~ s/\b$my_nick\b//;
         my $output = $megahal->do_reply($data, 0);
-        $output =~ s/  */ /g;
-#	$output = "$nick, $output" if $referencesme; 
-        $server->command("msg $target $output");
+	$output = fixReply($output);	
+	#$output =~ s/  */ /g;
+        sayit($server,$target,$output);
 
     } else {
 	    # dont learn anything for nao
 		$data =~ s/^\S+[\:,]\s*//;
 		$megahal->learn($data, 0);
 
-		## do a clean up cada 5k lineas (savebrain)
+		## do a clean up cada 10k lineas (savebrain)
 		my $totalLines = Irssi::settings_get_int('megahal_total_lines'); 
 		if ($totalLines < 10000) {
 			$totalLines++;
@@ -333,11 +333,18 @@ sub public_responder {
     }
 }
 
-
-sub print_msg {
-	Irssi::active_win()->print("@_");
+sub fixReply {
+	my $reply = shift;
+	$reply =~ s/  */ /g;
+	$reply =~ s/sq`//ig; 
+	#usar alguna lib de spellcheck? 
+	return $reply;
 }
-
+sub sayit { 
+	my ($server, $target, $msg) = @_;
+	$server->command("MSG $target $msg");
+}   
+sub print_msg { Irssi::active_win()->print("@_"); }
 Irssi::signal_add("message public", "public_responder");
 Irssi::signal_add("setup changed", "load_settings");
 Irssi::signal_add("setup reread", "load_settings");
