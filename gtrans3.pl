@@ -36,7 +36,7 @@ my %langcodes = (
 
 sub msg_pub {
 	my($server, $text, $nick, $mask,$chan) = @_;
-	do_translate($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!tr((?:anslate)|(?:ducir)|(?:durre)|(?:nscn))?/);
+	do_translate($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!tr((?:anslate)|(?:ducir)|(?:durre)|(?:nscn))/);
 }
 
 sub do_translate {
