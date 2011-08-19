@@ -212,12 +212,11 @@ sub public_responder {
 
 
     ## random speak, just for fun 
-    if ((int(rand(900)) == 42 ) or ($nick =~ /(Gabba)|(Vicky)|(Bubulz)|(sabru)|(Mayi)|(maia)|(tUrK)/i and int(rand(70)) == 42)) {
+    if (int(rand(99)) == 42) {
 	    $data =~ s/^$my_nick\S?//;
 	    my $output = $megahal->do_reply($data, 0);
-	    $output =~ s/  */ /g;
-	    $output = "$nick, $output";
-	    $server->command("msg $target $output");
+	    $output = fixReply($output);
+	    sayit($server,$target,"${nick}: $output");
 	    return;
     } 
 			
@@ -336,7 +335,7 @@ sub public_responder {
 sub fixReply {
 	my $reply = shift;
 	$reply =~ s/  */ /g;
-	$reply =~ s/sq`//ig; 
+	$reply =~ s/sq`,\s*//ig; 
 	#usar alguna lib de spellcheck? 
 	return $reply;
 }
