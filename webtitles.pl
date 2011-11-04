@@ -2,7 +2,7 @@
 use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
 use LWP::UserAgent;
 use strict;
-
+use Data::Dumper;
 
 sub msg_pub {
 	my($server, $text, $nick, $mask,$chan) = @_;
@@ -10,13 +10,19 @@ sub msg_pub {
 	my ($urlmatch) = $text =~ m{(https?://[^ ]+)};
 #	print_msg("$urlmatch") if ($urlmatch);
 	return if ($text =~ /^!\w+/);
-	return if ($urlmatch =~ /bolibot/i);
 	return if ($urlmatch =~ /(imdb)|(wikipedia)|(twitter)|(facebook)|(youtu(?:\.be)|be\.com)/i);
 	if ($urlmatch =~ /techmez/i) {
 		$server->command("MSG $chan Failmez - Lo \"\"último\"\" en ciencia y tecnología");
 		return;
 	}
-			
+	if ($urlmatch =~ /imgur/) {
+		#1st case: http://i.imgur.com/XXXX.png
+		if ($urlmatch =~ m{http://i\.imgur\.com/(\w{5})\.[pjgb]\w{2}$}) {
+				$urlmatch = "http://imgur.com/$1";
+		}
+		#2nd case: en browing mode: http://imgur.com/gallery/
+	}
+		
 	do_fetch($text, $chan, $server, $urlmatch) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $urlmatch) ;
 }
 
@@ -28,41 +34,21 @@ sub do_fetch {
 	$ua->protocols_allowed( [ 'http', 'https'] );
 	$ua->max_redirect( 3 );
 	$ua->timeout( 30 );
-
 	my $response = $ua->head( $urlmatch ); #para ver q es 
 	if ($response->is_success) {
-		if ($response->content_type) {
-			my ($type,$kind) = $response->content_type =~ m{(\w+)/(\w+)};
-			my $len = $response->content_length;
-			my $kb = int($len/1024) if ($len and $len > 1024);
-			#the big case:
-			#case 1, ppl didnt like this :<
-
-#			if ($type =~ /image|audio|video|application/ ) {
-#				#iwant the pixels!
-#				if ($kb) {
-#					$server->command("MSG $chan \x02${kind} :: $kb KiB\x20");
-#				} else {
-#					$server->command("MSG $chan \x02${kind} :: $len bytes\x20") if ($len);
-#				}
-#				return;
-#			}
-			#case 2
-			if ($response->content_is_html) {
-				my $got = $ua->get( $urlmatch );
-				my $title = $got->title if ($got->title);
-				$server->command("MSG $chan \x02${title}\x20") if ($title); 
-				return;
+		if ($response->content_is_html) {
+			my $got = $ua->get( $urlmatch );
+			#return if no desc available
+			my $title = $got->title if ($got->title);
+			return if ($title =~ /the simple image sharer/);
+			$server->command("MSG $chan \x02${title}\x20") if ($title); 
+			if ($urlmatch =~ /imgur/) {
+				#check si hay un link a reddit
+				#$_ = $got->decoded_content;
+				my ($redditSauce) = $got->decoded_content =~ m{"(http://www\.reddit\.com[^"]+)"};
+				$server->command("MSG $chan [sauce] $redditSauce") if ($redditSauce);
 			}
-			#case 3
-#			if ( $type eq "text" and $kind eq "plain" ) {
-#				return;
-#				my $got = $ua->get( $urlmatch );
-#				my $text = $got->decoded_content if ($got->decoded_content); 
-#				my ($line) = $text =~ /^(.*)\r/;
-#				#how the fuck do i trim this? nvm 
-#				print_msg("$line");
-#			}
+			return;
 		}
 	} 
 }
