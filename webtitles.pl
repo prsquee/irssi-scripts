@@ -30,7 +30,8 @@ sub do_fetch {
 	my ($text, $chan, $server, $urlmatch) = @_;
 
 	my $ua = new LWP::UserAgent;
-	$ua->agent('Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/533.4 (KHTML, like Gecko) Chrome/5.0.375.70 Safari/533.4'); #overkill? 
+	$ua->agent(Irssi::settings_get_str('myUserAgent'));
+	print_msg($ua->agent);
 	$ua->protocols_allowed( [ 'http', 'https'] );
 	$ua->max_redirect( 3 );
 	$ua->timeout( 30 );
@@ -54,4 +55,4 @@ sub do_fetch {
 }
 sub print_msg { Irssi::active_win()->print("@_"); }
 signal_add("message public","msg_pub");
-
+Irssi::settings_add_str('libwww', 'myUserAgent', '');
