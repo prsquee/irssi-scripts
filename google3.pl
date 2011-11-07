@@ -39,8 +39,8 @@ sub do_google {
 	#so, we have:
 	#${$res->{queries}->{request}}[0]{totalResults}");
 	#i dont wanna do this anymore :(
-
-	if (${$res->{queries}->{request}}[0]{totalResults} > 0) {
+	#this looks better tho:
+	if ($res->{queries}->{request}->[0]{totalResults} > 0) {
 		foreach my $items (@{$res->{items}}) {
 			my $title = ($items->{title});
 			my $link  = ($items->{link});
