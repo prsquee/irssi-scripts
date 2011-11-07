@@ -1,5 +1,16 @@
 # google search
-#to do: migrar todo a custom search antes de dic :<
+# DEPRECATED
+# DEPRECATED
+# DEPRECATED
+# DEPRECATED
+# DEPRECATED
+# DEPRECATED
+# DEPRECATED
+# DEPRECATED
+# DEPRECATED
+# DEPRECATED
+# DEPRECATED
+# DEPRECATED
 
 use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
 use strict;
