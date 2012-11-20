@@ -166,7 +166,7 @@ sub newtwitter {
 		},
 		consumer_key		=> 	$apikey,
 		consumer_secret		=> 	$secret,
-		apiurl			=>	'http://api.twitter.com',
+		apiurl			=>	'https://api.twitter.com/1/',
 		ssl			=>	1,
 		source 			=> 	'squeebot',
 	);
