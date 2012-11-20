@@ -21,10 +21,6 @@ sub do_google {
 		sayit($server,$chan,"gimme somethin to feed the beast");
 		return;
 	} 
-	if ($query =~ /techmez/i) {
-		sayit($server, $chan,"No lo vi primero en techmez!");
-		return;
-	}
 	my $query8 = uri_escape($query);
 	my $engine  = WWW::Google::CustomSearch->new(
 		api_key => Irssi::settings_get_str('search_apikey'),
@@ -35,7 +31,7 @@ sub do_google {
 	my $res = $engine->search($query8);
 	#el obj 'queries' contiene 2 arrays, 'nextPage' y 'request'.
 	#cada uno es un array de un solo value.
-	#easy value contiene varios objects mas.
+	#each value contiene varios objects mas.
 	#so, we have:
 	#${$res->{queries}->{request}}[0]{totalResults}");
 	#i dont wanna do this anymore :(
@@ -54,7 +50,7 @@ sub do_google {
 sub sayit { 
         my ($server, $target, $msg) = @_;
 	$server->command("MSG $target $msg");
-}                                         
+}
 sub print_msg { active_win()->print("@_"); }
 signal_add("message public","msg_pub");
 Irssi::settings_add_str('gsearch', 'search_apikey', '');

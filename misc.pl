@@ -15,7 +15,7 @@ sub msg_pub {
 				return;
 			};
 			/^!fortune$/	and do {
-				my $fortune = `/usr/games/fortune -os`;
+				my $fortune = `/usr/bin/fortune -s`;
 				my @foo = split(/\n/, $fortune);
 				sayit($server,$chan,"[fortune] $_") for (@foo);
 				return; 
