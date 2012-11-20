@@ -2,6 +2,7 @@
 use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
 use LWP::UserAgent;
 use strict;
+#use HTML::Entities;
 use Data::Dumper;
 
 sub msg_pub {
@@ -21,6 +22,7 @@ sub msg_pub {
 				$urlmatch = "http://imgur.com/$1";
 		}
 		#2nd case: en browing mode: http://imgur.com/gallery/
+		#and this will just wall throu
 	}
 		
 	do_fetch($text, $chan, $server, $urlmatch) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $urlmatch) ;
@@ -31,7 +33,6 @@ sub do_fetch {
 
 	my $ua = new LWP::UserAgent;
 	$ua->agent(Irssi::settings_get_str('myUserAgent'));
-	print_msg($ua->agent);
 	$ua->protocols_allowed( [ 'http', 'https'] );
 	$ua->max_redirect( 3 );
 	$ua->timeout( 30 );
@@ -42,6 +43,7 @@ sub do_fetch {
 			#return if no desc available
 			my $title = $got->title if ($got->title);
 			return if ($title =~ /the simple image sharer/);
+			#$title = HTML::Entities::decode($title) if ($title);
 			$server->command("MSG $chan \x02${title}\x20") if ($title); 
 			if ($urlmatch =~ /imgur/) {
 				#check si hay un link a reddit
