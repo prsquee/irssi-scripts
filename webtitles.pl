@@ -21,8 +21,6 @@ sub msg_pub {
 		if ($urlmatch =~ m{http://i\.imgur\.com/(\w{5})\.[pjgb]\w{2}$}) {
 				$urlmatch = "http://imgur.com/$1";
 		}
-		#2nd case: en browing mode: http://imgur.com/gallery/
-		#and this will just wall throu
 	}
 		
 	do_fetch($text, $chan, $server, $urlmatch) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $urlmatch) ;
@@ -47,7 +45,6 @@ sub do_fetch {
 			$server->command("MSG $chan \x02${title}\x20") if ($title); 
 			if ($urlmatch =~ /imgur/) {
 				#check si hay un link a reddit
-				#$_ = $got->decoded_content;
 				my ($redditSauce) = $got->decoded_content =~ m{"(http://www\.reddit\.com[^"]+)"};
 				$server->command("MSG $chan [sauce] $redditSauce") if ($redditSauce);
 			}
