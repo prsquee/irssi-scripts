@@ -6,13 +6,16 @@ sub isutube {
 	my($server, $msg, $nick, $address, $chan) = @_;
 	return if ($server->{tag} !~ /3dg|fnode|lia|gsg/);
 	return if ($msg =~ /^!/);
-	if ($msg =~ m#(?:http://)?(?:www\.)?youtu(?:\.be|be\.com)/(?:watch\?\S*v=)?(?:user/.*/)?([^&]{11})#) {
-		my ($title, $desc, $time, $views) = get_title($1) if $1;
+	my ($vid) = $msg =~ m{  (?:http://)?                        #protocol o not
+                          (?:www\.)?youtu(?:\.be|be\.com)     #matches long url and short url
+                          /                                   # 1st slash
+                          (?:watch\?\S*v=)?                   #this wont be here if it's short url, TODO use lookaround
+                          (?:user/.*/)?                       #may or may not be an username 
+                          ([^&]{11})                          #the vid id
+                        }x;
+  if (defined($vid) {
+		my ($title, $desc, $time, $views) = get_title($vid) if ($vid);
 		
-		if ($views >= 4000000) { 
-			sayit($server, $chan,"[WARNING] OWLD!");
-			return;
-		}
 		if($title) {
 			$time = "[0:0${time}]" if ($time < 10); 
 			$time = "[0:${time}]"  if ($time < 60);
@@ -24,7 +27,7 @@ sub isutube {
 				$time = "[${min}:${sec}]";
 			} 
 
-			my $msg = "[yt] " . $time . " - " . "\x02${title}\x02";
+			my $msg = "[YT]" . $time . " - " . "\x02${title}\x02" . " - Views: $views";
 			$msg .= " - $desc" if ($desc); 
 			sayit($server, $chan, $msg);
 		} else {
