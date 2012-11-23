@@ -6,13 +6,10 @@ sub isutube {
 	my($server, $msg, $nick, $address, $chan) = @_;
 	return if ($server->{tag} !~ /3dg|fnode|lia|gsg/);
 	return if ($msg =~ /^!/);
-	if ($msg =~ m#(?:http://)?(?:www\.)?youtu(?:\.be|be\.com)/(?:watch\?\S*v=)?(?:user/.*/)?([^&]{11})#) {
-		my ($title, $desc, $time, $views) = get_title($1) if $1;
+	my ($vid) = $msg =~ m{(?:http://)?(?:www\.)?youtu(?:\.be|be\.com)/(?:watch\?\S*v=)?(?:user/.*/)?([^&]{11})};
+    if (defined($vid)) {
+		my ($title, $desc, $time, $views) = get_title($vid) if ($vid);
 		
-		if ($views >= 4000000) { 
-			sayit($server, $chan,"[WARNING] OWLD!");
-			return;
-		}
 		if($title) {
 			$time = "[0:0${time}]" if ($time < 10); 
 			$time = "[0:${time}]"  if ($time < 60);
@@ -24,8 +21,9 @@ sub isutube {
 				$time = "[${min}:${sec}]";
 			} 
 
-			my $msg = "[yt] " . $time . " - " . "\x02${title}\x02";
-			$msg .= " - $desc" if ($desc); 
+			my $msg = "[YT]" . $time . " " . "\x02${title}\x02" ;
+			$msg .= " - $desc" if ($desc);
+            $msg .= " - Views: $views";
 			sayit($server, $chan, $msg);
 		} else {
 			return;
