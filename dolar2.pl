@@ -10,19 +10,60 @@ sub msg_pub {
 
 sub do_dolar {
 	my ($text, $chan, $server) = @_;
-	my $ua = new LWP::UserAgent;
-	$ua->agent("AgentName/0.1 " . $ua->agent);
-	$ua->max_redirect(4);
-	$ua->timeout(40);
-    my $url = "http://www.cotizacion-dolar.com.ar";
-	my $content;
-	my $response = $ua->get( $url );
-	if ($response->is_success) {
-		$content = $response->decoded_content;
-	} else {
-		sayit($server, $chan, "me parece q no anda $url"); 
+  my $blue    = do_fetch("http://www.preciodolarblue.com.ar");
+  my $oficial = do_fetch("http://www.cotizacion-dolar.com.ar");
+
+	my ($dolarC, $dolarV) = $oficial =~ /\bDolar\b\s(\d.\d\d)\s(\d\.\d\d)/;
+	my ($euroC, $euroV) = $oficial =~ /Euro\s(\d\.\d\d)\s(\d\.\d\d)/;
+  my ($blueC, $blueV) = $blue =~ /\bCompra: Venta: (\d\.\d\d) (\d\.\d\d)\b/;
+
+  #print_msg("$blueCompra - $blueVenta");
+		
+  unless ($dolarC and $dolarV) {
+    sayit($server, $chan, "no encontre los precios D:");
 		return;
 	}
+	my $output = "[Dolar Oficial] => $dolarC/$dolarV | [Dolar Blue] => $blueC/$blueV | [Euro] => $euroC/$euroV";
+
+	my ($ask, $howmuch) = $text =~ /^!(\w+) (\d+)$/;
+	if ($ask == 'dolar' and not defined($howmuch)) {
+		sayit($server, $chan, $output);
+		return;
+	}
+	if ($ask == 'dolar' and $howmuch) {
+		#print_msg("calcular el dolar en pesos");
+		my $stinkyPesos = "[Oficial] " . eval("$howmuch * $dolarC")  . " pesos" . "| [Blue] " . eval($howmuch * $blueC) . " pesos";
+		sayit($server, $chan, $stinkyPesos) if ($stinkyPesos and !$@);
+		return;
+	}
+	if ($ask == 'pesos' and $howmuch) {
+		#print_msg("calcular esa cantidad de pesos en dolares");
+		my $dollars = eval("$howmuch / $dolarV");
+		my $blueDollars = eval("$howmuch / $blueV");
+		$dollars = sprintf("%.2f",$dollars);
+		$blueDollars = sprintf("%.2f",$blueDollars);
+		sayit($server, $chan, "[Oficial] $dollars dolares | [Blue] $blueDollars dolares") if ($dollars and $blueDollars and !$@);
+		return;
+	}
+  #if ($ask == 'pesos' and not defined($howmuch)) {
+  #  sayit($server, $chan, "!pesos <CANTIDAD>");
+	#	return;
+  #}
+}
+sub do_fetch {
+  my $fetchme = shift;
+	my $ua = new LWP::UserAgent;
+  $ua->agent(Irssi::settings_get_str('myUserAgent'));
+	$ua->max_redirect(2);
+	$ua->timeout(20);
+	my $content;
+	my $response = $ua->get( $fetchme );
+  if ($response->is_success) {
+		$content = $response->decoded_content;
+  } else {
+  print_msg("me parece q no anda $fetchme");
+	return;
+  }
 	#$content =~ s/<[^>]*>/ /gs;
 	$content =~ s/<(?:[^>'"]*|(['"]).*?\1)*>/ /gs;
 	$content =~ s/<\/(?:[^>'"]*|(['"]).*?\1)*>/ /gs;
@@ -30,48 +71,10 @@ sub do_dolar {
 	$content =~ s/&nbsp;//g;
 	$content =~ s/\s+/ /g;
     #print ("$content");
-    #return;
-    # Compra Venta Dolar 4.78 4.83 Euro 6.11 6.28
-
-	my ($compra, $venta) = $content =~ /\bDolar\b\s(\d.\d\d)\s(\d\.\d\d)/;
-	my ($eucompra, $euventa) = $content =~ /Euro\s(\d\.\d\d)\s(\d\.\d\d)/;
-		
-    unless ($compra and $venta) {
-        sayit($server, $chan, "no encontre los precios D:");
-		return;
-	}
-	my $dolar = "[Dolar] COMPRA => $compra | VENTA => $venta";
-	my $euro = "[Euuro] COMPRA => $eucompra | VENTA => $euventa";
-
-    #blueish
-    #
-    my $blueurl = "http://www.preciodolarblue.com.ar";
-
-    # # # 
-	#ok ya tnemos todos los precios, que pidio?
-
-	my ($cmd, $howmuch) = $text =~ /^!(\w+) (\d+)$/;
-	# =.= do. not. compute.
-	if ($cmd == 'dolar' and not $howmuch) {
-		#solo tiro los precios de dolar euro
-		sayit($server, $chan, $dolar);
-		sayit($server, $chan, $euro);
-		return;
-	}
-	if ($cmd eq 'dolar' and $howmuch) {
-		#print_msg("calcular el dolar en pesos");
-		my $res = eval("$howmuch * $venta")  . " pesos";
-		sayit($server, $chan, $res) if ($res and !$@);
-		return;
-	}
-	if ($cmd eq 'pesos' and $howmuch) {
-		#print_msg("calcular esa cantidad de pesos en dolares");
-		my $res = eval("$howmuch / $compra");
-		$res = sprintf("%.2f",$res) . " dolares";
-		sayit($server, $chan, $res) if ($res and !$@);
-		return;
-	}
+  return $content;
 }
+
+
 sub sayit {
         my ($server, $target, $msg) = @_;
         $server->command("MSG $target $msg");
