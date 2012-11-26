@@ -48,7 +48,7 @@ sub do_last {
 		sayit($server, $chan, "I will show you the last tweet if you do a !lasttweet <username>");
 	} 
 	else {
-		my ($user) = $text =~ /^!lasttweet (\w+)/;
+		my ($user) = $text =~ /^!lasttweet @?(\w+)/;
 		if ($user) {
 			my $twitter = newtwitter();
 			#my $a = Dumper($twitter);
@@ -74,7 +74,7 @@ sub do_showuser {
 	if ($text =~ /^\@user$/ ){
 		sayit($server,$chan, "I will tell you everything about an user on twitter if you do a \@user <username>!");
 	} else {
-		my ($who) = $text =~ /^\@user (\w+)/;
+		my ($who) = $text =~ /^\@user @?(\w+)/;
 		if ($who) {
 			my $twitter = newtwitter();
 			eval {

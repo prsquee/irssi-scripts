@@ -73,7 +73,7 @@ sub do_translate {
 	my ($translated) = $content =~ m{"translatedText": "([^"]+)"};
 	
 	if (!$translated) {
-		sayit($server,$chan,"NSUFFICIENT DATA FOR A MEANINGFUL ANSWER");
+		sayit($server,$chan,"INSUFFICIENT DATA FOR A MEANINGFUL ANSWER");
 		return;
 	} 
 	else {

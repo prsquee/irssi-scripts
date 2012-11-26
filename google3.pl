@@ -21,6 +21,10 @@ sub do_google {
 		sayit($server,$chan,"gimme somethin to feed the beast");
 		return;
 	} 
+    if ($query =~ /^google$/i) {
+		sayit($server,$chan,"no! this will break the internet!");
+        return;
+    }
 	my $query8 = uri_escape($query);
 	my $engine  = WWW::Google::CustomSearch->new(
 		api_key => Irssi::settings_get_str('search_apikey'),

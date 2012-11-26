@@ -14,15 +14,13 @@ sub do_dolar {
 	$ua->agent("AgentName/0.1 " . $ua->agent);
 	$ua->max_redirect(4);
 	$ua->timeout(40);
-	#my $dolar = new HTTP::Request GET => "http://www.preciodolar.com";
-	#my $res = $ua->request($dolar);
-	my $url = "http://www.preciodolar.com";
-	my $content; 
+    my $url = "http://www.cotizacion-dolar.com.ar";
+	my $content;
 	my $response = $ua->get( $url );
 	if ($response->is_success) {
 		$content = $response->decoded_content;
 	} else {
-		sayit($server, $chan, "me parece q no anda preciodolar.com");
+		sayit($server, $chan, "me parece q no anda $url"); 
 		return;
 	}
 	#$content =~ s/<[^>]*>/ /gs;
@@ -31,20 +29,25 @@ sub do_dolar {
 	$content =~ s/google_*//g;
 	$content =~ s/&nbsp;//g;
 	$content =~ s/\s+/ /g;
-	my ($compra, $venta) = $content =~ /\sPeso\sargentino\s(\d.\d\d)\s(\d\.\d\d)/;
-	my ($eucompra, $euventa) = $content =~ /Euro\s(\d\.\d\d\d?\d?)\s(\d\.\d\d\d?\d?)/;
-	if ( $eucompra and $euventa) {
-		$eucompra = $compra / $eucompra;
-		$euventa = $venta / $euventa;
-	} else {
-		sayit($server, $chan, "no encontre los precios D:");
+    #print ("$content");
+    #return;
+    # Compra Venta Dolar 4.78 4.83 Euro 6.11 6.28
+
+	my ($compra, $venta) = $content =~ /\bDolar\b\s(\d.\d\d)\s(\d\.\d\d)/;
+	my ($eucompra, $euventa) = $content =~ /Euro\s(\d\.\d\d)\s(\d\.\d\d)/;
+		
+    unless ($compra and $venta) {
+        sayit($server, $chan, "no encontre los precios D:");
 		return;
 	}
-	$eucompra = sprintf("%.3f", $eucompra);
-	$euventa = sprintf("%.3f", $euventa);
 	my $dolar = "[Dolar] COMPRA => $compra | VENTA => $venta";
 	my $euro = "[Euuro] COMPRA => $eucompra | VENTA => $euventa";
 
+    #blueish
+    #
+    my $blueurl = "http://www.preciodolarblue.com.ar";
+
+    # # # 
 	#ok ya tnemos todos los precios, que pidio?
 
 	my ($cmd, $howmuch) = $text =~ /^!(\w+) (\d+)$/;
