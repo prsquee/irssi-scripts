@@ -1,6 +1,10 @@
 #quotes.pl
+
 use Irssi qw( settings_add_str settings_get_str );
 use strict;
+use warnings;
+use Data::Dump qw( dump );
+use File::Slurp qw( read_file write_file append_file);
 
 
 sub msg_pub {
@@ -8,150 +12,129 @@ sub msg_pub {
 	return if $server->{tag} !~ /3dg|fnode|lia/;
 	return if $text !~ /^!q/;
 	
-	my $qfile = settings_get_str("qfile");
-	my $fwends = settings_get_str("fwends");
-	CASE: {
-		if ( $text =~ /^!q(?:uote)?$/) { randq($server, $chan,$qfile); last CASE; }
-		if ( $text =~ /^!qadd\b/ and $fwends =~ /:$nick:/ ) { add_quote($text,$server,$chan,$nick,$qfile); last CASE; }
-		if ( $text =~ /^!qs\b/) { search_quote($text,$server,$chan,$qfile); last CASE; }
-		if ( $text =~ /^!qdel\b/) { delete_quote($text,$server,$chan,$qfile) if $fwends =~ /:$nick:/i; last CASE; }
-		if ( $text =~ /^!qlast (\d+)?$/ ) { last_quotes($text,$server,$chan,$qfile); last CASE; }
-		if ( $text =~ /^!qtotal\b/ ) {
-			my @buf = openq($qfile);
-			my $total = $#buf + 1 ;
-			$server->command("msg $chan total quotes: $total");
-			last CASE;
-		}
-	}
+  my $qfile = settings_get_str("quotes_dir") . "$server->{tag}" . $chan . ".txt";
+  $qfile =~ s/#/_/g;
+
+
+  #{{{ add 
+  if ( $text =~ /^!qadd(.*)$/ ) { 
+    my $addme = strip_all($1) if ($1);
+    unless ($addme) { sayit($server,$chan,"I only accept funny quotes!"); return; }
+    eval { append_file ($qfile, "$addme\n") };
+    sayit($server,$chan,"quote added") if (not $@);
+  }
+  #}}}
+  #{{{ last
+  if ( $text =~ /^!qlast\s?(\d)?$/ ) { 
+    my $buf = eval { read_file ($qfile, array_ref => 1) };
+    if ($buf) {
+      my $c = $1 || '1';
+      if ($c > scalar(@$buf)) {
+        sayit($server,$chan,"stahp! too much!");
+        return;
+      }
+      sayit($server, $chan, "[quote] $$buf[-${c}]");
+      return;
+    } else { 
+      sayit($server,$chan, "looks like no quotes for $chan");
+      return;
+    }
+  } #}}}
+  #{{{ random 
+  if ( $text =~ /^!q(?:uote)?$/) { 
+    my $buf = eval { read_file ($qfile, array_ref => 1) };
+    if ($buf) {
+      my $single = $$buf[int(rand(@$buf))];
+      sayit($server,$chan,"[random] $single");
+    } else {
+        sayit($server,$chan, "no quotes from $chan");
+    }
+  }#}}}
+  #{{{ count total 
+  if ( $text =~ /^!qtotal\b/ ) {
+    my $buf  = eval { read_file ($qfile, array_ref => 1) }; #total is a ref to an array of the slurped file
+    if ($buf) {
+      my $t = scalar @$buf;
+      sayit($server,$chan,"total quotes: $t");
+      return;
+    } else { 
+      sayit($server,$chan, "looks like there isnt any quotes for $chan");
+      return;
+    }
+  }#}}}
+  #{{{ #delete
+  if ( $text =~ /^!qdel(.*)/) { 
+    my $deleteme = strip_all($1) if ($1);
+    if ($deleteme) { 
+      $deleteme =~ s/\W/\\W/g; #escape all the non \w
+      $deleteme = qr/$deleteme/i;
+      my @toBeDeleted;
+      my $buf = eval { read_file ($qfile, array_ref => 1) };
+      eval { @toBeDeleted = grep { /($deleteme)/ } @$buf; } if ($buf);
+      if (@toBeDeleted) {
+        if ( scalar(@toBeDeleted) == 1) {
+          #if we found exactly 1 match
+          @$buf = grep { ! /($deleteme)/ } @$buf;
+          #write it atomically
+          write_file ($qfile, {atomic => 1}, @$buf);
+          sayit($server, $chan, "deleted quote: \"$_\"") for (@toBeDeleted);
+        } else { sayit($server,$chan,"stahp! that's more than one quote!"); return; }
+      } else { sayit($server,$chan,"quote not found!");                     return; }
+    } else { sayit($server,$chan,"delete a quote with a few words.");       return; }
+  }#}}}
+  #{{{ search
+  if ( $text =~ /^!qs(?:earch)?(.*)/) {
+    my $searchme = strip_all($1) if ($1);
+    if ($searchme) {
+      my @words2find = split(/\s+/, $searchme);
+      my @found = eval { read_file $qfile };
+      if (@found) {
+        foreach (@words2find) {
+          my $singleWord = qr/$_/i;
+          eval { @found = grep { /$singleWord/ } @found; }
+        }
+
+        if (scalar(@found) == 0) {
+          sayit($server,$chan,"found nothin'");
+        } else {
+            if (scalar(@found) >= 1 and scalar(@found) <= 4) {
+              #si encontro menos de 4
+              sayit($server,$chan, "[found] $_") for (@found);
+            } else {
+                #si encontro mas de 4, tirar 4 random quotes de los encontrados
+                my @randq;
+                for (0..3) {
+                  my $n = int(rand(@found));
+                  $randq[$_] = $found[$n];
+                  splice (@found, $n, 1);
+                }
+                my $totalFound = scalar(@found) + scalar(@randq);
+                sayit($server,$chan,"found $totalFound quotes, here are 4 random quotes");
+                sayit($server,$chan,"[found] $_") foreach (@randq);
+              }
+        }
+      } else { sayit($server,$chan, "no quotes for $chan"); return; }
+    } else { sayit($server,$chan,"I can find you a quote."); return;}
+  }#}}}
 }
-
-
-sub last_quotes {
-	my ($text,$server,$chan,$qfile) = @_;
-	#open; read the last \d lines , msg and close, GO
-	my @buf = openq($qfile);
-	my ($c) = $text =~ /^!qlast\s+(\d+)/;
-	if ($c > $#buf) {
-		sayit($server,$chan,"you can't handle that much truth");
-		return;
-	}
-	sayit($server,$chan,"[last $c] $buf[-${c}]") if ($c and @buf);
-}
-sub delete_quote { 
-	my ($text,$server,$chan,$qfile) = @_;
-	if ($text eq '!qdel') {
-		$server->command("msg $chan pone una parte del quote y lo borro");
-		return;
-	}
-
-	my ($deleteme) = $text =~ /^!qdel\s(.*)/;
-	$deleteme =~ s/\W/\\W/g;
-
-	my @buf = openq($qfile);
-	my $found = 1;
-	my @toBeDeleted; 
-
-	eval { @toBeDeleted = grep { /$deleteme/i } @buf; };
-
-	if ( @toBeDeleted ) {
-		if ( $#toBeDeleted == 0 ) {
-			@buf = grep { !/($deleteme)/i } @buf;
-			open FH, ">$qfile" or die;
-			print FH @buf; 
-			close (FH) or die;
-			$server->command("msg $chan $_ >> deleted!") for (@toBeDeleted);
-		} else { $server->command("msg $chan chill dude, tas borrando mas de un quote!");}	
-	}
-	else { $server->command("msg $chan no encontre nada para borrar"); }
-}
-
-sub search_quote {
-	my ($text,$server,$chan,$qfile) = @_;
-	if ($text eq '!qs') {
-		$server->command("msg $chan que busco??");
-		return;
-	}
-	my ($searchme) = $text =~ /^!qs\s(.*)/;
-	
-	my @words2search = split(" ", $searchme);
-	my $bingo = 0;
-	my @found = openq($qfile);
-	#my @found = @buf;
-	
-	foreach my $n (0 .. $#words2search) {
-		eval { 
-			@found = grep { /.*?($words2search[$n]).*?/i } @found; 
-		} and $bingo = 1; #sacar este bingo y usar $@?
-	} unless ($bingo) { 
-		$server->command("msg $chan no encontre nada :|"); 
-		return;
-	  } else {
-		  if ($#found <= 4) { 
-			  $server->command("msg $chan [quote] $_") for (@found); 
-		  } else {
-			#tiro 6 quotes randoM sin repetir, AGRANDAR el if de arriba too, or TENCHUBUG!
-			my @randnum;
-			my $max = 5;
-			my $n;
-			push @randnum, int(rand(@found));
-			#elegir 6 numeros random y sin repetir, overkill? maybe, but it wroks;
-			NEW: for (1 .. $max) {
-				$n = int(rand(@found));
-				for (0 .. $#randnum) {
-					redo NEW if ($n == $randnum[$_]);
-				}
-				push @randnum, $n;
-			}
-			my $i = ++$max; my $j = ++$#found;
-			$server->command("msg $chan $i random quotes de los $j encontrados");
-			$server->command("msg $chan [quote] $found[$_]") for (@randnum);
-		}
-	}
-}
-	
-sub randq {
-	my ($server,$chan,$qfile) = @_;
-	my @buf = openq($qfile);
-	my $q = $buf[int(rand(@buf))];
-	sayit($server,$chan,"[rand] $q");
-}
-
-sub add_quote {
-	my ($text,$server,$chan,$nick,$qfile) = @_;
-	if ($text eq '!qadd') {
-		sait($server,$chan,"que agrego??");
-		return;
-	}
-	$text =~ s/^!qadd\s//;
-	$text = strip_all($text);
-	eval {
-		open QAPPND, ">>$qfile" or die ;
-		print QAPPND "$text\n"; 
-		close (QAPPND) or die;
-	} and $server->command("msg $chan agregado");
-}
-
+#{{{ misc strip all; open file; print and say 
 sub strip_all {
-	        my ($text) = @_;
-		$text =~ s/\x03\d{0,2}(,\d{0,2})?//g;           #mirc colors
-		$text =~ s/\x1b\[\d+(?:,\d+)?m//g;              #ansi colors 
-		$text =~ s/\x02|\x16|\x1F|\x0F//g;              #bold, inverse, underline and clear
-		$text =~ s/^\s+//g;				#espacios vacios al ppio
-		return $text;
+  my $text = shift;
+	$text =~ s/\x03\d{0,2}(,\d{0,2})?//g;           #mirc colors
+	$text =~ s/\x1b\[\d+(?:,\d+)?m//g;              #ansi colors 
+	$text =~ s/\x02|\x16|\x1F|\x0F//g;              #bold, inverse, underline and clear
+	$text =~ s/^\s+//g;				                      #espacios vacios al ppio
+	return $text;
 }
 
-sub openq { 
-	my ($qfile) = @_;
-	open LOG, "$qfile" or die "$@";
-	my @buf = <LOG>;
-	close (LOG) or die;
-	return @buf;
-}
 sub print_msg { Irssi::active_win()->print("@_"); }
 sub sayit {
-        my ($server, $target, $msg) = @_;
-        $server->command("MSG $target $msg");
+  my ($server, $target, $msg) = @_;
+  $server->command("MSG $target $msg");
 }
+#}}}
+#{{{ signaal and stuff 
 Irssi::signal_add("message public","msg_pub");
 Irssi::settings_add_str("quotes", "qfile", '');
-Irssi::settings_add_str("quotes", "fwends", '');
+Irssi::settings_add_str("quotes", "quotes_dir", '/home/squee/.irssi/scripts/quotes_saved/');
+#}}}
