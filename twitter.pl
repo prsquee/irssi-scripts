@@ -15,7 +15,7 @@ sub msg_pub {
 		do_twittr($text, $chan, $server) 	if ($text =~ m{twitter\.com(/#!)?/[^/]+/status/\d+}i ); 
 		do_search($text, $chan, $server) 	if ($text =~ /^!searchtwt/ );
 		do_showuser($text, $chan, $server) 	if ($text =~ /^\@user/ );
-		do_last($text, $chan, $server) 		if ($text =~ /^!lasttweet/ );
+		do_last($text, $chan, $server) 		if ($text =~ /^!l(?:ast)?t(?:weet)?/ );
 		do_find($text, $chan, $server) 		if ($text =~ /^!findpeople/ );
 	}
 }
@@ -44,11 +44,11 @@ sub do_find {
 
 sub do_last {
 	my ($text, $chan, $server) = @_;
-	if ($text =~ /^!lasttweet$/) {
+	if ($text =~ /^!l(?:ast)?t(?:weet)?$/) {
 		sayit($server, $chan, "I will show you the last tweet if you do a !lasttweet <username>");
 	} 
 	else {
-		my ($user) = $text =~ /^!lasttweet @?(\w+)/;
+		my ($user) = $text =~ /^!l(?:ast)?t(?:weet)? @?(\w+)/;
 		if ($user) {
 			my $twitter = newtwitter();
 			#my $a = Dumper($twitter);
@@ -60,7 +60,7 @@ sub do_last {
 				my ($client) = $r->{status}{source} =~ m{<a\b[^>]+>(.*?)</a>};
 				$client = $r->{status}{source} if (!$client);
 				my $tweet = decode_entities($r->{status}{text});
-				my $lasttweet = "\@$user tweeted " . "\"" . $tweet . "\" " . "from " . $client;
+				my $lasttweet = "\@$user last tweet: " . "\"" . $tweet . "\" " . "from " . $client;
 				sayit($server,$chan,$lasttweet) if ($tweet);
 			};
 			sayit($server, $chan, $@) if $@;
