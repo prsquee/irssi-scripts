@@ -20,8 +20,9 @@ sub isutube {
 				$sec = "0" . $sec if ($sec < 10);
 				$time = "[${min}:${sec}]";
 			}
-			my $msg = "[YT]" . $time . " - " . "\x02${title}\x02" . " - Views: $views";
+			my $msg = "[YT]" . $time . " - " . "\x02${title}\x02";
 			$msg .= " - $desc" if ($desc); 
+      $msg .= " - Views: $views";
 			sayit($server, $chan, $msg);
 		} else { return; }
 	}
