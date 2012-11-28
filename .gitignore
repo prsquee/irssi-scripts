@@ -1,1 +1,5 @@
 *.txt
+
+*.un~
+
+.DS_Store
