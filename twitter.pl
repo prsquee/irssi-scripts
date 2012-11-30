@@ -12,7 +12,7 @@ use WWW::Shorten::Googl;
 sub msg_pub {
 	my($server, $text, $nick, $mask,$chan) = @_;
 	if ($server->{tag} =~ /3dg|fnode|gsg/) {
-		do_twittr($text, $chan, $server) 	if ($text =~ m{twitter\.com(/#!)?/[^/]+/status/\d+}i ); 
+		do_twittr($text, $chan, $server) 	if ($text =~ m{twitter\.com(/#!)?/[^/]+/status(?:es)?/\d+}i ); 
 		do_search($text, $chan, $server) 	if ($text =~ /^!searchtwt/ );
 		do_showuser($text, $chan, $server) 	if ($text =~ /^\@user/ );
 		do_last($text, $chan, $server) 		if ($text =~ /^!l(?:ast)?t(?:weet)?/ );
@@ -130,7 +130,7 @@ sub do_search {
 }
 sub do_twittr {
 	my ($text, $chan, $server) = @_;
-	my ($user,$statusid) = $text =~ m{twitter\.com(?:/#!)?/([^/]+)/status/(\d+)}i; 
+	my ($user,$statusid) = $text =~ m{twitter\.com(?:/#!)?/([^/]+)/status(?:es)?/(\d+)}i; 
 	my $apikey = Irssi::settings_get_str('twitter_apikey');
 	my $secret = Irssi::settings_get_str('twitter_secret');
 

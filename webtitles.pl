@@ -11,15 +11,11 @@ sub msg_pub {
 	my ($urlmatch) = $text =~ m{(https?://[^ ]+)};
 #	print_msg("$urlmatch") if ($urlmatch);
 	return if ($text =~ /^!\w+/);
-	return if ($urlmatch =~ /(imdb)|(wikipedia)|(twitter)|(facebook)|(youtu(?:\.be)|be\.com)/i);
-	if ($urlmatch =~ /techmez/i) {
-		$server->command("MSG $chan Failmez - Lo \"\"último\"\" en ciencia y tecnología");
-		return;
-	}
+	return if ($urlmatch =~ /(imdb)|(wikipedia)|(twitter)|(facebook)|(fbcdn)|(youtu(?:\.be)|be\.com)/i);
 	if ($urlmatch =~ /imgur/) {
 		#1st case: http://i.imgur.com/XXXX.png
 		if ($urlmatch =~ m{http://i\.imgur\.com/(\w{5})\.[pjgb]\w{2}$}) {
-				$urlmatch = "http://imgur.com/$1";
+				$urlmatch = "http://imgur.com/$1" if ($1);
 		}
 	}
 		
@@ -42,16 +38,21 @@ sub do_fetch {
 			my $title = $got->title if ($got->title);
 			return if ($title =~ /the simple image sharer/);
 			#$title = HTML::Entities::decode($title) if ($title);
-			$server->command("MSG $chan \x02${title}\x20") if ($title); 
+			sayit($server, $chan, "[link title] \x02${title}\x20") if ($title);
 			if ($urlmatch =~ /imgur/) {
-				#check si hay un link a reddit
-				my ($redditSauce) = $got->decoded_content =~ m{"(http://www\.reddit\.com[^"]+)"};
-				$server->command("MSG $chan [sauce] $redditSauce") if ($redditSauce);
+				#check si hay un link a reddit and make a short link, fuck API
+				my ($shortRedditLink) = $got->decoded_content =~ m{"http://www\.reddit\.com/\w/\w+/comments/(\w+)/[^"]+"};
+        if ($shortRedditLink) { $shortRedditLink = "http://redd.it/" . $shortRedditLink
+				sayit($server,$chan,"[sauce] $shortRedditLink") if ($shortRedditLink);
 			}
 			return;
 		}
 	} 
 }
 sub print_msg { Irssi::active_win()->print("@_"); }
+sub sayit {
+  my ($server, $target, $msg) = @_;
+  $server->command("MSG $target $msg");
+}
 signal_add("message public","msg_pub");
 Irssi::settings_add_str('libwww', 'myUserAgent', '');
