@@ -159,6 +159,7 @@ sub newtwitter {
 	my $secret = Irssi::settings_get_str('twitter_secret');
 	my $twitter = Net::Twitter::Lite->new(
 		#edit Lite.pm to make this permanent? 
+    legacy_lists_api => 0,
 		oauth_urls => {
 			request_token_url 	=> 	'https://api.twitter.com/oauth/request_token',
 			access_token_url 	=> 	'https://api.twitter.com/oauth/access_token',

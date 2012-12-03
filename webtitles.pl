@@ -42,7 +42,7 @@ sub do_fetch {
 			if ($urlmatch =~ /imgur/) {
 				#check si hay un link a reddit and make a short link, fuck API
 				my ($shortRedditLink) = $got->decoded_content =~ m{"http://www\.reddit\.com/\w/\w+/comments/(\w+)/[^"]+"};
-        if ($shortRedditLink) { $shortRedditLink = "http://redd.it/" . $shortRedditLink
+        $shortRedditLink = "http://redd.it/$shortRedditLink" if ($shortRedditLink);
 				sayit($server,$chan,"[sauce] $shortRedditLink") if ($shortRedditLink);
 			}
 			return;

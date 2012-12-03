@@ -137,4 +137,5 @@ sub sayit {
 Irssi::signal_add("message public","msg_pub");
 Irssi::settings_add_str("quotes", "qfile", '');
 Irssi::settings_add_str("quotes", "quotes_dir", '/home/squee/.irssi/scripts/quotes_saved/');
+#use Irssi::get_irssi_dir()
 #}}}
