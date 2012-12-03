@@ -4,6 +4,28 @@
 use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
 use LWP::UserAgent;
 use strict;
+use POSIX qw( strftime );
+
+#{{{ init and stuff
+
+our $dolarC;
+our $dolarV;
+our $blueC;
+our $blueV;
+our $euroC;
+our $euroV;
+our $fetched;
+
+sub init {
+  ($blueC, $blueV) = getBlue(do_fetch("http://www.preciodolarblue.com.ar"));
+  ($dolarC, $dolarV, $euroC, $euroV) = getDollar(do_fetch("http://www.cotizacion-dolar.com.ar"));
+
+  if ($dolarC and $dolarV and $euroC and $euroV and $blueC and $blueV) {
+    $fetched = strftime "%F", localtime;
+    #print (CRAP $fetched);
+  }
+}
+#}}}
 sub msg_pub {
 	my($server, $text, $nick, $mask,$chan) = @_;
 	do_dolar($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!(?:dolar|pesos)(?:\s+\d+)?$/);
@@ -16,24 +38,13 @@ sub do_dolar {
     sayit($server, $chan, "!pesos <CANTIDAD>");
 		return;
   }
-
-  my $blue = do_fetch("http://www.preciodolarblue.com.ar");
-  my $oficial = do_fetch("http://www.cotizacion-dolar.com.ar");
-
-	my ($dolarC, $dolarV) = $oficial =~ /\bDolar\b\s(\d.\d\d)\s(\d\.\d\d)/;
-	my ($euroC, $euroV) = $oficial =~ /Euro\s(\d\.\d\d)\s(\d\.\d\d)/;
-  my ($blueC, $blueV) = $blue =~ /\bCompra: Venta: (\d\.\d\d) (\d\.\d\d)\b/;
+  init() if ($fetched ne strftime("%F",localtime));
 
   unless (($dolarC and $dolarV) or ($blueC and $blueV)) {
     sayit($server, $chan, "no encontre los precios. check the sauces!");
 		return;
 	}
-#  unless ($blueC and $blueV) {
-#    sayit($server, $chan, "no encontre los precios blue D:");
-#    return;
-#	}
 	my $output = "[Dolar Oficial] => $dolarC/$dolarV | [Dolar Blue] => $blueC/$blueV | [Euro] => $euroC/$euroV";
-
 
 	if ($ask eq 'dolar' and not $howmuch) {
 		sayit($server, $chan, $output);
@@ -47,14 +58,29 @@ sub do_dolar {
 	}
 	if ($ask eq 'pesos' and $howmuch) {
 		#print_msg("calcular esa cantidad de pesos en dolares");
-		my $dollars = eval("$howmuch / $dolarV");
-		my $blueDollars = eval("$howmuch / $blueV");
-		$dollars = sprintf("%.2f",$dollars);
-		$blueDollars = sprintf("%.2f",$blueDollars);
-		sayit($server, $chan, "[Oficial] $dollars dolares | [Blue] $blueDollars dolares") if ($dollars and $blueDollars and !$@);
+		my $dollars     = sprintf("%.2f", eval("$howmuch / $dolarV"));
+		my $blueDollars = sprintf("%.2f", eval("$howmuch / $blueV" ));
+    my $euros       = sprintf("%.2f", eval("$howmuch / $euroV" ));
+		sayit($server, $chan, "[Dolar Oficial] $dollars | [Dolar Blue] $blueDollars | [Euro] $euros") if ($dollars and $blueDollars and $euros and !$@);
 		return;
 	}
 }
+
+#{{{ get stuff 
+sub getDollar  {
+  my $content = shift;
+	my ($dCompra, $dVenta) = $content =~ /\bDolar\b\s(\d.\d\d)\s(\d\.\d\d)/;
+	my ($eCompra, $eVenta) = $content =~ /Euro\s(\d\.\d\d)\s(\d\.\d\d)/;
+  return ($dCompra, $dVenta, $eCompra, $eVenta) if ($dCompra and $dVenta and $eCompra and $eVenta );
+}
+
+sub getBlue {
+  my $content = shift;
+  my ($compra, $venta) = $content =~ /\bCompra: Venta: (\d\.\d\d) (\d\.\d\d)\b/;
+  return ($compra, $venta) if ($compra and $venta);
+
+}#}}}
+#{{{  fetch prices
 sub do_fetch {
   my $fetchme = shift;
 	my $ua = new LWP::UserAgent;
@@ -77,10 +103,14 @@ sub do_fetch {
 	$content =~ s/\s+/ /g;
     #print ("$content");
   return $content;
-}
+}#}}}
+#{{{ signal and stuff
 sub sayit {
-        my ($server, $target, $msg) = @_;
-        $server->command("MSG $target $msg");
+  my ($server, $target, $msg) = @_;
+  $server->command("MSG $target $msg");
 }
 sub print_msg { active_win()->print("@_"); }
 signal_add("message public","msg_pub");
+#}}}
+
+init();
