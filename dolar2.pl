@@ -8,13 +8,13 @@ use POSIX qw( strftime );
 
 #{{{ init and stuff
 
-our $dolarC;
-our $dolarV;
-our $blueC;
-our $blueV;
-our $euroC;
-our $euroV;
-our $fetched;
+my $dolarC;
+my $dolarV;
+my $blueC;
+my $blueV;
+my $euroC;
+my $euroV;
+my $fetched;
 
 sub init {
   ($blueC, $blueV) = getBlue(do_fetch("http://www.preciodolarblue.com.ar"));
@@ -52,7 +52,7 @@ sub do_dolar {
 	}
 	if ($ask eq 'dolar' and $howmuch > 0) {
 		#print_msg("calcular el dolar en pesos");
-		my $stinkyPesos = "[Oficial] " . eval("$howmuch * $dolarC")  . " pesos" . " | [Blue] " . eval($howmuch * $blueC) . " pesos";
+		my $stinkyPesos = "[Oficial] " . eval("$howmuch * $dolarC")  . " pesos" . " | [Tarjeta] " . eval("$howmuch * 1.15") . " pesos" . "| [Blue] " . eval($howmuch * $blueC) . " pesos";
 		sayit($server, $chan, $stinkyPesos) if ($stinkyPesos and !$@);
 		return;
 	}
