@@ -7,7 +7,7 @@ sub msg_pub {
 	
 	if ($text =~ /^!(\w+)/) {
 		my $cmd = $1;
-		if ($cmd =~ /h[ea]lp/) {
+		if ($cmd =~ /^h[ea]lp/) {
 			sayit($server,$chan,Irssi::settings_get_str('halpcommands')); return;
     }
 		if ($cmd eq 'fortune') {
@@ -16,16 +16,23 @@ sub msg_pub {
 				sayit($server,$chan,"[fortune] $_") for (@foo);
 				return;
     }
-    # have to fix this 
-#		if ($cmd eq 'say' and $nick eq 'sQuEE' ) { #}and $mask =~ m{squee\@unaffiliated/sq/x-\d+}i) {
-#					$text =~ s/^!\w+\s//;
-#          my $serverCmd = ($cmd eq 'say') ? "MSG" : "ACTION";
-#          $server->command("${serverCmd}, $chan, $text");
-#					return;
-#    }
+		if ($cmd =~ /^(?:do)$|(?:say)$/ and $nick eq 'sQuEE' and $mask =~ m{unaffiliated/sq/x-\d+}) {
+					$text =~ s/^!\w+\s//;
+          my $serverCmd = ($cmd eq 'say') ? "MSG" : "ACTION";
+          $server->command("$serverCmd $chan $text");
+					return;
+    }
 		if ($cmd eq 'uptime') {
 				get_uptime($chan,$server);
-			}
+        return;
+    }
+    if ($cmd eq 'addhelp') {
+        my $halp = Irssi::settings_get_str('halpcommands');
+        my ($newhalp) = $text =~ /!addhelp\s+(.*)$/;
+        $halp .= " $newhalp" if $newhalp;
+        Irssi::settings_set_str('halpcommands', $halp);
+        return
+      }
 	}
 }
 
