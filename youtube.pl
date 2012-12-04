@@ -1,15 +1,25 @@
+use warnings;
 use strict;
 use IO::Socket::INET;
 use Irssi;
+
+my $youtubex = qr{(?x-sm:
+    (?:http://)?(?:www\.)?      #optional 
+    youtu(?:\.be|be\.com)       #matches the short youtube link
+    /                           #the 1st slash
+    (?:watch\?\S*v=)?           #this wont be here if it's short uri
+    (?:user/.*/)?               #username can be 
+    ([^&]{11})                  #the vid id
+)};
 
 sub isutube {
 	my($server, $msg, $nick, $address, $chan) = @_;
 	return if ($server->{tag} !~ /3dg|fnode|lia|gsg/);
 	return if ($msg =~ /^!/);
-	my ($vid) = $msg =~ m{(?:http://)?(?:www\.)?youtu(?:\.be|be\.com)/(?:watch\?\S*v=)?(?:user/.*/)?([^&]{11})};
+  #my ($vid) = $msg =~ m{(?:http://)?(?:www\.)?youtu(?:\.be|be\.com)/(?:watch\?\S*v=)?(?:user/.*/)?([^&]{11})};
+  my ($vid) = $msg =~ $youtubex;
     if (defined($vid)) {
 		my ($title, $desc, $time, $views) = get_title($vid) if ($vid);
-		
 		if($title) {
 			$time = "[0:0${time}]" if ($time < 10); 
 			$time = "[0:${time}]"  if ($time < 60);
