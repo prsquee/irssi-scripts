@@ -32,7 +32,11 @@ sub msg_pub {
         $halp .= " $newhalp" if $newhalp;
         Irssi::settings_set_str('halpcommands', $halp);
         return
-      }
+    }
+    if ($cmd eq 'ping') {
+      sayit($server,$chan,"pong");
+      return;
+    }
 	}
 }
 
