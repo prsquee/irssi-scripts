@@ -1,44 +1,56 @@
 use Irssi;
-use warnings;
+#use warnings;
+use strict;
+use Data::Dumper;
+
+my $delims = q(/|!@#$:;);
+my $regex = qr{(?x-sm:
+    ^!re
+    \s+
+    "([^"]+)"           #our string and thgis is $1 TODO single quotes and other stuff
+    \s+
+    ([$delims])         #this will be \2
+    ( (?:(?!\2).)+ )    #at least one char that is not our delims this is $3
+    \2                  #closing delims 
+    ([a-z]*)?            #mods, $4
+    $                   #EOL
+)};
+
+
+
 
 
 sub pub_msg {
 	my ($server,$text,$nick,$mask,$chan) = @_ ;
 	return if ($server->{tag} !~ /3dg|fnode/);
-	$server->command("msg $chan regex tester, usage: !re \"string to match\" /regex/"), return if ($text eq "!re");
+	sayit($server, $chan,"regex tester, usage: !re \"string to match\" /regex/") if ($text eq "!re");
 
-	if ($text =~ m{!re "([^"]+)" /([^/]+)/(\w+)?$}) {
+  #if ($text =~ m{!re "([^"]+)" /([^/]+)/$}) {
+	if ($text =~ $regex) {
 		my $string2match = $1;
-		my $regex = $2;
-		my $mods = $3 if ($3); 
-		my @matches;
+		my $regex = $3;
+    my $mods = $4 || 'gi';        #TODO fix this uselessness
 		
 		if ($string2match and $regex) {
-			#print_msg("$1 - $2 - $3");
-			
-			#	$matchSyntax = $
-			use re 'eval'; 
-			eval { $regex = qr/$2/i }; 
-			if ($@) {
-				#$server->command("msg $chan wrong syntax?"); return;
-				Irssi::print("$@"); return;
-			}
+			use re 'eval';
+			eval { my $test = qr/$regex/};
+      sayit($server,$chan,"your regex skill is bad, and you should feel bad") if ($@);
 		}
-
-		eval { @matches = $string2match =~ /$regex/g };
-		if (!$@ and $#matches >= 0) {
-			my $backref = ":";
-			$backref .= "$_:" for (@matches);
-			$server->command("msg $chan MATCH: [$backref]");
+    my @matches;
+		eval { @matches = $string2match =~ /$regex/ig ; };
+    #print(CRAP Dumper(@matches));
+		if (! $@ and scalar(@matches) > 0) {
+      my $matched = join(":", @matches);
+			sayit($server,$chan, "MATCH: [$matched]");
 		} else {
-			$server->command("msg $chan NOMATCH");
+			sayit($server,$chan, "no match");
 		}
-	} else {
-		$server->command("msg $chan you are doing it wrong") if ($text =~ /^!re .*$/);
 	}
-} 
+}
 
-
+sub sayit { 
+  my ($server, $target, $msg) = @_;
+  $server->command("MSG $target $msg");
+}
 sub print_msg { Irssi::print("@_"); }
-
 Irssi::signal_add("message public","pub_msg");
