@@ -52,7 +52,7 @@ sub do_dolar {
 	}
 	if ($ask eq 'dolar' and $howmuch > 0) {
 		#print_msg("calcular el dolar en pesos");
-		my $stinkyPesos = "[Oficial] " . eval("$howmuch * $dolarC")  . " pesos" . " | [Tarjeta] " . eval("$howmuch * $dolarC * 1.15") . " pesos" . " | [Blue] " . eval($howmuch * $blueC) . " pesos";
+		my $stinkyPesos = "[Oficial] " . eval("$howmuch * $dolarC")  . " pesos" . " | [Tarjeta] " . sprintf("%.2f", eval("$howmuch * $dolarC * 1.15")) . " pesos" . " | [Blue] " . eval($howmuch * $blueC) . " pesos";
 		sayit($server, $chan, $stinkyPesos) if ($stinkyPesos and !$@);
 		return;
 	}
@@ -60,7 +60,7 @@ sub do_dolar {
 		#print_msg("calcular esa cantidad de pesos en dolares");
 		my $dollars     = sprintf("%.2f", eval("$howmuch / $dolarV"));
 		my $blueDollars = sprintf("%.2f", eval("$howmuch / $blueV" ));
-    my $euros       = sprintf("%.2f", eval("$howmuch / $euroV" ));
+        my $euros       = sprintf("%.2f", eval("$howmuch / $euroV" ));
 		sayit($server, $chan, "[Dolar Oficial] $dollars | [Dolar Blue] $blueDollars | [Euro] $euros") if ($dollars and $blueDollars and $euros and !$@);
 		return;
 	}
