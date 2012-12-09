@@ -4,7 +4,7 @@ use warnings;
 use strict;
 
 my %lastline;
-my $delims = q(/|i!@#$%&:;);
+my $delims = q(/|!@#$%&:;);
 my $regex = qr{(?x-sm:
     ^s
       ([$delims])
