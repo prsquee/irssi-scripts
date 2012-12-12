@@ -87,6 +87,15 @@ sub incoming_public {
       signal_emit('search isohunt',$server,$chan,$text) if (is_loaded('isohunt'));
       return;
     }#}}}
+    if ($cmd eq 'short') {
+      my ($url) = $text =~ m{(https?://[^ ]+)}i;
+      if ($url and is_loaded('ggl')) {
+        my $shorten = scalar('Irssi::Script::ggl')->can('do_shortme')->($url);
+        sayit($server,$chan,"[shorten] $shorten");
+      }
+      sayit($server,$chan,"I need a http://yourmom.com") if (not defined($url));
+      return;
+    }
     #{{{ get temp
     if ($cmd eq 'temp') {
       signal_emit('get temp',$server,$chan) if (is_loaded('smn'));
@@ -110,7 +119,13 @@ sub incoming_public {
       signal_emit('showme the money',$server,$chan,$text) if (is_loaded('dolar2'));
       return;
     }#}}}
-  }
+    #{{{ quotes and stuff
+    # if ($cmd eq 'qadd') {
+    #   my ($quote) = $text =~ 
+
+    # }
+    #}}}
+    }
   #cmd check ends here. begin general text match
 	if ($text =~ m{(https?://[^ ]*)}) {
     my $url = $1;
@@ -127,7 +142,7 @@ sub incoming_public {
       signal_emit('check tubes',$server,$chan,$vid) if (is_loaded('youtube'));
       return;
     }
-    #future reddit api
+    #future reddit api here 
     if ($url =~ /imgur/) {
       #1st case: http://i.imgur.com/XXXX.png
       if ($url =~ m{http://i\.imgur\.com/(\w{5})\.[pjgb]\w{2}$}) {
