@@ -132,14 +132,20 @@ sub incoming_public {
 	if ($text =~ m{(https?://[^ ]*)}) {
     my $url = $1;
     return if ($url =~ /(wikipedia)|(facebook)|(fbcdn)/i);
-    #{{{ grab imdb
+    #{{{ site specific stuff
     if ($url =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
         my $imdb = $1;
         signal_emit('search imdb',$server,$chan,$imdb) if (is_loaded('imdb'));
         return;
-    }#}}}
+    }
     #youtube here
     if ($url =~ /$youtubex/) {
+      my $vid = $1;
+      signal_emit('check tubes',$server,$chan,$vid) if (is_loaded('youtube'));
+      return;
+    }
+    # http://www.chromaplay.com
+    if ($url =~ m{chromaplay\.com/\?ytid=([^ &]{11})$}) {
       my $vid = $1;
       signal_emit('check tubes',$server,$chan,$vid) if (is_loaded('youtube'));
       return;
@@ -147,13 +153,14 @@ sub incoming_public {
     #future reddit api here 
     if ($url =~ /imgur/) {
       #1st case: http://i.imgur.com/XXXX.png
-      if ($url =~ m{http://i\.imgur\.com/(\w{5})\.[pjgb]\w{2}$}) {
+      if ($url =~ m{http://i\.imgur\.com/(\w{5})h?\.[pjgb]\w{2}$}) {
           $url = "http://imgur.com/$1" if ($1);
       }
-    }
+    } #}}}
+
     #any other http link fall here
     signal_emit('check title',$server,$chan,$url);
-  }
+  } # URL match ends here. lo que sigue seria general text match, como el de replace and others stuff que no me acuerdo
 }
 
 #{{{ signal and stuff
