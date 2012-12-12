@@ -1,4 +1,6 @@
 #public commands
+
+#{{{ use libs
 use Irssi qw (  print
                 signal_emit
                 signal_add
@@ -10,6 +12,7 @@ use Irssi qw (  print
 use strict;
 use warnings;
 use Data::Dumper;
+#}}}
 
 sub incoming_public {
 	my($server, $text, $nick, $mask, $chan) = @_;
@@ -19,12 +22,14 @@ sub incoming_public {
 
   #check if someone said a command
   if ($text =~ /^!/) {
+    #{{{ halps 
     my ($cmd) = $text =~ /^!(\w+)\s*/;
     if ($cmd =~ /^h[ea]lp$/) {
       #my $halps = settings_ge_str('halpcommands');
       sayit($server,$chan, settings_get_str('halpcommands')); 
       return;
-    }
+    }#}}}
+    #{{{ add help
     if ($cmd eq 'addhelp') {
         my ($newhalp) = $text =~ /^!addhelp\s+(.*)$/;
         my $halps = settings_get_str('halpcommands');
@@ -32,53 +37,74 @@ sub incoming_public {
         Irssi::settings_set_str('halpcommands', $halps);
         sayit($server,$chan,$halps);
         return;
-    }
+    }#}}}
+    #{{{ fortune cookies
     if ($cmd eq 'fortune') {
         my $fortune = `/usr/bin/fortune -s`;
         my @cookie = split(/\n/, $fortune);
         sayit($server,$chan,"[fortune] $_") foreach @cookie;
         return;
-    }
+    }#}}}
+    #{{{ do this and say that
     if ($cmd =~ /(?:^do$)|(?:^say$)/ and $nick eq 'sQuEE' and $mask =~ /unaffiliated/) {
           $text =~ s/^!\w+\s//;
           my $serverCmd = ($cmd eq 'say') ? "MSG" : "ACTION";
           $server->command("$serverCmd $chan $text");
           return;
-    }
+    }#}}}
+    #{{{ uptime
     if ($cmd eq 'uptime') {
       #get_uptime($chan,$server);
       signal_emit('show uptime',$server,$chan) if (is_loaded('uptime'));
       return;
-    }
+    }#}}}
+    #{{{ imdb
     if ($cmd eq 'imdb') {
       signal_emit('search imdb',$server,$chan,$text) if (is_loaded('imdb'));
       return;
-    }
+    }#}}}
+    #{{{ test stuff
     if ($cmd eq 'nickinfo') {
       print (CRAP "fix me");
       return;
-    }
+    }#}}}
+    #{{{ calculating
     if ($cmd eq 'calc') {
       signal_emit('calculate',$server,$chan,$text) if (is_loaded('calc'));
       return;
-    }
+    }#}}}
+    #{{{ isohunt
     if ($cmd eq 'ihq') {
       signal_emit('search isohunt',$server,$chan,$text) if (is_loaded('isohunt'));
       return;
-    }
+    }#}}}
+    #{{{ get temp
     if ($cmd eq 'temp') {
       signal_emit('get temp',$server,$chan);
       return;
-    }
-    if ($cmd eq 'ping') { sayit($server,$chan,"pong"); return; }
+    }#}}}
+    #{{{ ping pong
+    if ($cmd eq 'ping') { sayit($server,$chan,"pong"); return; }#}}}
+    #{{{  googling 
+    if ($cmd eq 'google' or 'g') {
+      my ($query) = $text =~ /^!g(?:oogle)? (.*)$/;
+      if ($query =~ /google/) {
+        sayit ($server,$chan,"no! this will break the interwebz!");
+        return;
+      } else {
+        signal_emit('google me',$server,$chan,$query);
+        return;
+      }
+    }#}}}
   }
   #cmd check ends here. begin general text match
-
+  
+  #{{{ general matching
   if ($text =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
     my $id = $1;
     signal_emit('search imdb',$server,$chan,$id) if (is_loaded('imdb'));
     return;
-  }
+  }#}}}
 }
 
 #sub msg_priv {
@@ -87,12 +113,12 @@ sub incoming_public {
 #	sayit($server, $nick, $msg); 
 #	Irssi::signal_stop()
 #}
+#{{{ signal and stuff
 sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
 sub sayit { 
 	my ($server, $target, $msg) = @_;
 	$server->command("MSG $target $msg");
 }
-
 #signal_add("message private","msg_priv");
 signal_add("message public","incoming_public");
 settings_add_str('bot config', 'halpcommands', '');
@@ -100,12 +126,14 @@ settings_add_str('bot config', 'active_networks','');
 settings_add_str('bot config', 'myUserAgent', '');
 
 #signal registration
-signal_register( { 'show uptime' => [ 'iobject', 'string' ]});              #server,chan
-signal_register( { 'search imdb' => [ 'iobject', 'string', 'string' ]});    #server,chan,text
-signal_register( { 'calculate'   => [ 'iobject', 'string', 'string' ]});    k#server,chan,text
+signal_register( { 'show uptime'    => [ 'iobject', 'string' ]});           #server,chan
+signal_register( { 'search imdb'    => [ 'iobject', 'string', 'string' ]}); #server,chan,text
+signal_register( { 'calculate'      => [ 'iobject', 'string', 'string' ]}); #server,chan,text
 signal_register( { 'search isohunt' => [ 'iobject', 'string', 'string' ]}); #server,chan,text
-signal_register( { 'get temp' => [ 'iobject', 'string' ]});                 #server,chan
-
+signal_register( { 'get temp'       => [ 'iobject', 'string' ]});           #server,chan
+signal_register( { 'google me'      => [ 'iobject', 'string','string' ]});  #server,chan,text
+#}}}
+#{{{ signal register halp
 #signal_register(hash)
 #  Register parameter types for one or more signals.
 #  `hash' must map one or more signal names to references to arrays
@@ -149,4 +177,4 @@ signal_register( { 'get temp' => [ 'iobject', 'string' ]});                 #ser
 #  • WI_ITEM_REC iobject
 #  • PERL_SCRIPT_REC Irssi::Script
 
-#
+##}}}
