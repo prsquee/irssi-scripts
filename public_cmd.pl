@@ -66,6 +66,10 @@ sub incoming_public {
       signal_emit('search isohunt',$server,$chan,$text) if (is_loaded('isohunt'));
       return;
     }
+    if ($cmd eq 'temp') {
+      signal_emit('get temp',$server,$chan);
+      return;
+    }
     if ($cmd eq 'ping') { sayit($server,$chan,"pong"); return; }
   }
   #cmd check ends here. begin general text match
@@ -93,13 +97,15 @@ sub sayit {
 signal_add("message public","incoming_public");
 settings_add_str('bot config', 'halpcommands', '');
 settings_add_str('bot config', 'active_networks','');
-
-signal_register( { 'show uptime' => [ 'iobject', 'string' ]});            #server,chan
-signal_register( { 'search imdb' => [ 'iobject', 'string', 'string' ]});  #server,chan,text
-signal_register( { 'calculate'   => [ 'iobject', 'string', 'string' ]});  #server,chan,text
-signal_register( { 'search isohunt' => [ 'iobject', 'string', 'string' ]});  #server,chan,text
+settings_add_str('bot config', 'myUserAgent', '');
 
 #signal registration
+signal_register( { 'show uptime' => [ 'iobject', 'string' ]});              #server,chan
+signal_register( { 'search imdb' => [ 'iobject', 'string', 'string' ]});    #server,chan,text
+signal_register( { 'calculate'   => [ 'iobject', 'string', 'string' ]});    k#server,chan,text
+signal_register( { 'search isohunt' => [ 'iobject', 'string', 'string' ]}); #server,chan,text
+signal_register( { 'get temp' => [ 'iobject', 'string' ]});                 #server,chan
+
 #signal_register(hash)
 #  Register parameter types for one or more signals.
 #  `hash' must map one or more signal names to references to arrays
