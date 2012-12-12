@@ -26,5 +26,3 @@ sub sayit {
 	$server->command("MSG $target $msg");
 }
 signal_add("calculate","do_calculate");
-
-
