@@ -16,56 +16,70 @@ sub incoming_public {
   my $myNets = settings_get_str('active_networks');
   print (CRAP "im not being used on any network!") if (not defined($myNets));
 	return if $server->{tag} !~ /$myNets/;
-  return if $text !~ /^!/;
-	
-	my ($cmd) = $text =~ /^!(\w+)\b/;
-  if ($cmd =~ /^h[ea]lp$/) {
-    #my $halps = settings_ge_str('halpcommands');
-    sayit($server,$chan, settings_get_str('halpcommands')); 
-    return;
-  }
-  if ($cmd eq 'addhelp') {
-      my ($newhalp) = $text =~ /^!addhelp\s+(.*)$/;
-      my $halps = settings_get_str('halpcommands');
-      $halps .= " $newhalp" if ($newhalp);
-      Irssi::settings_set_str('halpcommands', $halps);
-      sayit($server,$chan,$halps);
+  #return if $text !~ /^!/;
+  
+  #check if someone said a command
+  if ($text =~ /^!/) {
+    my ($cmd) = $text =~ /^!(\w+)\b/;
+    if ($cmd =~ /^h[ea]lp$/) {
+      #my $halps = settings_ge_str('halpcommands');
+      sayit($server,$chan, settings_get_str('halpcommands')); 
       return;
-  }
-  if ($cmd eq 'fortune') {
-      my $fortune = `/usr/bin/fortune -s`;
-      my @cookie = split(/\n/, $fortune);
-      sayit($server,$chan,"[fortune] $_") foreach @cookie;
-      return;
-  }
-  if ($cmd =~ /(?:^do$)|(?:^say$)/ and $nick eq 'sQuEE' and $mask =~ /unaffiliated/) {
-        $text =~ s/^!\w+\s//;
-        my $serverCmd = ($cmd eq 'say') ? "MSG" : "ACTION";
-        $server->command("$serverCmd $chan $text");
+    }
+    if ($cmd eq 'addhelp') {
+        my ($newhalp) = $text =~ /^!addhelp\s+(.*)$/;
+        my $halps = settings_get_str('halpcommands');
+        $halps .= " $newhalp" if ($newhalp);
+        Irssi::settings_set_str('halpcommands', $halps);
+        sayit($server,$chan,$halps);
         return;
+    }
+    if ($cmd eq 'fortune') {
+        my $fortune = `/usr/bin/fortune -s`;
+        my @cookie = split(/\n/, $fortune);
+        sayit($server,$chan,"[fortune] $_") foreach @cookie;
+        return;
+    }
+    if ($cmd =~ /(?:^do$)|(?:^say$)/ and $nick eq 'sQuEE' and $mask =~ /unaffiliated/) {
+          $text =~ s/^!\w+\s//;
+          my $serverCmd = ($cmd eq 'say') ? "MSG" : "ACTION";
+          $server->command("$serverCmd $chan $text");
+          return;
+    }
+    if ($cmd eq 'uptime') {
+      #get_uptime($chan,$server);
+      signal_emit('show uptime',$server,$chan) if (is_loaded('uptime'));
+      return;
+    }
+    if ($cmd eq 'imdb') {
+      signal_emit('search imdb',$server,$chan,$text) if (is_loaded('imdb'));
+      return;
+    }
+    if ($cmd eq 'nickinfo') {
+      print (CRAP "fix me");
+      return;
+    }
+    if ($cmd eq 'ping') { sayit($server,$chan,"pong"); return; }
   }
-  if ($cmd eq 'uptime') {
-    #get_uptime($chan,$server);
-    print(CRAP "$server $chan");
-    signal_emit('show uptime',$server,$chan);
-    return;
-  }
-  if ($cmd eq 'ping') {
-    sayit($server,$chan,"pong");
-    return;
-  }
-  if ($cmd eq 'nickinfo') { 
-    print (CRAP Dumper(Irssi::Channel::nick_find( $chan, $nick )));
-    return;
-  }
-}
+  #cmd check ends here. begin general text match
 
+
+  if ($text =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
+    my $id = $1;
+    signal_emit('search imdb',$server,$chan,$id);
+    return;
+  }
+
+
+
+}
 #sub msg_priv {
 #	my ($server, $text, $nick, $address) = @_;
 #	my $msg = "I only do private shows for certain people I know, you are not on that list. talk to sQuEE, he's mah pimp";
 #	sayit($server, $nick, $msg); 
 #	Irssi::signal_stop()
 #}
+sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
 sub sayit { 
 	my ($server, $target, $msg) = @_;
 	$server->command("MSG $target $msg");
@@ -76,7 +90,8 @@ signal_add("message public","incoming_public");
 settings_add_str('bot config', 'halpcommands', '');
 settings_add_str('bot config', 'active_networks','');
 
-signal_register( { 'show uptime' => [ 'iobject', 'string' ]}); #only need to pass $server,$chan
+signal_register( { 'show uptime' => [ 'iobject', 'string' ]});            #server,chan
+signal_register( { 'search imdb' => [ 'iobject', 'string', 'string' ]});  #server,chan,text
 
 #signal registration
 #signal_register(hash)

@@ -1,5 +1,4 @@
-#imdb api
-#http://imdbapi.com/
+#imdb api http://imdbapi.com/
 
 #$imdb struct
 #'ID' => 'tt0290978',
@@ -18,26 +17,16 @@
 #'Writer' => 'N/A',
 #'Plot' => 'The story of an office that faces closure when the company decides to downsize
 
-use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
+use Irssi qw(signal_add print ) ;
 use strict;
 use LWP::UserAgent;
 use URI::Escape qw( uri_escape );
-#use Data::Dumper;
+use Data::Dumper;
 use JSON;
 
-
-sub msg_pub {
-	my($server, $text, $nick, $mask,$chan) = @_;
-	sayit($server,$chan,"I will tell ya everything about a movie!") and return if ($text eq "!imdb");
-	do_imdb($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!imdb/);
-	my ($id) = $text =~ m{http://www\.imdb\.com/title/(tt\d+)};
-	do_imdb($id,$chan,$server) if ($id);
-	
-}
-
-
 sub do_imdb {
-	my ($text, $chan, $server) = @_;
+	my ($server, $chan, $text) = @_;
+  #my ($text, $chan, $server) = @_;
 	my $param; my $query;
 
 	if ($text =~ /^tt/) {
@@ -56,13 +45,13 @@ sub do_imdb {
 	my $url = "http://www.imdbapi.com/?${param}=${query}" if ($param and $query);
 	
 	my $ua = new LWP::UserAgent;
-	$ua->timeout(20);
+	$ua->timeout(10);
 	my $got = $ua->get($url);
 	my $content = $got->decoded_content;
 	my $json = new JSON;
 	my $imdb = $json->allow_nonref->decode($content);
 	if ($imdb->{Response} !~ /True/ ) {
-		sayit($server,$chan,"sorry, doesn't ring a bell, try again");
+		sayit($server,$chan,"sorry, doesn't ring a bell, try with the full name");
 		return;
 	}
 	my $link;
@@ -81,10 +70,9 @@ sub do_imdb {
 	return;
 }
 
-sub sayit { 
+sub sayit {
 	my ($server, $target, $msg) = @_;
 	$server->command("MSG $target $msg");
-}                                         
-sub print_msg { active_win()->print("@_"); }
-signal_add("message public","msg_pub");
+}
+signal_add("search imdb","do_imdb");
 
