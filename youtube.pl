@@ -1,41 +1,29 @@
+#check youtube title and desc
+use Irssi qw (signal_add print settings_get_str );
 use warnings;
 use strict;
-use IO::Socket::INET;
-use Irssi;
+use IO::Socket::INET; #TODO this is so ugly, I need to use json asap
 
-my $youtubex = qr{(?x-sm:
-    (?:http://)?(?:www\.)?      #optional 
-    youtu(?:\.be|be\.com)       #matches the short youtube link
-    /                           #the 1st slash
-    (?:watch\?\S*v=)?           #this wont be here if it's short uri
-    (?:user/.*/)?               #username can be 
-    ([^&]{11})                  #the vid id
-)};
-
-sub isutube {
-	my($server, $msg, $nick, $address, $chan) = @_;
-	return if ($server->{tag} !~ /3dg|fnode|lia|gsg/);
-	return if ($msg =~ /^!/);
-  #my ($vid) = $msg =~ m{(?:http://)?(?:www\.)?youtu(?:\.be|be\.com)/(?:watch\?\S*v=)?(?:user/.*/)?([^&]{11})};
-  my ($vid) = $msg =~ $youtubex;
-    if (defined($vid)) {
-		my ($title, $desc, $time, $views) = get_title($vid) if ($vid);
-		if($title) {
-			$time = "[0:0${time}]" if ($time < 10); 
-			$time = "[0:${time}]"  if ($time < 60);
-			if ($time >= 60) {
-				use integer;
-				my $min = $time / 60;
-				my $sec = $time % 60;
-				$sec = "0" . $sec if ($sec < 10);
-				$time = "[${min}:${sec}]";
-			}
-			my $msg = "[YT]" . $time . " - " . "\x02${title}\x02";
-			$msg .= " - $desc" if ($desc); 
-      $msg .= " - Views: $views";
-			sayit($server, $chan, $msg);
-		} else { return; }
-	}
+sub fetch_tubes {
+	my($server,$chan,$vid) = @_;
+  my ($title, $desc, $time, $views) = get_title($vid) if ($vid);
+  if($title) {
+    if ($time < 10) {
+      $time = "[0:0${time}]";
+    } elsif ($time < 60) {
+        $time = "[0:${time}]";
+    } elsif ($time >= 60) {
+          use integer;
+          my $min = $time / 60;
+          my $sec = $time % 60;
+          $sec = "0" . $sec if ($sec < 10);
+          $time = "[${min}:${sec}]";
+    }
+    my $msg = "[YT]" . $time . " - " . "\x02${title}\x02";
+    $msg .= " - $desc" if ($desc); 
+    $msg .= " - Views: $views" if ($views);
+    sayit($server, $chan, $msg);
+  } else { return; }
 }
 
 # http://code.google.com/apis/youtube/2.0/developers_guide_protocol.html
@@ -52,7 +40,7 @@ sub get_title {
 	$req .= "host: gdata.youtube.com\r\n";
 	$req .= "user-agent: UserAgent 1.0\r\n";
 	$req .= "\r\n";
-	print $sock $req;
+	print $sock $req;     #oh the humanity T_T
 
 	my $title; my $desc; my $time; my $views;
 	while(<$sock>) {
@@ -68,7 +56,4 @@ sub sayit {
 	my ($server, $target, $msg) = @_;
 	$server->command("MSG $target $msg");
 }
-
-Irssi::signal_add("message public", "isutube"); 
-#Irssi::signal_add("message private", \&isutube);
-
+signal_add("check tubes", "fetch_tubes"); 

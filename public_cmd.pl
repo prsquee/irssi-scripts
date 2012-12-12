@@ -1,6 +1,6 @@
 #public commands
 
-#{{{ use libs
+#{{{ libs and vars
 use Irssi qw (  print
                 signal_emit
                 signal_add
@@ -12,6 +12,15 @@ use Irssi qw (  print
 use strict;
 use warnings;
 use Data::Dumper;
+
+my $youtubex = qr{(?x-sm:
+    (?:http://)?(?:www\.)?      #optional 
+    youtu(?:\.be|be\.com)       #matches the short youtube link
+    /                           #the 1st slash
+    (?:watch\?\S*v=)?           #this wont be here if it's short uri
+    (?:user/.*/)?               #username can be 
+    ([^&]{11})                  #the vid id
+)};
 #}}}
 
 sub incoming_public {
@@ -108,22 +117,23 @@ sub incoming_public {
         return;
     }#}}}
     #youtube here
+    if ($url =~ /$youtubex/) {
+      my $vid = $1;
+      signal_emit('check tubes',$server,$chan,$vid) if (is_loaded('youtube'));
+      return;
+    }
+    #future reddit api
     if ($url =~ /imgur/) {
       #1st case: http://i.imgur.com/XXXX.png
       if ($url =~ m{http://i\.imgur\.com/(\w{5})\.[pjgb]\w{2}$}) {
           $url = "http://imgur.com/$1" if ($1);
       }
     }
+    #any other http link fall here
     signal_emit('check title',$server,$chan,$url);
   }
 }
 
-#sub msg_priv {
-#	my ($server, $text, $nick, $address) = @_;
-#	my $msg = "I only do private shows for certain people I know, you are not on that list. talk to sQuEE, he's mah pimp";
-#	sayit($server, $nick, $msg); 
-#	Irssi::signal_stop()
-#}
 #{{{ signal and stuff
 sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
 sub sayit { 
@@ -135,7 +145,7 @@ signal_add("message public","incoming_public");
 settings_add_str('bot config', 'halpcommands', '');
 settings_add_str('bot config', 'active_networks','');
 settings_add_str('bot config', 'myUserAgent', '');
-
+#}}}
 #signal registration
 signal_register( { 'show uptime'    => [ 'iobject', 'string' ]});           #server,chan
 signal_register( { 'search imdb'    => [ 'iobject', 'string', 'string' ]}); #server,chan,text
@@ -143,9 +153,15 @@ signal_register( { 'calculate'      => [ 'iobject', 'string', 'string' ]}); #ser
 signal_register( { 'search isohunt' => [ 'iobject', 'string', 'string' ]}); #server,chan,text
 signal_register( { 'get temp'       => [ 'iobject', 'string' ]});           #server,chan
 signal_register( { 'google me'      => [ 'iobject', 'string','string' ]});  #server,chan,query
-signal_register( { 'check title'    => [ 'iobject', 'string','string' ]});  #server,chan,url 
-#}}}
+signal_register( { 'check title'    => [ 'iobject', 'string','string' ]});  #server,chan,url
+signal_register( { 'check tubes'    => [ 'iobject', 'string','string' ]});  #server,chan,vid
+#}
 #{{{ signal register halp
+#sub msg_priv {
+#	my ($server, $text, $nick, $address) = @_;
+#	my $msg = "I only do private shows for certain people I know, you are not on that list. talk to sQuEE, he's mah pimp";
+#	sayit($server, $nick, $msg); 
+#	Irssi::signal_stop()
 #signal_register(hash)
 #  Register parameter types for one or more signals.
 #  `hash' must map one or more signal names to references to arrays
