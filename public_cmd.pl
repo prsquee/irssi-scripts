@@ -87,6 +87,7 @@ sub incoming_public {
       signal_emit('search isohunt',$server,$chan,$text) if (is_loaded('isohunt'));
       return;
     }#}}}
+    #{{{ shorten 
     if ($cmd eq 'short') {
       my ($url) = $text =~ m{(https?://[^ ]+)}i;
       if ($url and is_loaded('ggl')) {
@@ -95,7 +96,7 @@ sub incoming_public {
       }
       sayit($server,$chan,"I need a http://yourmom.com") if (not defined($url));
       return;
-    }
+    }#}}}
     #{{{ get temp
     if ($cmd eq 'temp') {
       signal_emit('get temp',$server,$chan) if (is_loaded('smn'));
@@ -115,18 +116,19 @@ sub incoming_public {
     #{{{ ping pong
     if ($cmd eq 'ping') { sayit($server,$chan,"pong"); return; }#}}}
     #{{{ dolar and pesos
-    if ($cmd eq 'dolar' or 'pesos') {
+    if ($cmd eq 'dolar' or $cmd eq 'pesos') {
       signal_emit('showme the money',$server,$chan,$text) if (is_loaded('dolar2'));
       return;
     }#}}}
     #{{{ quotes and stuff
-    # if ($cmd eq 'qadd') {
-    #   my ($quote) = $text =~ 
-
-    # }
+    if ($cmd =~ /^q(?:uote|add|del|last|search)?/) {
+       signal_emit('quotes',$server,$chan,$text) if (is_loaded('quotes'));
+       return;
+     }
     #}}}
-    }
-  #cmd check ends here. begin general text match
+    } #cmd check ends here. begin general text match
+
+  #general url match
 	if ($text =~ m{(https?://[^ ]*)}) {
     my $url = $1;
     return if ($url =~ /(wikipedia)|(facebook)|(fbcdn)/i);
@@ -175,7 +177,8 @@ signal_register( { 'get temp'       => [ 'iobject', 'string' ]});           #ser
 signal_register( { 'google me'      => [ 'iobject', 'string','string' ]});  #server,chan,query
 signal_register( { 'check title'    => [ 'iobject', 'string','string' ]});  #server,chan,url
 signal_register( { 'check tubes'    => [ 'iobject', 'string','string' ]});  #server,chan,vid
-signal_register( { 'showme the money'    => [ 'iobject', 'string','string' ]});  #server,chan,text
+signal_register( { 'quotes'         => [ 'iobject', 'string','string' ]});  #server,chan,text
+signal_register( { 'showme the money' => [ 'iobject', 'string','string' ]});  #server,chan,text
 #}
 #{{{ signal register halp
 #sub msg_priv {

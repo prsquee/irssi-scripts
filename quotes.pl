@@ -1,20 +1,17 @@
 #quotes.pl
-
-use Irssi qw( settings_add_str settings_get_str );
+use Irssi qw( signal_add print settings_add_str settings_get_str get_irssi_dir );
 use strict;
 use warnings;
-use Data::Dump qw( dump );
+use Data::Dump;
 use File::Slurp qw( read_file write_file append_file);
 
 
-sub msg_pub {
-	my ($server, $text, $nick, $mask, $chan) = @_;
-	return if $server->{tag} !~ /3dg|fnode|lia/;
-	return if $text !~ /^!q/;
+sub do_quotes {
+	my ($server, $chan, $text) = @_;
+	return if $text !~ /^!q/; #cant hurt one moar check
 	
-  my $qfile = settings_get_str("quotes_dir") . "$server->{tag}" . $chan . ".txt";
+  my $qfile = get_irssi_dir() . "/scripts/datafiles/$server->{tag}" . $chan . ".txt";
   $qfile =~ s/#/_/g;
-
 
   #{{{ add 
   if ( $text =~ /^!qadd(.*)$/ ) { 
@@ -127,15 +124,12 @@ sub strip_all {
 	return $text;
 }
 
-sub print_msg { Irssi::active_win()->print("@_"); }
 sub sayit {
   my ($server, $target, $msg) = @_;
   $server->command("MSG $target $msg");
 }
 #}}}
 #{{{ signaal and stuff 
-Irssi::signal_add("message public","msg_pub");
-Irssi::settings_add_str("quotes", "qfile", '');
-Irssi::settings_add_str("quotes", "quotes_dir", '/home/squee/.irssi/scripts/quotes_saved/');
-#use Irssi::get_irssi_dir()
+signal_add("quotes", "do_quotes");
+settings_add_str("quotes", "qfile", '');
 #}}}
