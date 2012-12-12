@@ -16,11 +16,10 @@ sub incoming_public {
   my $myNets = settings_get_str('active_networks');
   print (CRAP "im not being used on any network!") if (not defined($myNets));
 	return if $server->{tag} !~ /$myNets/;
-  #return if $text !~ /^!/;
-  
+
   #check if someone said a command
   if ($text =~ /^!/) {
-    my ($cmd) = $text =~ /^!(\w+)\b/;
+    my ($cmd) = $text =~ /^!(\w+) /;
     if ($cmd =~ /^h[ea]lp$/) {
       #my $halps = settings_ge_str('halpcommands');
       sayit($server,$chan, settings_get_str('halpcommands')); 
@@ -59,6 +58,10 @@ sub incoming_public {
       print (CRAP "fix me");
       return;
     }
+    if ($cmd eq 'calc') {
+      signal_emit('calculate',$server,$chan,$text);
+      return;
+    }
     if ($cmd eq 'ping') { sayit($server,$chan,"pong"); return; }
   }
   #cmd check ends here. begin general text match
@@ -66,7 +69,7 @@ sub incoming_public {
 
   if ($text =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
     my $id = $1;
-    signal_emit('search imdb',$server,$chan,$id);
+    signal_emit('search imdb',$server,$chan,$id) if (is_loaded('imdb'));
     return;
   }
 
@@ -92,6 +95,7 @@ settings_add_str('bot config', 'active_networks','');
 
 signal_register( { 'show uptime' => [ 'iobject', 'string' ]});            #server,chan
 signal_register( { 'search imdb' => [ 'iobject', 'string', 'string' ]});  #server,chan,text
+signal_register( { 'calculate'   => [ 'iobject', 'string', 'string' ]});  #server,chan,text
 
 #signal registration
 #signal_register(hash)

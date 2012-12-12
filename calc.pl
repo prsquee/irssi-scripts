@@ -1,33 +1,30 @@
 #calc.pl
+use warnings;
 use strict;
-use Irssi qw( active_win signal_add print server_find_tag );
+use Irssi qw( signal_add print );
 
-sub msg_pub {
-	my ($server, $msg, $nick, $mask, $chan) = @_;
-	if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $msg =~ /^!calc/) {
-		for ($msg) {
-			s/,/./g; 
-			s/[^*.+0-9&|)(x\/^-]//g; 		# remove anything that is not a math symbol
-			s/\*\*/^/g;				# teh powah!
-			s/([*+\\.\/x-])\1*/$1/g;		# borrar simbolos repetidos
-			s/\^/**/g;
-			s/(?<!0)x//g;
-		}
-		my $answer = eval("($msg) || 0");
+my $error = 'INSUFFICIENT DATA FOR A MEANINGFUL ANSWER';
+
+sub do_calculate {
+	my ($server, $chan, $text) = @_;
+  #if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $msg =~ /^!calc/) {
+  $text =~ s/^!calc //;
+  $text =~ s/,/./g;
+  $text =~ s/[^*.+0-9&|)(x\/^-]//g;   # remove anything that is not a math symbol
+  $text =~ s/\*\*/^/g;				        # teh powah!
+  $text =~ s/([*+\\.\/x-])\1*/$1/g;		# borrar simbolos repetidos
+  $text =~ s/\^/**/g;                 #TODO arreglar el regex de ariiba
+  $text =~ s/(?<!0)x//g;              #stripar hex con lookback
+
+  my $answer = eval("($text) || 0");
 			
-		if ($@) {
-			$msg = "INSUFFICIENT DATA FOR A MEANINGFUL ANSWER"; #ERROR (${\ (split / at/, $@, 2)[0]}) ;
-		} 
-		else {
-			$msg = $answer;
-		}
-		sayit($server,$chan,$msg); 
-	}	
+  my $out = $@ ? $error : $answer;
+	sayit($server,$chan,$out);
 }
-sub sayit { 
+sub sayit {
 	my ($server, $target, $msg) = @_;
 	$server->command("MSG $target $msg");
-}   
-signal_add("message public","msg_pub");
+}
+signal_add("calculate","do_calculate");
 
 
