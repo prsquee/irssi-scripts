@@ -7,6 +7,10 @@ use LWP::UserAgent;
 use JSON;
 use Data::Dump;
 
+my $ua = new LWP::UserAgent;
+$ua->agent(settings_get_str('myUserAgent'));
+$ua->timeout( 10 );
+
 sub do_ihq {
 	my ($server,$chan,$text) = @_;
 	my ($searchme) = $text =~ /^!ihq (\w.*)$/;
@@ -18,9 +22,6 @@ sub do_ihq {
 	$searchme =~ s/\s+/%20/;
 	my $query = 'http://isohunt.com/js/json.php?ihq=' . $searchme . '&sort=seeds' . '&rows=6';
 
-	my $ua = new LWP::UserAgent;
-  $ua->agent(settings_get_str('myUserAgent'));
-	$ua->timeout( 10 );
 
 	my $got = $ua->get( $query );
 	my $content = $got->decoded_content;

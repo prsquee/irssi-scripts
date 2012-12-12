@@ -24,6 +24,10 @@ use URI::Escape qw( uri_escape );
 use Data::Dumper;
 use JSON;
 
+my $json = new JSON;
+my $ua = new LWP::UserAgent;
+$ua->timeout(10);
+
 sub do_imdb {
 	my ($server, $chan, $text) = @_;
   #my ($text, $chan, $server) = @_;
@@ -44,11 +48,8 @@ sub do_imdb {
 	return if (!$query);
 	my $url = "http://www.imdbapi.com/?${param}=${query}" if ($param and $query);
 	
-	my $ua = new LWP::UserAgent;
-	$ua->timeout(10);
 	my $got = $ua->get($url);
 	my $content = $got->decoded_content;
-	my $json = new JSON;
 	my $imdb = $json->allow_nonref->decode($content);
 	if ($imdb->{Response} !~ /True/ ) {
 		sayit($server,$chan,"sorry, doesn't ring a bell, try with the full name");
