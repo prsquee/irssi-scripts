@@ -1,57 +1,46 @@
-use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
+#isohunt
+use Irssi qw(settings_get_str signal_add print);
+use warnings;
 use strict;
+use Data::Dumper;
 use LWP::UserAgent;
 use JSON;
-#use WWW::Shorten::Bitly;
-use WWW::Shorten::Googl;
-
-
-
-sub msg_pub {
-	my($server, $text, $nick, $mask,$chan) = @_;
-	do_ihq($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!ihq/);
-}
+use Data::Dump;
 
 sub do_ihq {
-	my ($text, $chan, $server) = @_;
+	my ($server,$chan,$text) = @_;
 	my ($searchme) = $text =~ /^!ihq (\w.*)$/;
 	if (!$searchme) {
 		sayit($server,$chan,"que busco en isohunt?");
 		return;
 	} 
-	#bold
+	#escaping all the spacessssss;
 	$searchme =~ s/\s+/%20/;
 	my $query = 'http://isohunt.com/js/json.php?ihq=' . $searchme . '&sort=seeds' . '&rows=6';
-	#print_msg("$query");
 
 	my $ua = new LWP::UserAgent;
-	$ua->agent('AppleWebKit/533.4 (KHTML, like Gecko)'); 
+  $ua->agent(settings_get_str('myUserAgent'));
 	$ua->timeout( 10 );
 
-
 	my $got = $ua->get( $query );
-	my $content = $got->decoded_content; 
+	my $content = $got->decoded_content;
 	my $json = new JSON;
 	my $json_text = $json->allow_nonref->utf8->relaxed->decode($content);
 
 	foreach my $result ( @{$json_text->{items}->{list}} ) {
 		my $title = $result->{title};
 		$title =~ s/<\/?b>/\x02/g;  #making it a feature! (?)
-		my $torrent = $result->{enclosure_url}; 
-		
-		my $short = makeashorterlink($torrent);
-
-		my $SL = 'S/L: ' . $result->{Seeds} . '/' . $result->{leechers} ; 
+		my $SL = 'S/L: ' . $result->{Seeds} . '/' . $result->{leechers} ;
 		my $cat = $result->{category};
-
-		sayit($server,$chan,"[isohunt] $title - $SL - $cat - $short");
+    my $torrentLink = $result->{enclosure_url};
+    #can we short?
+    my $short_ref = scalar('Irssi::Script::ggl')->can('do_shortme');
+    my $shorten = $short_ref->($torrentLink) if (defined($short_ref) and ref($short_ref) eq 'CODE');
+		sayit($server,$chan,"[isohunt] $title - $SL - $cat - $shorten");
 	}
-
 }
-sub print_msg { active_win()->print("@_"); }
-sub sayit { 
-        my ($server, $target, $msg) = @_;
-        $server->command("MSG $target $msg");
-}   
-signal_add("message public","msg_pub");
-
+sub sayit {
+  my ($server, $target, $msg) = @_;
+  $server->command("MSG $target $msg");
+}
+signal_add("search isohunt","do_ihq");

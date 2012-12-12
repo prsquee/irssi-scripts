@@ -19,7 +19,7 @@ sub incoming_public {
 
   #check if someone said a command
   if ($text =~ /^!/) {
-    my ($cmd) = $text =~ /^!(\w+) /;
+    my ($cmd) = $text =~ /^!(\w+)\s*/;
     if ($cmd =~ /^h[ea]lp$/) {
       #my $halps = settings_ge_str('halpcommands');
       sayit($server,$chan, settings_get_str('halpcommands')); 
@@ -59,23 +59,24 @@ sub incoming_public {
       return;
     }
     if ($cmd eq 'calc') {
-      signal_emit('calculate',$server,$chan,$text);
+      signal_emit('calculate',$server,$chan,$text) if (is_loaded('calc'));
+      return;
+    }
+    if ($cmd eq 'ihq') {
+      signal_emit('search isohunt',$server,$chan,$text) if (is_loaded('isohunt'));
       return;
     }
     if ($cmd eq 'ping') { sayit($server,$chan,"pong"); return; }
   }
   #cmd check ends here. begin general text match
 
-
   if ($text =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
     my $id = $1;
     signal_emit('search imdb',$server,$chan,$id) if (is_loaded('imdb'));
     return;
   }
-
-
-
 }
+
 #sub msg_priv {
 #	my ($server, $text, $nick, $address) = @_;
 #	my $msg = "I only do private shows for certain people I know, you are not on that list. talk to sQuEE, he's mah pimp";
@@ -96,6 +97,7 @@ settings_add_str('bot config', 'active_networks','');
 signal_register( { 'show uptime' => [ 'iobject', 'string' ]});            #server,chan
 signal_register( { 'search imdb' => [ 'iobject', 'string', 'string' ]});  #server,chan,text
 signal_register( { 'calculate'   => [ 'iobject', 'string', 'string' ]});  #server,chan,text
+signal_register( { 'search isohunt' => [ 'iobject', 'string', 'string' ]});  #server,chan,text
 
 #signal registration
 #signal_register(hash)
