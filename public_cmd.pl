@@ -80,7 +80,7 @@ sub incoming_public {
     }#}}}
     #{{{ get temp
     if ($cmd eq 'temp') {
-      signal_emit('get temp',$server,$chan);
+      signal_emit('get temp',$server,$chan) if (is_loaded('smn'));
       return;
     }#}}}
     #{{{ ping pong
@@ -92,19 +92,30 @@ sub incoming_public {
         sayit ($server,$chan,"no! this will break the interwebz!");
         return;
       } else {
-        signal_emit('google me',$server,$chan,$query);
+        signal_emit('google me',$server,$chan,$query) if (is_loaded('google3'));
         return;
       }
     }#}}}
   }
   #cmd check ends here. begin general text match
-  
-  #{{{ general matching
-  if ($text =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
-    my $id = $1;
-    signal_emit('search imdb',$server,$chan,$id) if (is_loaded('imdb'));
-    return;
-  }#}}}
+	if ($text =~ m{(https?://[^ ]*)}) {
+    my $url = $1;
+    return if ($url =~ /(wikipedia)|(facebook)|(fbcdn)/i);
+    #{{{ grab imdb
+    if ($url =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
+        my $imdb = $1;
+        signal_emit('search imdb',$server,$chan,$imdb) if (is_loaded('imdb'));
+        return;
+    }#}}}
+    #youtube here
+    if ($url =~ /imgur/) {
+      #1st case: http://i.imgur.com/XXXX.png
+      if ($url =~ m{http://i\.imgur\.com/(\w{5})\.[pjgb]\w{2}$}) {
+          $url = "http://imgur.com/$1" if ($1);
+      }
+    }
+    signal_emit('check title',$server,$chan,$url);
+  }
 }
 
 #sub msg_priv {
@@ -131,7 +142,8 @@ signal_register( { 'search imdb'    => [ 'iobject', 'string', 'string' ]}); #ser
 signal_register( { 'calculate'      => [ 'iobject', 'string', 'string' ]}); #server,chan,text
 signal_register( { 'search isohunt' => [ 'iobject', 'string', 'string' ]}); #server,chan,text
 signal_register( { 'get temp'       => [ 'iobject', 'string' ]});           #server,chan
-signal_register( { 'google me'      => [ 'iobject', 'string','string' ]});  #server,chan,text
+signal_register( { 'google me'      => [ 'iobject', 'string','string' ]});  #server,chan,query
+signal_register( { 'check title'    => [ 'iobject', 'string','string' ]});  #server,chan,url 
 #}}}
 #{{{ signal register halp
 #signal_register(hash)
