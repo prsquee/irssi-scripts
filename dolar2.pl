@@ -17,6 +17,7 @@ my $euroV;
 my $fetched;
 
 sub init {
+  #initial fetch and theyll stay in ram
   ($blueC, $blueV) = getBlue(do_fetch("http://www.preciodolarblue.com.ar"));
   ($dolarC, $dolarV, $euroC, $euroV) = getDollar(do_fetch("http://www.cotizacion-dolar.com.ar"));
 
@@ -26,13 +27,9 @@ sub init {
   }
 }
 #}}}
-sub msg_pub {
-	my($server, $text, $nick, $mask,$chan) = @_;
-	do_dolar($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!(?:dolar|pesos)(?:\s+\d+)?$/);
-}
 
 sub do_dolar {
-	my ($text, $chan, $server) = @_;
+	my ($server,$chan,$text) = @_;
 	my ($ask, $howmuch) = $text =~ /^!(\w+)\s*(\d*)$/;
   if ($ask eq 'pesos' and not $howmuch) {
     sayit($server, $chan, "!pesos <CANTIDAD>");
@@ -109,8 +106,6 @@ sub sayit {
   my ($server, $target, $msg) = @_;
   $server->command("MSG $target $msg");
 }
-sub print_msg { active_win()->print("@_"); }
-signal_add("message public","msg_pub");
+signal_add("showme the money","do_dolar");
 #}}}
-
 init();

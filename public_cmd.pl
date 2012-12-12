@@ -31,8 +31,8 @@ sub incoming_public {
 
   #check if someone said a command
   if ($text =~ /^!/) {
+    my ($cmd) = $text =~ /^!(\w+)\b/;
     #{{{ halps 
-    my ($cmd) = $text =~ /^!(\w+)\s*/;
     if ($cmd =~ /^h[ea]lp$/) {
       #my $halps = settings_ge_str('halpcommands');
       sayit($server,$chan, settings_get_str('halpcommands')); 
@@ -55,7 +55,7 @@ sub incoming_public {
         return;
     }#}}}
     #{{{ do this and say that
-    if ($cmd =~ /(?:^do$)|(?:^say$)/ and $nick eq 'sQuEE' and $mask =~ /unaffiliated/) {
+    if (($cmd eq 'do' or $cmd eq 'say') and $nick eq 'sQuEE' and $mask =~ /unaffiliated/) {
           $text =~ s/^!\w+\s//;
           my $serverCmd = ($cmd eq 'say') ? "MSG" : "ACTION";
           $server->command("$serverCmd $chan $text");
@@ -92,18 +92,23 @@ sub incoming_public {
       signal_emit('get temp',$server,$chan) if (is_loaded('smn'));
       return;
     }#}}}
-    #{{{ ping pong
-    if ($cmd eq 'ping') { sayit($server,$chan,"pong"); return; }#}}}
-    #{{{  googling 
-    if ($cmd eq 'google' or 'g') {
-      my ($query) = $text =~ /^!g(?:oogle)? (.*)$/;
+    #{{{  googling
+    if ($cmd =~ /g(?:oogle)?/) {
+      my ($query) = $text =~ /^!g(?:oogle)?\s+(.*)$/;
       if ($query =~ /google/) {
         sayit ($server,$chan,"no! this will break the interwebz!");
         return;
-      } else {
+      } elsif ($query) {
         signal_emit('google me',$server,$chan,$query) if (is_loaded('google3'));
         return;
       }
+    }#}}}
+    #{{{ ping pong
+    if ($cmd eq 'ping') { sayit($server,$chan,"pong"); return; }#}}}
+    #{{{ dolar and pesos
+    if ($cmd eq 'dolar' or 'pesos') {
+      signal_emit('showme the money',$server,$chan,$text) if (is_loaded('dolar2'));
+      return;
     }#}}}
   }
   #cmd check ends here. begin general text match
@@ -155,6 +160,7 @@ signal_register( { 'get temp'       => [ 'iobject', 'string' ]});           #ser
 signal_register( { 'google me'      => [ 'iobject', 'string','string' ]});  #server,chan,query
 signal_register( { 'check title'    => [ 'iobject', 'string','string' ]});  #server,chan,url
 signal_register( { 'check tubes'    => [ 'iobject', 'string','string' ]});  #server,chan,vid
+signal_register( { 'showme the money'    => [ 'iobject', 'string','string' ]});  #server,chan,text
 #}
 #{{{ signal register halp
 #sub msg_priv {
