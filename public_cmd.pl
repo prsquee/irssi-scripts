@@ -71,7 +71,7 @@ sub incoming_public {
       signal_emit('search imdb',$server,$chan,$text) if (is_loaded('imdb'));
       return;
     }#}}}
-    #{{{ test stuff
+    #{{{ test nick stuff
     if ($cmd eq 'nickinfo') {
       print (CRAP "fix me");
       return;
@@ -132,9 +132,21 @@ sub incoming_public {
       sayit($server,$chan,"I need a twitter username") if (not $user);
       return;
     }#}}}
-    } #cmd check ends here. begin general text match
+    #{{{ karma is a bitch
+    if ($cmd eq 'karma') {
+      my ($name) = $text =~ /!karma\s+(.*)$/;
+      $name = $nick if (not defined($name));
+      if ($name eq $server->{nick}) {
+        sayit($server,$chan,"my karma is over 9000 already!");
+        return;
+      }
+      $name .= $server->{tag};
+      signal_emit("karma check",$server,$chan,$name) if (is_loaded('karma'));
+      return;
+    }#}}}
+  } #cmd check ends here. begin general text match
 
-  #GENERAL URL MATCH
+  #{{{ GENERAL URL MATCH
 	if ($text =~ m{(https?://[^ ]*)}) {
     my $url = $1;
     return if ($url =~ /(wikipedia)|(facebook)|(fbcdn)/i);
@@ -171,18 +183,28 @@ sub incoming_public {
     #any other http link fall here
     signal_emit('check title',$server,$chan,$url);
   } # URL match ends here. lo que sigue seria general text match, como el de replace and others stuff que no me acuerdo
+  #}}}
 
   ## find anything that is not a cmd or a http link
-  if ($text =~ /^\@user\b/) { #teh fuck era @?
+  if ($text =~ /^\@user\b/) { #pasar esto a !
     my ($who) = $text =~ /^\@user\s+@?(\w+)/;
     signal_emit('teh fuck is who',$server,$chan,$who) if ($who);
     return;
   }
-}
+  ## karma check
+  if ($text =~ /(\w+)(([-+])\3)/) { #dat backref
+    #no self karma
+    return if ($nick =~ /^${1}$/i);
+    my $name = $1 . $server->{tag} if $1;
+    my $op = $2 if $2;
+    signal_emit('karma bitch',$name,$op) if (is_loaded('karma'));
+  }
+
+} #incoming puiblic message ends here
 
 #{{{ signal and stuff
 sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
-sub sayit { 
+sub sayit {
 	my ($server, $target, $msg) = @_;
 	$server->command("MSG $target $msg");
 }
@@ -193,20 +215,22 @@ settings_add_str('bot config', 'active_networks','');
 settings_add_str('bot config', 'myUserAgent', '');
 #}}}
 #signal registration
-signal_register( { 'show uptime'    => [ 'iobject', 'string' ]});           #server,chan
-signal_register( { 'search imdb'    => [ 'iobject', 'string', 'string' ]}); #server,chan,text
-signal_register( { 'calculate'      => [ 'iobject', 'string', 'string' ]}); #server,chan,text
-signal_register( { 'search isohunt' => [ 'iobject', 'string', 'string' ]}); #server,chan,text
-signal_register( { 'get temp'       => [ 'iobject', 'string' ]});           #server,chan
-signal_register( { 'google me'      => [ 'iobject', 'string','string' ]});  #server,chan,query
-signal_register( { 'check title'    => [ 'iobject', 'string','string' ]});  #server,chan,url
-signal_register( { 'check tubes'    => [ 'iobject', 'string','string' ]});  #server,chan,vid
-signal_register( { 'quotes'         => [ 'iobject', 'string','string' ]});  #server,chan,text
+signal_register( { 'show uptime'    => [ 'iobject', 'string' ]});             #server,chan
+signal_register( { 'search imdb'    => [ 'iobject', 'string', 'string' ]});   #server,chan,text
+signal_register( { 'calculate'      => [ 'iobject', 'string', 'string' ]});   #server,chan,text
+signal_register( { 'search isohunt' => [ 'iobject', 'string', 'string' ]});   #server,chan,text
+signal_register( { 'get temp'       => [ 'iobject', 'string' ]});             #server,chan
+signal_register( { 'google me'      => [ 'iobject', 'string','string' ]});    #server,chan,query
+signal_register( { 'check title'    => [ 'iobject', 'string','string' ]});    #server,chan,url
+signal_register( { 'check tubes'    => [ 'iobject', 'string','string' ]});    #server,chan,vid
+signal_register( { 'quotes'         => [ 'iobject', 'string','string' ]});    #server,chan,text
 signal_register( { 'showme the money' => [ 'iobject', 'string','string' ]});  #server,chan,text
 signal_register( { 'teh fuck is who'  => [ 'iobject', 'string','string' ]});  #server,chan,who
-signal_register( { 'fetch tweet'    => [ 'iobject', 'string','string' ]});  #server,chan,url
-signal_register( { 'last tweet'     => [ 'iobject', 'string','string' ]});  #server,chan,user
-#}
+signal_register( { 'fetch tweet'      => [ 'iobject', 'string','string' ]});  #server,chan,url
+signal_register( { 'last tweet'       => [ 'iobject', 'string','string' ]});  #server,chan,user
+signal_register( { 'karma check'      => [ 'iobject', 'string','string' ]});  #server,chan,name
+signal_register( { 'karma bitch'      => [ 'string','string' ]});             #name,op
+
 #{{{ signal register halp
 #sub msg_priv {
 #	my ($server, $text, $nick, $address) = @_;
