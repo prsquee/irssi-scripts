@@ -134,7 +134,7 @@ sub incoming_public {
     }#}}}
     } #cmd check ends here. begin general text match
 
-  #general url match
+  #GENERAL URL MATCH
 	if ($text =~ m{(https?://[^ ]*)}) {
     my $url = $1;
     return if ($url =~ /(wikipedia)|(facebook)|(fbcdn)/i);
@@ -171,6 +171,13 @@ sub incoming_public {
     #any other http link fall here
     signal_emit('check title',$server,$chan,$url);
   } # URL match ends here. lo que sigue seria general text match, como el de replace and others stuff que no me acuerdo
+
+  ## find anything that is not a cmd or a http link
+  if ($text =~ /^\@user\b/) { #teh fuck era @?
+    my ($who) = $text =~ /^\@user\s+@?(\w+)/;
+    signal_emit('teh fuck is who',$server,$chan,$who) if ($who);
+    return;
+  }
 }
 
 #{{{ signal and stuff
@@ -196,6 +203,7 @@ signal_register( { 'check title'    => [ 'iobject', 'string','string' ]});  #ser
 signal_register( { 'check tubes'    => [ 'iobject', 'string','string' ]});  #server,chan,vid
 signal_register( { 'quotes'         => [ 'iobject', 'string','string' ]});  #server,chan,text
 signal_register( { 'showme the money' => [ 'iobject', 'string','string' ]});  #server,chan,text
+signal_register( { 'teh fuck is who'  => [ 'iobject', 'string','string' ]});  #server,chan,who
 signal_register( { 'fetch tweet'    => [ 'iobject', 'string','string' ]});  #server,chan,url
 signal_register( { 'last tweet'     => [ 'iobject', 'string','string' ]});  #server,chan,user
 #}

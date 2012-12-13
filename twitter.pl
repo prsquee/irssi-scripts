@@ -9,12 +9,10 @@ use Data::Dumper;
 #use WWW::Shorten::Googl;
 
 
-#init and leave it
-#signal_add("message public","msg_pub");
-signal_add("fetch tweet","do_twitter");
-signal_add("last tweet","do_last");
-#signal_add("fetch tweet","do_twitter");
-#signal_add("fetch tweet","do_twitter");
+#init 
+signal_add("fetch tweet",     "do_twitter");
+signal_add("last tweet",      "do_last");
+signal_add("teh fuck is who", "userbio");
 
 #dem keis and sicrets
 settings_add_str('twitter', 'twitter_apikey', '');
@@ -24,17 +22,6 @@ settings_add_str('twitter', 'twitter_access_token_secret', '');
 #}}}
 
 my $twitterObj  = newtwitter();
-
-#sub msg_pub {
-#	my($server, $text, $nick, $mask,$chan) = @_;
-#	if ($server->{tag} =~ /3dg|fnode|gsg/) {
-#		do_twittr($text, $chan, $server) 	  if ($text =~ m{twitter\.com(/#!)?/[^/]+/status(?:es)?/\d+}i ); 
-#		do_search($text, $chan, $server) 	  if ($text =~ /^!searchtwt/ );
-#		do_showuser($text, $chan, $server) 	if ($text =~ /^\@user/ );
-#		do_last($text, $chan, $server) 		  if ($text =~ /^!l(?:ast)?t(?:weet)?/ );
-#		do_find($text, $chan, $server) 		  if ($text =~ /^!findpeople/ );
-#	}
-#}
 
 #{{{ this is kinda useless 
 sub do_find {
@@ -75,43 +62,27 @@ sub do_last {
       my $lasttweet = "\@$user last tweet: " . "\"" . $tweet . "\" " . "from " . $client;
       sayit($server,$chan,$lasttweet) if ($tweet);
     };
-    sayit($server, $chan, $@) if $@;
+    print (CRAP $@) if $@;
   }
 }
 #}}}
-#{{{ show users
-sub do_showuser {
-	my ($text, $chan, $server) = @_;
-	if ($text =~ /^\@user$/ ){
-		sayit($server,$chan, "I will tell you everything about an user on twitter if you do a \@user <username>!");
-	} else {
-		my ($who) = $text =~ /^\@user @?(\w+)/;
-		if ($who) {
-      #my $twitter = newtwitter();
-			eval {
-				my $r = $twitterObj->show_user($who);
-				#my $a = Dumper($r);
-				#print_msg("$a");
-
-				my $user = "[\@$who] " . "Name: " . $r->{name};
-				$user .= " - " . "Bio: " . $r->{description} if ($r->{description}); 
-				$user .= " - " . "Location: " . $r->{location} if ($r->{location});
-				my $userstats = "Tweets: " . $r->{statuses_count} . " - ". "Followers: " . $r->{followers_count} . " - " . "Following: " . $r->{friends_count};
-				my $since = $r->{created_at}; #convert this plz
-				#my ($client) = $r->{status}{source} =~ m{<a\b[^>]+>(.*?)</a>};
-				#$client = $r->{status}{source} if (!$client);
-				#my $tweet = decode_entities($r->{status}{text});
-				#my $lasttweet = "Last tweet " . "\"" . $tweet . "\" " . "from " . $client;
-				sayit($server,$chan,$user);
-				sayit($server,$chan,$userstats);
-				#sayit($server,$chan,$lasttweet) if ($tweet);
-			};
-			if ($@) {
-				sayit($server,$chan,"$@");
-				return;
-			}
-		} else { return }; 
-	}
+#{{{ user info
+sub userbio {
+	my ($server,$chan,$who) = @_;
+  if ($who) {
+    eval {
+      my $r = $twitterObj->show_user($who);
+      my $user = "[\@$who] " . "Name: " . $r->{name};
+      $user .= " - " . "Bio: " . $r->{description} if ($r->{description}); 
+      $user .= " - " . "Location: " . $r->{location} if ($r->{location});
+      my $userstats = "Tweets: " . $r->{statuses_count} . " - ". "Followers: " . $r->{followers_count} . " - " . "Following: " . $r->{friends_count};
+      my $since = $r->{created_at}; #convert this pl0x
+      print (CRAP $since);
+      sayit($server,$chan,$user);
+      sayit($server,$chan,$userstats);
+    };
+    print (CRAP $@) if $@;
+  }
 }
 #}}}
 #{{{ search twt
