@@ -1,5 +1,4 @@
 #public commands
-
 #{{{ libs and vars
 use Irssi qw (  print
                 signal_emit
@@ -103,8 +102,8 @@ sub incoming_public {
       return;
     }#}}}
     #{{{  googling
-    if ($cmd =~ /g(?:oogle)?/) {
-      my ($query) = $text =~ /^!g(?:oogle)?\s+(.*)$/;
+    if ($cmd eq 'google') {
+      my ($query) = $text =~ /^!google\s+(.*)$/;
       if ($query =~ /google/) {
         sayit ($server,$chan,"no! this will break the interwebz!");
         return;
@@ -126,6 +125,13 @@ sub incoming_public {
        return;
      }
     #}}}
+    #{{{ last tweet from a uesr
+    if ($cmd =~ /^l(?:ast)?t(?:weet)?$/) {
+      my ($user) = $text =~ /^!l(?:ast)?t(?:weet)? @?(\w+)/;
+      signal_emit("last tweet",$server,$chan,$user) if ($user and is_loaded('twitter'));
+      sayit($server,$chan,"I need a twitter username") if (not $user);
+      return;
+    }#}}}
     } #cmd check ends here. begin general text match
 
   #general url match
@@ -144,6 +150,11 @@ sub incoming_public {
       signal_emit('check tubes',$server,$chan,$vid) if (is_loaded('youtube'));
       return;
     }
+    #twitter status fetch
+    if ($url =~ m{twitter\.com(?:/#!)?/[^/]+/status(?:es)?/\d+}) {
+      signal_emit('fetch tweet',$server,$chan,$url) if (is_loaded('twitter'));
+      return;
+    }
     # http://www.chromaplay.com
     if ($url =~ m{chromaplay\.com/\?ytid=([^ &]{11})$}) {
       my $vid = $1;
@@ -152,8 +163,7 @@ sub incoming_public {
     }
     #future reddit api here 
     if ($url =~ /imgur/) {
-      #1st case: http://i.imgur.com/XXXX.png
-      if ($url =~ m{http://i\.imgur\.com/(\w{5})h?\.[pjgb]\w{2}$}) {
+      if ($url =~ m{http://i\.imgur\.com/(\w{5})h?\.[pjgb]\w{2}$}) { #h is for hires
           $url = "http://imgur.com/$1" if ($1);
       }
     } #}}}
@@ -186,6 +196,8 @@ signal_register( { 'check title'    => [ 'iobject', 'string','string' ]});  #ser
 signal_register( { 'check tubes'    => [ 'iobject', 'string','string' ]});  #server,chan,vid
 signal_register( { 'quotes'         => [ 'iobject', 'string','string' ]});  #server,chan,text
 signal_register( { 'showme the money' => [ 'iobject', 'string','string' ]});  #server,chan,text
+signal_register( { 'fetch tweet'    => [ 'iobject', 'string','string' ]});  #server,chan,url
+signal_register( { 'last tweet'     => [ 'iobject', 'string','string' ]});  #server,chan,user
 #}
 #{{{ signal register halp
 #sub msg_priv {
