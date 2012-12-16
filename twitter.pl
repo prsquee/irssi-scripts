@@ -12,7 +12,7 @@ use Data::Dumper;
 signal_add("fetch tweet",     "do_twitter");
 signal_add("last tweet",      "do_last");
 signal_add("teh fuck is who", "userbio");
-signal_add("post sysarmy", "update");
+signal_add("post twitter",    "update");
 
 my $twitterObj  = newtwitter();
 
@@ -54,10 +54,10 @@ sub do_last {
     #print_msg("$a");
     eval {
       my $r = $twitterObj->show_user($user);
-      my ($client) = $r->{status}{source} =~ m{<a\b[^>]+>(.*?)</a>};
-      $client = $r->{status}{source} if (!$client);
+      #my ($client) = $r->{status}{source} =~ m{<a\b[^>]+>(.*?)</a>};
+      #$client = $r->{status}{source} if (!$client);
       my $tweet = decode_entities($r->{status}{text});
-      my $lasttweet = "\@$user last tweet: " . "\"" . $tweet . "\" " . "from " . $client;
+      my $lasttweet = "\@$user last tweet: " . "\"" . $tweet . "\" "; # . "from " . $client;
       sayit($server,$chan,$lasttweet) if ($tweet);
     };
     print (CRAP $@) if $@;
@@ -138,10 +138,12 @@ sub do_twitter {
 #}}}
 #{{{ new twtrr 
 sub newtwitter {
+  my %consumer_tokens = (
+  consumer_key    => settings_get_str('twitter_apikey'),
+  consumer_secret => settings_get_str('twitter_secret'),
+  );
 	my $twitter = Net::Twitter::Lite->new(
-		#edit Lite.pm to make this permanent? 
-    consumer_key    => 'RNb12bentS8kc4pq9paAYg',
-    consumer_secret => 'Zh4NpQnejkecdzF9AhqiyM8s71erV44HI6GXSJs3B0',
+    %consumer_tokens,
     legacy_lists_api  =>  0,
 	);
   #my ($at, $ats) = restore_tokens(); #this seems like forever

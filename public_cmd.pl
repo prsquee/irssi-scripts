@@ -38,8 +38,8 @@ sub incoming_public {
       return;
     }#}}}
     #{{{ add help
-    if ($cmd eq 'addhelp') {
-        my ($newhalp) = $text =~ /^!addhelp\s+(.*)$/;
+    if ($cmd eq 'addhalp') {
+        my ($newhalp) = $text =~ /^!addhalp\s+(.*)$/;
         my $halps = settings_get_str('halpcommands');
         $halps .= " $newhalp" if ($newhalp);
         Irssi::settings_set_str('halpcommands', $halps);
@@ -133,9 +133,14 @@ sub incoming_public {
       return;
     }#}}}
     #{{{ post tweet to sysarmy 
-    if ($cmd eq 'tt' and $chan eq '#moob') {
+    if ($cmd eq 'tt' and $chan =~ /sysarmy|moob/) {
+      if ($text eq '!tt') {
+        sayit($server,$chan,'tweet to @sysARmIRC');
+        return;
+      }
       $text =~ s/!tt\s+//;
-      signal_emit('post sysarmy',$text);
+      $text = '[' . '@' . $nick . '] ' . $text;
+      signal_emit('post sysarmy',$server,$chan,$text);
       return;
     }
     #}}}
@@ -225,6 +230,8 @@ settings_add_str('twitter', 'twitter_apikey', '');
 settings_add_str('twitter', 'twitter_secret', '');
 settings_add_str('twitter', 'twitter_access_token', '');
 settings_add_str('twitter', 'twitter_access_token_secret', '');
+settings_add_str('twitter', 'sysarmy_access_token', '');
+settings_add_str('twitter', 'sysarmy_access_token_secret', '');
 
 #}}}
 #signal registration
@@ -243,7 +250,9 @@ signal_register( { 'fetch tweet'      => [ 'iobject', 'string','string'   ]});  
 signal_register( { 'last tweet'       => [ 'iobject', 'string','string'   ]});  #server,chan,user
 signal_register( { 'karma check'      => [ 'iobject', 'string','string'   ]});  #server,chan,name
 signal_register( { 'karma bitch'      => [            'string','string'   ]});  #name,op
-signal_register( { 'post sysarmy'     => [            'string'            ]});  #text
+signal_register( { 'post twitter'     => [ 'iobject', 'string','string'   ]});  #server,chan,text
+signal_register( { 'post sysarmy'     => [ 'iobject', 'string','string'   ]});  #server,chan,text
+signal_register( { 'tweet quote'      => [            'string'            ]});  #addme
 
 #{{{ signal register halp
 #sub msg_priv {
