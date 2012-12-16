@@ -1,28 +1,26 @@
 #twitter
-#http://search.cpan.org/~mmims/Net-Twitter-Lite-0.10004/lib/Net/Twitter/Lite.pm
+#http://search.cpan.org/~mmims/Net-Twitter-Lite-0.11002/lib/Net/Twitter/Lite.pm 
 
 use Irssi qw(signal_add print settings_add_str settings_get_str settings_set_str ) ;
 use strict;
 use Net::Twitter::Lite; 
 use HTML::Entities;
 use Data::Dumper;
-#use WWW::Shorten::Googl;
 
 
 #init 
 signal_add("fetch tweet",     "do_twitter");
 signal_add("last tweet",      "do_last");
 signal_add("teh fuck is who", "userbio");
-
-#dem keis and sicrets
-settings_add_str('twitter', 'twitter_apikey', '');
-settings_add_str('twitter', 'twitter_secret', '');
-settings_add_str('twitter', 'twitter_access_token', '');
-settings_add_str('twitter', 'twitter_access_token_secret', '');
-#}}}
+signal_add("post sysarmy", "update");
 
 my $twitterObj  = newtwitter();
 
+sub update {
+  my $text = shift;
+  eval { $twitterObj->update($text) };
+  print (CRAP "$@") if $@;
+}
 #{{{ this is kinda useless 
 sub do_find {
 	my ($text, $chan, $server) = @_;
@@ -140,21 +138,11 @@ sub do_twitter {
 #}}}
 #{{{ new twtrr 
 sub newtwitter {
-	my $apikey = settings_get_str('twitter_apikey');
-	my $secret = settings_get_str('twitter_secret');
 	my $twitter = Net::Twitter::Lite->new(
 		#edit Lite.pm to make this permanent? 
-    legacy_lists_api => 0,
-		oauth_urls => {
-			request_token_url 	=> 	'https://api.twitter.com/oauth/request_token',
-			access_token_url 	=> 	'https://api.twitter.com/oauth/access_token',
-			authorization_url 	=> 	'https://api.twitter.com/oauth/authorize',
-		},
-		consumer_key		=> 	$apikey,
-		consumer_secret		=> 	$secret,
-		apiurl			=>	'https://api.twitter.com/1/',
-		ssl			=>	1,
-		source 			=> 	'squeebot',
+    consumer_key    => 'RNb12bentS8kc4pq9paAYg',
+    consumer_secret => 'Zh4NpQnejkecdzF9AhqiyM8s71erV44HI6GXSJs3B0',
+    legacy_lists_api  =>  0,
 	);
   #my ($at, $ats) = restore_tokens(); #this seems like forever
 	my $at  = settings_get_str('twitter_access_token');
@@ -162,7 +150,9 @@ sub newtwitter {
 	if ($at && $ats) {
 		$twitter->access_token($at);
 		$twitter->access_token_secret($ats);
-	}
+	} else {
+    print (CRAP "no tokens!");
+  }
 	return $twitter;
 }
 #}}}

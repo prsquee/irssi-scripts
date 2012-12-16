@@ -132,6 +132,13 @@ sub incoming_public {
       sayit($server,$chan,"I need a twitter username") if (not $user);
       return;
     }#}}}
+    #{{{ post tweet to sysarmy 
+    if ($cmd eq 'tt' and $chan eq '#moob') {
+      $text =~ s/!tt\s+//;
+      signal_emit('post sysarmy',$text);
+      return;
+    }
+    #}}}
     #{{{ karma is a bitch
     if ($cmd eq 'karma') {
       my ($name) = $text =~ /!karma\s+(.*)$/;
@@ -213,23 +220,30 @@ signal_add("message public","incoming_public");
 settings_add_str('bot config', 'halpcommands', '');
 settings_add_str('bot config', 'active_networks','');
 settings_add_str('bot config', 'myUserAgent', '');
+
+settings_add_str('twitter', 'twitter_apikey', '');
+settings_add_str('twitter', 'twitter_secret', '');
+settings_add_str('twitter', 'twitter_access_token', '');
+settings_add_str('twitter', 'twitter_access_token_secret', '');
+
 #}}}
 #signal registration
-signal_register( { 'show uptime'    => [ 'iobject', 'string' ]});             #server,chan
-signal_register( { 'search imdb'    => [ 'iobject', 'string', 'string' ]});   #server,chan,text
-signal_register( { 'calculate'      => [ 'iobject', 'string', 'string' ]});   #server,chan,text
-signal_register( { 'search isohunt' => [ 'iobject', 'string', 'string' ]});   #server,chan,text
-signal_register( { 'get temp'       => [ 'iobject', 'string' ]});             #server,chan
-signal_register( { 'google me'      => [ 'iobject', 'string','string' ]});    #server,chan,query
-signal_register( { 'check title'    => [ 'iobject', 'string','string' ]});    #server,chan,url
-signal_register( { 'check tubes'    => [ 'iobject', 'string','string' ]});    #server,chan,vid
-signal_register( { 'quotes'         => [ 'iobject', 'string','string' ]});    #server,chan,text
-signal_register( { 'showme the money' => [ 'iobject', 'string','string' ]});  #server,chan,text
-signal_register( { 'teh fuck is who'  => [ 'iobject', 'string','string' ]});  #server,chan,who
-signal_register( { 'fetch tweet'      => [ 'iobject', 'string','string' ]});  #server,chan,url
-signal_register( { 'last tweet'       => [ 'iobject', 'string','string' ]});  #server,chan,user
-signal_register( { 'karma check'      => [ 'iobject', 'string','string' ]});  #server,chan,name
-signal_register( { 'karma bitch'      => [ 'string','string' ]});             #name,op
+signal_register( { 'show uptime'      => [ 'iobject', 'string'            ]});  #server,chan
+signal_register( { 'search imdb'      => [ 'iobject', 'string','string'   ]});  #server,chan,text
+signal_register( { 'calculate'        => [ 'iobject', 'string','string'   ]});  #server,chan,text
+signal_register( { 'search isohunt'   => [ 'iobject', 'string','string'   ]});  #server,chan,text
+signal_register( { 'get temp'         => [ 'iobject', 'string'            ]});  #server,chan
+signal_register( { 'google me'        => [ 'iobject', 'string','string'   ]});  #server,chan,query
+signal_register( { 'check title'      => [ 'iobject', 'string','string'   ]});  #server,chan,url
+signal_register( { 'check tubes'      => [ 'iobject', 'string','string'   ]});  #server,chan,vid
+signal_register( { 'quotes'           => [ 'iobject', 'string','string'   ]});  #server,chan,text
+signal_register( { 'showme the money' => [ 'iobject', 'string','string'   ]});  #server,chan,text
+signal_register( { 'teh fuck is who'  => [ 'iobject', 'string','string'   ]});  #server,chan,who
+signal_register( { 'fetch tweet'      => [ 'iobject', 'string','string'   ]});  #server,chan,url
+signal_register( { 'last tweet'       => [ 'iobject', 'string','string'   ]});  #server,chan,user
+signal_register( { 'karma check'      => [ 'iobject', 'string','string'   ]});  #server,chan,name
+signal_register( { 'karma bitch'      => [            'string','string'   ]});  #name,op
+signal_register( { 'post sysarmy'     => [            'string'            ]});  #text
 
 #{{{ signal register halp
 #sub msg_priv {

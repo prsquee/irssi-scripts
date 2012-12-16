@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use Data::Dump;
 use File::Slurp qw( read_file write_file append_file);
+use Storable qw( store retrive );
 
 
 sub do_quotes {
@@ -11,6 +12,7 @@ sub do_quotes {
 	return if $text !~ /^!q/; #cant hurt one moar check
 	
   my $qfile = get_irssi_dir() . "/scripts/datafiles/$server->{tag}" . $chan . ".txt";
+  my $sfile = get_irssi_dir() . "/scripts/datafiles/$server->{tag}" . $chan . ".storable";
   $qfile =~ s/#/_/g;
 
   #{{{ add 
