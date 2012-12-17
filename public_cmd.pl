@@ -130,6 +130,12 @@ sub incoming_public {
     }#}}}
     #{{{ quotes and stuff
     if ($cmd =~ /^q(?:uote|add|del|last|search)?/) {
+      if ($cmd eq 'qadd' and $chan =~ /sysarmy|moob/) {
+        #keys are irc names, values are twitter @users 
+        foreach my $name (keys %{$twitterusers_ref}) {
+          $text =~ s/\b(?:$name)\b/\@$twitterusers_ref->{$name}/g;
+        }
+      }
       signal_emit('quotes',$server,$chan,$text) if (is_loaded('quotes'));
       return;
     }
