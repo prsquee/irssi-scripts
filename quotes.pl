@@ -5,8 +5,6 @@ use warnings;
 use Data::Dump; #use this to store/retrieve quotes
 use File::Slurp qw( read_file write_file append_file);
 
-
-
 sub do_quotes {
 	my ($server, $chan, $text) = @_;
   my $qfile = get_irssi_dir() . "/scripts/datafiles/$server->{tag}" . $chan . ".txt";

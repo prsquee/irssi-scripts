@@ -7,6 +7,7 @@ use LWP::UserAgent;
 use JSON;
 use Data::Dump;
 
+my $json = new JSON;
 my $ua = new LWP::UserAgent;
 $ua->agent(settings_get_str('myUserAgent'));
 $ua->timeout( 10 );
@@ -25,7 +26,6 @@ sub do_ihq {
 
 	my $got = $ua->get( $query );
 	my $content = $got->decoded_content;
-	my $json = new JSON;
 	my $json_text = $json->allow_nonref->utf8->relaxed->decode($content);
 
 	foreach my $result ( @{$json_text->{items}->{list}} ) {

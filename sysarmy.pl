@@ -37,6 +37,7 @@ sub tweetquote {
     return 1;
   } else {
     print (CRAP $@);
+    return undef;
   }
 }
 

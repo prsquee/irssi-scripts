@@ -130,9 +130,9 @@ sub incoming_public {
     }#}}}
     #{{{ quotes and stuff
     if ($cmd =~ /^q(?:uote|add|del|last|search)?/) {
-       signal_emit('quotes',$server,$chan,$text) if (is_loaded('quotes'));
-       return;
-     }
+      signal_emit('quotes',$server,$chan,$text) if (is_loaded('quotes'));
+      return;
+    }
     #}}}
     #{{{ last tweet from a uesr
     if ($cmd =~ /^l(?:ast)?t(?:weet)?$/) {
@@ -141,7 +141,7 @@ sub incoming_public {
       sayit($server,$chan,"I need a twitter username") if (not $user);
       return;
     }#}}}
-    #{{{ post tweet to sysarmy 
+    #{{{ post tweet to sysarmy
     if ($cmd eq 'tt' and $chan =~ /sysarmy|moob/) {
       if ($text eq '!tt') {
         sayit($server,$chan,'tweet to @sysARmIRC. add your @username with !mytwitteris');
