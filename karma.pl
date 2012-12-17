@@ -1,13 +1,12 @@
-#replace.pl
+#karma is a bitch!
 use Irssi qw(signal_add print get_irssi_dir ) ;
 use warnings;
 use strict;
 use Data::Dumper;
-use File::Slurp qw( read_file write_file append_file);
 use Storable qw (store retrieve);
 
 my $karmaStorable = get_irssi_dir() . "/scripts/datafiles/karma.storable";
-my $karma = retrieve($karmaStorable);
+my $karma = eval { retrieve($karmaStorable) } || [];
 
 sub calc_karma {
 	my ($name,$op) = @_;

@@ -1,5 +1,4 @@
 #public commands
-#{{{ libs and vars
 use Irssi qw (  print
                 signal_emit
                 signal_add
@@ -7,11 +6,21 @@ use Irssi qw (  print
                 settings_get_str
                 settings_add_str
                 settings_set_str
+                get_irssi_dir
 );
 use strict;
 use warnings;
+use Storable qw (store retrieve);
 use Data::Dumper;
 
+
+#{{{ init stuff
+#nick 2 twitter list
+my $twitterusersFile = get_irssi_dir() . '/scripts/datafiles/twitternames.storable';
+my $twitterusers_ref = eval { retrieve($twitterusersFile) } || [];
+#print (CRAP Dumper($twitterusers_ref));
+
+# static and complex regexes
 my $youtubex = qr{(?x-sm:
     (?:http://)?(?:www\.)?      #optional 
     youtu(?:\.be|be\.com)       #matches the short youtube link
@@ -38,7 +47,7 @@ sub incoming_public {
       return;
     }#}}}
     #{{{ add help
-    if ($cmd eq 'addhalp') {
+    if ($cmd eq 'addhalp' and $nick eq 'sQuEE' and $mask =~ /unaffiliated/) {
         my ($newhalp) = $text =~ /^!addhalp\s+(.*)$/;
         my $halps = settings_get_str('halpcommands');
         $halps .= " $newhalp" if ($newhalp);
@@ -135,13 +144,33 @@ sub incoming_public {
     #{{{ post tweet to sysarmy 
     if ($cmd eq 'tt' and $chan =~ /sysarmy|moob/) {
       if ($text eq '!tt') {
-        sayit($server,$chan,'tweet to @sysARmIRC');
+        sayit($server,$chan,'tweet to @sysARmIRC. add your @username with !mytwitteris');
         return;
       }
       $text =~ s/!tt\s+//;
+      #replace $nick with username here
+      $nick = $twitterusers_ref->{$nick} if (exists($twitterusers_ref->{$nick}));
       $text = '[' . '@' . $nick . '] ' . $text;
       signal_emit('post sysarmy',$server,$chan,$text);
       return;
+    }#}}}
+    #{{{ my twitter is 
+    if ($cmd eq 'mytwitteris') {
+      #print (CRAP Dumper($twitterusers_ref));
+      my ($givenName) = $text =~ /^!mytwitteris\s+(.+)$/;
+      if (not $givenName) {
+        #sayit($server,$chan,"if you tell me your twitter username I will replace your nick with that when I tweet");
+        if (!exists ($twitterusers_ref->{$nick}) or !defined($twitterusers_ref->{$nick})) {
+          sayit($server,$chan,"I dunno any twitter handle for $nick");
+        } else {
+            sayit($server,$chan,"I remember $nick is \@$twitterusers_ref->{$nick} on twitter");
+            return;
+          }
+      } else {
+        $givenName =~ s/^\@//;
+        $twitterusers_ref->{$nick} = $givenName;
+        store $twitterusers_ref, $twitterusersFile;
+      }
     }
     #}}}
     #{{{ karma is a bitch

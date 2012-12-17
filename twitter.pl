@@ -134,6 +134,7 @@ sub do_twitter {
 
  	$result .= ". in reply to " . $shorturl	if ($shorturl);
 	sayit($server,$chan,$result) if ($result);
+  print (CRAP $time);
 }
 #}}}
 #{{{ new twtrr 
