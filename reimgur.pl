@@ -9,21 +9,9 @@ use JSON;
 use Data::Dumper;
 
 signal_add('reimgur','reupload');
-#sub msg_pub {
-#	my($server, $text, $nick, $mask,$chan) = @_;
-#	if ($server->{tag} =~ /3dg|fnode|lia|gsg/) {
-#			my ($url) = $text =~ m{^!imgur (https?://[^ ]+)};
-#			if ($text =~ /^!imgur/ and not $url) {
-#				sayit($server,$chan,"dame un link a una imagen y lo reuploadeo a imgur!");
-#			}
-#			reupload($url,$server,$chan) if ($url);
-#	}
-#}
 my $imgur = WWW::Imgur->new ();
 $imgur->key(settings_get_str('imgurkey'));
-
 my $json = new JSON;
-
 sub reupload {
 	my ($server,$chan,$url) = @_;
 	my $success = $imgur->upload($url) or (sayit($server,$chan,"Upload failed") and return);

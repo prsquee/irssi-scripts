@@ -5,6 +5,7 @@ use Irssi qw(signal_add print settings_add_str settings_get_str settings_set_str
 use strict;
 use Net::Twitter::Lite;
 use Data::Dumper;
+use Encode qw (encode decode);
 
 #{{{ #init 
 signal_add("post sysarmy",  "post_twitter");
@@ -40,16 +41,15 @@ sub tweetquote {
     return undef;
   }
 }
-
 #}}}
-
 #{{{ do twitter
 sub post_twitter {
 	my ($server,$chan,$text) = @_;
-  #contar 140 chars
+  #print (CRAP $text));
   my $status;
-  eval { $status = $twitter->update($text) };
+  eval { $status = $twitter->update(decode("utf8", $text)) }; #no idea why this works, and who am i to argue with the encodeing gods.
 	if ($@) {
+    #contar 140 chars? bitch please.
     sayit($server,$chan,"error: $@");
   } else {
     #sayit($server,$chan,"*chirp*");
@@ -57,9 +57,7 @@ sub post_twitter {
     my $short = scalar('Irssi::Script::ggl')->can('do_shortme')->($url);
     sayit($server,$chan,"tweet sent at $short") if ($short);
   }
-
   #print (CRAP Dumper($twitter));
-
 }
 #}}}
 #{{{ sayit
