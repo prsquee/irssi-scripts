@@ -214,7 +214,14 @@ sub incoming_public {
       signal_emit('check tubes',$server,$chan,$vid) if (is_loaded('youtube'));
       return;
     }
+    if ($url =~ m{mercadolibre\.com\.ar/(MLA-\d+)}) {
+      my $mla = $1;
+      $mla =~ s/-//;
+      signal_emit('mercadolibre',$server,$chan,$mla);
+      return;
+    }
     #future reddit api here 
+    #imgur api?
     if ($url =~ /imgur/) {
       if ($url =~ m{http://i\.imgur\.com/(\w{5})h?\.[pjgb]\w{2}$}) { #h is for hires
           $url = "http://imgur.com/$1" if ($1);
@@ -282,6 +289,7 @@ signal_register( { 'karma bitch'      => [            'string','string'   ]});  
 signal_register( { 'post twitter'     => [ 'iobject', 'string','string'   ]});  #server,chan,text
 signal_register( { 'post sysarmy'     => [ 'iobject', 'string','string'   ]});  #server,chan,text
 signal_register( { 'tweet quote'      => [            'string'            ]});  #addme
+signal_register( { 'mercadolibre'     => [ 'iobject', 'string','string'   ]});  #server,chan,mla
 
 #{{{ signal register halp
 #sub msg_priv {
