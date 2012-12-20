@@ -19,8 +19,8 @@ sub do_quotes {
     #tweet this quote 
     if ($chan =~ /sysarmy|moob/) {
       my $tweetme = $addme . "  \n"  . '#sysarmy';
-      my $tweed = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($tweetme);
-      $out .= ' and tweeted' if ($tweed);
+      my $tweeturl = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($tweetme);
+      $out .= " and tweeted at $tweeturl" if ($tweeturl);
     }
     sayit($server,$chan,$out);
   }

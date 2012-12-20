@@ -33,9 +33,15 @@ if ($at && $ats) {
 #{{{ quote 2 tweet
 sub tweetquote {
   my $text = shift;
-  eval { $twitter->update($text) };
+  my $status;
+
+  eval { $status = $twitter->update(decode("utf8", $text)) };
   if (!$@) {
-    return 1;
+    #get the link to the tweet we just sent.
+    #shorten that
+    my $shorten = scalar('Irssi::Script::ggl')->can('do_shortme')->('https://twitter.com/sysARmIRC/status/' . $status->{'id'});
+    #return that short url
+    return $shorten;
   } else {
     print (CRAP $@);
     return undef;
