@@ -1,6 +1,6 @@
 #check youtube title and desc
 
-use Irssi qw (signal_add print settings_get_str );
+use Irssi qw (signal_add signal_emit print settings_get_str );
 use warnings;
 use strict;
 use IO::Socket::INET; #TODO this is so ugly, I need to use json asap
@@ -15,11 +15,12 @@ $ua->timeout(10);
 $ua->agent(settings_get_str('myUserAgent'));
 
 sub fetch_tubes {
-	my($server,$chan,$vid) = @_;
+  my($server,$chan,$vid) = @_;
   my $url = "http://gdata.youtube.com/feeds/api/videos/$vid?&v=2&alt=json";
   my $req = $ua->get($url);
-  my $result = $json->utf8->decode($req->decoded_content)->{entry};
-  #print (CRAP Dumper($decoded_json));
+  my $result;
+  eval { $result = $json->utf8->decode($req->decoded_content)->{entry} };
+  print (CRAP $@) if $@;
   my $title  = $result->{title}->{'$t'};
   my $desc   = $result->{'media$group'}->{'media$description'}->{'$t'};
   my $time   = $result->{'media$group'}->{'yt$duration'}->{seconds};
@@ -27,22 +28,32 @@ sub fetch_tubes {
 
   #my ($title, $desc, $time, $views) = get_title($vid) if ($vid);
   if($title) {
-    if ($time < 10) {
-      $time = "[0:0${time}]";
-    } elsif ($time < 60) {
-        $time = "[0:${time}]";
-    } elsif ($time >= 60) {
-          use integer;
-          my $min = $time / 60;
-          my $sec = $time % 60;
-          $sec = "0" . $sec if ($sec < 10);
-          $time = "[${min}:${sec}]";
+    my $hours = sprintf ("%01d", $time/3600) if ($time >= 3600);
+    if (defined($hours)) {
+      $hours .= ':';
+      $time = $time - 3600 * int($hours);
+    }
+    my $mins = '00:';
+    my $secs;
+    if ($time >= 60) {
+      $mins = sprintf ("%02d:", $time/60);
+      $secs = sprintf ("%02d",  $time%60);
+    } elsif ($time > 60) {
+      $secs = sprintf("%01d", $time);
     }
     my $msg = "[YT]" . $time . " - " . "\x02${title}\x02";
     $msg .= " - $desc" if ($desc); 
     $msg .= " - Views: $views" if ($views);
     sayit($server, $chan, $msg);
+    #save links
+    signal_emit('write to file',"<sQ`> [YT] $time - $title - Views: $views\n");
   } else { return; }
+}
+
+sub search_tubes {
+  #http://gdata.youtube.com/feeds/api/videos?q=funny+cats&alt=json&v=2&prettyprint=trueI#
+  my ($server,$chan,$query) = @_;
+  return;
 }
 
 sub sayit {
@@ -50,3 +61,4 @@ sub sayit {
 	$server->command("MSG $target $msg");
 }
 signal_add("check tubes", "fetch_tubes"); 
+signal_add("search tubes", "search_tubes"); 
