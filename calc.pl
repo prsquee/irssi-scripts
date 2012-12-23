@@ -3,6 +3,7 @@ use warnings;
 use strict;
 use Irssi qw( signal_add print );
 
+
 my $error = 'INSUFFICIENT DATA FOR A MEANINGFUL ANSWER';
 
 sub do_calculate {
@@ -19,7 +20,7 @@ sub do_calculate {
   my $answer = eval("($text) || 0");
 			
   my $out = $@ ? $error : $answer;
-	sayit($server,$chan,$out);
+  sayit($server,$chan,$out);
 }
 sub sayit {
 	my ($server, $target, $msg) = @_;

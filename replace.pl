@@ -1,5 +1,5 @@
 #replace.pl
-use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
+use Irssi qw( command_bind signal_add print settings_get_str ) ;
 use warnings;
 use strict;
 
@@ -17,9 +17,12 @@ my $regex = qr{(?x-sm:
 )};
 #m{^s([/|@])((?:(?!\1).)+)\1((?:.(?!\1).)*)\1?}) {
 
-sub msg_pub { 
+my $networks = settings_get_str('active_networks');
+
+sub msg_pub {
 	my ($server,$text,$nick,$mask,$chan) = @_;
-	return if ($server->{tag} !~ /3dg|fnode|lia|gsg/);
+  
+	return if ($server->{tag} !~ /$networks/);
 	return if ($text =~ /^!/);
 	if ($text =~ $regex) {
 		my $search;
@@ -36,13 +39,9 @@ sub msg_pub {
 
 			my $replaced = $lastline{$nickToFind};
 			return if (!$replaced);
-			if ($replaced =~ s{$search}{$replace}eig) {
-				if (!$user) {
-					sayit($server,$chan,"FTFY: $replaced");
-				} 
-				else {
-					sayit($server,$chan,"$user quiso decir: $replaced");
-				}
+			if ($replaced =~ s{$search}{$replace}ig) {
+				if (!$user) { sayit($server,$chan,"FTFY: $replaced"); }
+				else { sayit($server,$chan,"$user quiso decir: $replaced"); }
 			}
 		}
 	}
@@ -56,5 +55,4 @@ sub sayit {
   my ($server, $target, $msg) = @_;
 	$server->command("MSG $target $msg");
 }
-sub printmsg { active_win()->print("@_"); }
 Irssi::signal_add("message public","msg_pub");
