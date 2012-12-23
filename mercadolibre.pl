@@ -1,6 +1,6 @@
 #mercadolibre
 #'buying_mode' => 'buy_it_now' || acution
-use Irssi qw (signal_add print settings_get_str);
+use Irssi qw (signal_add print settings_get_str signal_emit);
 use strict;
 use warnings;
 use LWP::UserAgent;
@@ -32,6 +32,7 @@ sub fml {
 
   my $out = "[$condition] $title - $howmuch - Sold: $sold - $city - $pais";
   sayit($server,$chan,$out);
+  signal_emit('write to file',"<sQ`> $out\n") if ($chan =~ /sysarmy|moob/);
   return;
 }
 

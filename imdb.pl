@@ -17,7 +17,7 @@
 #'Writer' => 'N/A',
 #'Plot' => 'The story of an office that faces closure when the company decides to downsize
 
-use Irssi qw(signal_add print ) ;
+use Irssi qw(signal_add print signal_emit) ;
 use strict;
 use LWP::UserAgent;
 use URI::Escape qw( uri_escape );
@@ -68,6 +68,7 @@ sub do_imdb {
 	sayit($server,$chan,$title);
 	sayit($server,$chan,$genre);
 	sayit($server,$chan,$plot);
+  signal_emit('write to file', "<sQ`> $title\n<sQ`> $genre\n<sQ`> $plot\n") if ($chan =~ /sysarmy|moob/);
 	return;
 }
 

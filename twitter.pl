@@ -1,7 +1,7 @@
 #twitter
 #http://search.cpan.org/~mmims/Net-Twitter-Lite-0.11002/lib/Net/Twitter/Lite.pm 
 
-use Irssi qw(signal_add print settings_add_str settings_get_str settings_set_str ) ;
+use Irssi qw(signal_emit signal_add print settings_add_str settings_get_str settings_set_str ) ;
 use strict;
 use Net::Twitter::Lite; 
 use HTML::Entities;
@@ -134,6 +134,7 @@ sub do_twitter {
 
  	$result .= ". in reply to " . $shorturl	if ($shorturl);
 	sayit($server,$chan,$result) if ($result);
+  signal_emit('write to file', "<sQ`> $result\n") if ($result and $chan =~ /sysarmy|moob/);
   print (CRAP $time);
 }
 #}}}

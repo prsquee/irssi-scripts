@@ -1,9 +1,8 @@
 #check youtube title and desc
 
 use Irssi qw (signal_add signal_emit print settings_get_str );
-use warnings;
+#use warnings;
 use strict;
-use IO::Socket::INET; #TODO this is so ugly, I need to use json asap
 use Data::Dumper;
 use LWP::UserAgent;
 use JSON;
@@ -28,19 +27,17 @@ sub fetch_tubes {
 
   #my ($title, $desc, $time, $views) = get_title($vid) if ($vid);
   if($title) {
-    my $hours = sprintf ("%01d", $time/3600) if ($time >= 3600);
-    if (defined($hours)) {
-      $hours .= ':';
-      $time = $time - 3600 * int($hours);
-    }
+    my $hours = sprintf ("%02d:", $time/3600) if ($time >= 3600);
+    $time = $time - 3600 * int($hours) if ($hours);
     my $mins = '00:';
     my $secs;
     if ($time >= 60) {
       $mins = sprintf ("%02d:", $time/60);
       $secs = sprintf ("%02d",  $time%60);
-    } elsif ($time > 60) {
-      $secs = sprintf("%01d", $time);
+    } elsif ($time < 60) {
+      $secs = sprintf("%02d", $time);
     }
+    $time = '[' . $hours . $mins . $secs . ']';
     my $msg = "[YT]" . $time . " - " . "\x02${title}\x02";
     $msg .= " - $desc" if ($desc); 
     $msg .= " - Views: $views" if ($views);
@@ -50,15 +47,15 @@ sub fetch_tubes {
   } else { return; }
 }
 
-sub search_tubes {
-  #http://gdata.youtube.com/feeds/api/videos?q=funny+cats&alt=json&v=2&prettyprint=trueI#
-  my ($server,$chan,$query) = @_;
-  return;
-}
+#sub search_tubes {
+#  #http://gdata.youtube.com/feeds/api/videos?q=funny+cats&alt=json&v=2&prettyprint=trueI#
+#  my ($server,$chan,$query) = @_;
+#  return;
+#}
 
 sub sayit {
 	my ($server, $target, $msg) = @_;
 	$server->command("MSG $target $msg");
 }
 signal_add("check tubes", "fetch_tubes"); 
-signal_add("search tubes", "search_tubes"); 
+#signal_add("search tubes", "search_tubes"); 
