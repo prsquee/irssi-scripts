@@ -128,6 +128,13 @@ sub incoming_public {
         signal_emit('showme the money',$server,$chan,$text) if (is_loaded('dolar2'));
         return;
       }#}}}
+      #{{{ last tweet from a uesr
+      if ($cmd =~ /^l(?:ast)?t(?:weet)?$/) {
+        my ($user) = $text =~ /^!l(?:ast)?t(?:weet)? @?(\w+)/;
+        signal_emit("last tweet",$server,$chan,$user) if ($user and is_loaded('twitter'));
+        sayit($server,$chan,"I need a twitter username") if (not $user);
+        return;
+      }#}}}
       #{{{ quotes and stuff
       if ($cmd =~ /^q(?:uote|add|del|last|search)?/) {
         if ($cmd eq 'qadd' and $chan =~ /sysarmy|moob/) {
@@ -177,6 +184,13 @@ sub incoming_public {
         }
         $name .= $server->{tag};
         signal_emit("karma check",$server,$chan,$name) if (is_loaded('karma'));
+        return;
+      }#}}}
+      #{{{ checout user on twitter 
+      if ($cmd eq 'user') {
+        my ($who) = $text =~ /^!user\s+@?(\w+)/;
+        signal_emit('teh fuck is who',$server,$chan,$who) if ($who and is_loaded('twitter'));
+        sayit($server,$chan,"!user <twitter_username>") if (!defined($who));
         return;
       }#}}}
     }
@@ -230,12 +244,6 @@ sub incoming_public {
   } # URL match ends here. lo que sigue seria general text match, como el de replace and others stuff que no me acuerdo
   #}}}
   #{{{ ## do stuff with anything that is not a cmd or a http link
-  if ($text =~ /^\@user\b/) { #pasar esto a !
-    my ($who) = $text =~ /^\@user\s+@?(\w+)/;
-    signal_emit('teh fuck is who',$server,$chan,$who) if ($who and is_loaded('twitter'));
-    sayit($server,$chan,"\@user <twitter_username> to checkout profile and bio on twitter") if (!defined($who));
-    return;
-  }
   ## karma karma and karma
   if ($text =~ /(\w+)(([-+])\3)/) { 
     #no self karma

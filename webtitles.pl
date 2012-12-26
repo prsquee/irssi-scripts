@@ -21,9 +21,10 @@ sub do_fetch {
 		if ($response->content_is_html) {
 			my $got = $ua->get( $url );
 			my $t = $got->title if ($got->title);
+      my $enc = detect($t);
       my $title;
-      eval { $title = decode(detect($t),$t) };
-      return if $@;
+      eval { $title = decode($enc,$t) if (defined($enc)) };
+      $title = $t if ($@ or not defined($enc));
 			return if ($title =~ /the simple image sharer/i);       #we all know this already
       my $out = "[link title] $title" if ($title);
 			sayit($server, $chan, "$out")   if ($title);

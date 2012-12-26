@@ -21,30 +21,6 @@ sub update {
   eval { $twitterObj->update($text) };
   print (CRAP "$@") if $@;
 }
-#{{{ this is kinda useless 
-sub do_find {
-	my ($text, $chan, $server) = @_;
-	if ($text =~ /^!findpeople$/) {
-		#sayit($server, $chan, "I will try to see if that person is on twitter if you do a !findpeople <name>");
-		sayit($server, $chan, "im not ready yet D:");
-	} 
-	else {
-		my ($unsub) = $text =~ /^!findpeople (.*)/;
-
-		if ($unsub) {
-			my $twitter = newtwitter();
-			##l2handle undef here 
-			eval {
-				my $r = $twitter->users_search($unsub);
-				my $a = Dumper($r);
-				print_msg("$a");
-			};
-			sayit($server,$chan,"sorry, no relevant info on twitter") if ($@);
-			return if $@;
-		}
-	}
-}
-#}}}
 #{{{ fetch last tweet
 sub do_last {
 	my ($server,$chan,$user) = @_;
@@ -73,9 +49,10 @@ sub userbio {
       my $user = "[\@$who] " . "Name: " . $r->{name};
       $user .= " - " . "Bio: " . $r->{description} if ($r->{description}); 
       $user .= " - " . "Location: " . $r->{location} if ($r->{location});
+      my ($year) = $r->{created_at} =~ /(2\d{3})$/;
+      $user .= " - " . "User since $year" if ($year);
       my $userstats = "Tweets: " . $r->{statuses_count} . " - ". "Followers: " . $r->{followers_count} . " - " . "Following: " . $r->{friends_count};
-      my $since = $r->{created_at}; #convert this pl0x
-      print (CRAP $since);
+      #my $since = $r->{created_at}; #convert this pl0x
       sayit($server,$chan,$user);
       sayit($server,$chan,$userstats);
     };
@@ -165,3 +142,4 @@ sub sayit {
 	my ($server, $target, $msg) = @_;
 	$server->command("MSG $target $msg");
 }
+#}}}
