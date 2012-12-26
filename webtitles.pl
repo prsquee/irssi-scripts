@@ -3,6 +3,9 @@ use Irssi qw(signal_emit signal_add print settings_get_str) ;
 use LWP::UserAgent;
 use strict;
 use Data::Dumper;
+use Encode qw(encode decode is_utf8);
+use Encode::Detect::Detector qw(detect);
+
 
 my $ua = new LWP::UserAgent;
 $ua->agent(settings_get_str('myUserAgent'));
@@ -17,10 +20,13 @@ sub do_fetch {
 	if ($response->is_success) {
 		if ($response->content_is_html) {
 			my $got = $ua->get( $url );
-			my $title = $got->title if ($got->title);
+			my $t = $got->title if ($got->title);
+      my $title;
+      eval { $title = decode(detect($t),$t) };
+      return if $@;
 			return if ($title =~ /the simple image sharer/i);       #we all know this already
       my $out = "[link title] $title" if ($title);
-			sayit($server, $chan, "$out") if ($title);
+			sayit($server, $chan, "$out")   if ($title);
       $out = '<sQ`> ' . $out . "\n";
 			if ($url =~ /imgur/) {
 				#check si hay un link a reddit and make a short link, fuck API
