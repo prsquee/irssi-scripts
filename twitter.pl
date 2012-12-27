@@ -6,7 +6,7 @@ use strict;
 use Net::Twitter::Lite; 
 use HTML::Entities;
 use Data::Dumper;
-
+use Date::Parse qw(str2time); #thank godess for this black magic
 
 #init 
 signal_add("fetch tweet",     "do_twitter");
@@ -30,16 +30,61 @@ sub do_last {
     #print_msg("$a");
     eval {
       my $r = $twitterObj->show_user($user);
+      #print(CRAP Dumper($r));
       #my ($client) = $r->{status}{source} =~ m{<a\b[^>]+>(.*?)</a>};
       #$client = $r->{status}{source} if (!$client);
-      my $tweet = decode_entities($r->{status}{text});
-      my $lasttweet = "\@$user last tweet: " . "\"" . $tweet . "\" "; # . "from " . $client;
-      sayit($server,$chan,$lasttweet) if ($tweet);
+      my $delta = moment_ago($r->{status}{created_at},$r->{utc_offset});
+      my $lasttweet = "\@$user tweeted: " . '"' . decode_entities($r->{status}{text}) . '" ';
+      $lasttweet .= 'from ' . $delta . ' ago' if ($delta);
+      sayit($server,$chan,$lasttweet) if ($r->{status}{text});
     };
     print (CRAP $@) if $@;
   }
 }
 #}}}
+
+#{{{ time diff 
+sub moment_ago {
+  my ($time,$offset) = @_;
+  #print (CRAP "created at $time with $offset");
+  #offset is in secs. 
+  $time =~ s| \+\d{4}||g;
+  my $t = str2time($time);
+  if (substr($offset,0,1) eq '-') {
+    $t -= abs($offset);
+  } else {
+    $t += $offset;
+  }
+  #print (CRAP str2time($time));
+  #print (CRAP $offset);
+  #print (CRAP $t);
+  my $diff  = time - $t;
+  #print (CRAP "$diff is" . time . " - $t");
+  return undef if (not $diff);
+
+  if ($diff > 31536000) {
+    my $y = sprintf("%d" ,$diff/31536000);
+    $y > 1 ? return "$y years" : return "a year";
+  }
+  if ($diff > 2592000) {
+    my $m = sprintf("%d" ,$diff/2592000);
+    $m > 1 ? return "$m months" : return "a month";
+  }
+  if ($diff > 86400) {
+    my $d = sprintf("%d" ,$diff/86400);
+    $d > 1 ? return "$d days" : return "a day";
+  }
+  if ($diff > 3600) {
+    my $h = sprintf("%d" ,$diff/3600);
+    $h > 1 ? return "$h hours" : return "an hour";
+  }
+  if ($diff >= 60) {
+    my $m = sprintf("%d" ,$diff/60);
+    $m > 1 ? return "$m mins" : return "just a minute";
+  }
+  return "$diff secs" if ($diff < 60 and $diff > 0);
+  return undef if ($diff <= 0);  #fucked up time zones 
+}#}}}
 #{{{ user info
 sub userbio {
 	my ($server,$chan,$who) = @_;
@@ -92,19 +137,16 @@ sub do_search {
 sub do_twitter {
 	my ($server,$chan,$text) = @_;
 	my ($user,$statusid) = $text =~ m{twitter\.com(?:/#!)?/([^/]+)/status(?:es)?/(\d+)}i; 
-  #my $apikey = Irssi::settings_get_str('twitter_apikey');
-  #my $secret = Irssi::settings_get_str('twitter_secret');
 
-  #my $twitter = newtwitter();
 	my $status = eval { $twitterObj->show_status($statusid) };
+  print (CRAP Dumper($status));
 	return if $@;
 
-	my $tweet = decode_entities($status->{text});
-	my $time = $status->{created_at}; #use DateTime::Duration to do a $age ago style;
-	
+  my $delta = moment_ago($status->{created_at},$status->{user}->{utc_offset});
 	my ($client) = $status->{source} =~ m{<a\b[^>]+>(.*?)</a>};
 	$client = $status->{source} if (!$client);
-	my $result = "\@${user} " . "tweeted ". "\"". $tweet . "\"" . " " . "from " . $client;
+	my $result = "\@${user} " . 'tweeted: '. '"'. decode_entities($status->{text}) . '" ';
+  $result .= 'from ' . $delta . ' ago' if ($delta);
 
 	my $replyurl = "http://twitter.com/" . $user . "/status/" . $status->{in_reply_to_status_id} if ($status->{in_reply_to_status_id});
   my $shorturl = scalar('Irssi::Script::ggl')->can('do_shortme')->($replyurl) if ($replyurl);
@@ -112,7 +154,6 @@ sub do_twitter {
  	$result .= ". in reply to " . $shorturl	if ($shorturl);
 	sayit($server,$chan,$result) if ($result);
   signal_emit('write to file', "<sQ`> $result\n") if ($result and $chan =~ /sysarmy|moob/);
-  print (CRAP $time);
 }
 #}}}
 #{{{ new twtrr 
