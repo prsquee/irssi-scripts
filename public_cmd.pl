@@ -200,7 +200,6 @@ sub incoming_public {
 	if ($text =~ m{(https?://[^ ]*)}) {
     my $url = $1;
     signal_emit('write to file',"<$nick> $text") if ($chan =~ /sysarmy|moob/ and is_loaded('savelink'));
-
     return if ($url =~ /(wikipedia)|(facebook)|(fbcdn)/i);
     #{{{ site specific stuff
     if ($url =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
