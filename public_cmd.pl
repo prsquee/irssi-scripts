@@ -200,7 +200,8 @@ sub incoming_public {
 	if ($text =~ m{(https?://[^ ]*)}) {
     my $url = $1;
     signal_emit('write to file',"<$nick> $text") if ($chan =~ /sysarmy|moob/ and is_loaded('savelink'));
-    return if ($url =~ /(wikipedia)|(facebook)|(fbcdn)/i);
+    return if ($url =~ /wikipedia|facebook|fbcdn/i);
+
     #{{{ site specific stuff
     if ($url =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
         my $imdb = $1;
@@ -209,8 +210,12 @@ sub incoming_public {
     }
     #youtube here
     if ($url =~ /$youtubex/) {
-      my $vid = $1;
-      signal_emit('check tubes',$server,$chan,$vid) if (is_loaded('youtube'));
+      signal_emit('check tubes',$server,$chan,$1) if (is_loaded('youtube'));
+      return;
+    }
+    #show twitter user bio info from an url 
+    if ($url =~ m{twitter\.com/(\w+)$}) {
+      signal_emit('teh fuck is who',$server,$chan,$1) if ($1 and is_loaded('twitter'));
       return;
     }
     #twitter status fetch
@@ -220,14 +225,12 @@ sub incoming_public {
     }
     # http://www.chromaplay.com
     if ($url =~ m{chromaplay\.com/\?ytid=([^ &]{11})$}) {
-      my $vid = $1;
-      signal_emit('check tubes',$server,$chan,$vid) if (is_loaded('youtube'));
+      signal_emit('check tubes',$server,$chan,$1) if ($1 and is_loaded('youtube'));
       return;
     }
     if ($url =~ m{mercadolibre\.com\.ar/(MLA-\d+)}) {
-      my $mla = $1;
-      $mla =~ s/-//;
-      signal_emit('mercadolibre',$server,$chan,$mla);
+      $_ = $1 and s/-//;
+      signal_emit('mercadolibre',$server,$chan,$_);
       return;
     }
     #future reddit api here 

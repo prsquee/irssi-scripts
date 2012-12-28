@@ -21,10 +21,18 @@ sub do_fetch {
 		if ($response->content_is_html) {
 			my $got = $ua->get( $url );
 			my $t = $got->title if ($got->title);
-      my $enc = detect($t);
+      #print (CRAP Dumper($got->content_type));
+      my ($type,$charset) = $got->content_type;
+      #print (CRAP $charset);
+      my $enc = undef;
       my $title;
-      eval { $title = decode($enc,$t) if (defined($enc)) };
-      $title = $t if ($@ or not defined($enc));
+      if ($typ =~ /text/ and $charset !~ /utf-8/) {
+        $enc = detect($t);
+        eval { $title = decode($enc,$t) if (defined($enc)) };
+        $title = $t if ($@ or not defined($enc));
+      } else {
+        $title = $t;
+      }
 			return if ($title =~ /the simple image sharer/i);       #we all know this already
       my $out = "[link title] $title" if ($title);
 			sayit($server, $chan, "$out")   if ($title);
