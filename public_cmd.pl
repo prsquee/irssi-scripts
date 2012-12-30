@@ -200,7 +200,10 @@ sub incoming_public {
 	if ($text =~ m{(https?://[^ ]*)}) {
     my $url = $1;
     signal_emit('write to file',"<$nick> $text") if ($chan =~ /sysarmy|moob/ and is_loaded('savelink'));
-    return if ($url =~ /wikipedia|facebook|fbcdn/i);
+    if ($url =~ /wikipedia|facebook|fbcdn/i) {
+      signal_emit('write to file',' ') if ($chan =~ /sysarmy|moob/ and is_loaded('savelink'));
+      return;
+    }
 
     #{{{ site specific stuff
     if ($url =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
@@ -247,7 +250,7 @@ sub incoming_public {
   #}}}
   #{{{ ## do stuff with anything that is not a cmd or a http link
   ## karma karma and karma
-  if ($text =~ /(\w+)(([-+])\3)/) { 
+  if ($text =~ /(\w+)(([-+])\3)/) {
     #no self karma
     return if ($nick =~ /^${1}$/i);
     my $name = $1 . $server->{tag} if $1;

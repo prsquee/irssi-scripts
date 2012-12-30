@@ -139,7 +139,7 @@ sub do_twitter {
 	my ($user,$statusid) = $text =~ m{twitter\.com(?:/#!)?/([^/]+)/status(?:es)?/(\d+)}i; 
 
 	my $status = eval { $twitterObj->show_status($statusid) };
-  print (CRAP Dumper($status));
+  #print (CRAP Dumper($status));
 	return if $@;
 
   my $delta = moment_ago($status->{created_at},$status->{user}->{utc_offset});
