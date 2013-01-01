@@ -51,8 +51,9 @@ sub do_imdb {
 	my $got = $ua->get($url);
 	my $content = $got->decoded_content;
 	my $imdb = $json->allow_nonref->decode($content);
+  #print (CRAP Dumper($imdb));
 	if ($imdb->{Response} !~ /True/ ) {
-		sayit($server,$chan,"sorry, doesn't ring a bell, try with the full name");
+		sayit($server,$chan,"not found, try with the full name");
 		return;
 	}
 	my $link;

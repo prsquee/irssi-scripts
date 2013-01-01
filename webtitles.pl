@@ -37,14 +37,14 @@ sub do_fetch {
       if ($title) {
         $out = "[link title] $title";
         sayit($server, $chan, "$out");
-        $out = '<sQ`> ' . $out;
+        $out = '<sQ`> ' . $out . "\n";
       }
 			if ($url =~ /imgur/) {
 				#check si hay un link a reddit and make a short link, fuck API
 				my ($shortRedditLink) = $got->decoded_content =~ m{"http://www\.reddit\.com/\w/\w+/comments/(\w+)/[^"]+"};
         $shortRedditLink = "http://redd.it/$shortRedditLink" if ($shortRedditLink);
 				sayit($server,$chan,"[sauce] $shortRedditLink") if ($shortRedditLink);
-        $out .= "\n<sQ`> [sauce] $shortRedditLink" if ($shortRedditLink);
+        $out .= "<sQ`> [sauce] $shortRedditLink\n" if ($shortRedditLink);
 			}
 		}
 	}

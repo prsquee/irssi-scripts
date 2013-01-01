@@ -18,11 +18,10 @@ sub do_ihq {
 	if (!$searchme) {
 		sayit($server,$chan,"que busco en isohunt?");
 		return;
-	} 
+	}
 	#escaping all the spacessssss;
-	$searchme =~ s/\s+/%20/;
-	my $query = 'http://isohunt.com/js/json.php?ihq=' . $searchme . '&sort=seeds' . '&rows=6';
-
+	$searchme =~ s/\s+/%20/; #TODO: utf8 escaping all
+	my $query = "http://isohunt.com/js/json.php?ihq=${searchme}&sort=seeds&rows=6";
 
 	my $got = $ua->get( $query );
 	my $content = $got->decoded_content;

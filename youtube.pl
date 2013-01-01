@@ -38,8 +38,8 @@ sub fetch_tubes {
       $secs = sprintf("%02d", $time);
     }
     $time = '[' . $hours . $mins . $secs . ']';
-    my $msg = "[YT]" . $time . " - " . "\x02${title}\x02";
-    $msg .= " - $desc" if ($desc); 
+    my $msg = "[YT]${time} - ${title}";
+    $msg .= " - $desc" if ($desc);
     $msg .= " - Views: $views" if ($views);
     sayit($server, $chan, $msg);
     #save links
