@@ -37,7 +37,7 @@ sub check_vimeo {
   my $title = $json_text->{'title'};
   my $desc = $json_text->{'description'};
 
-  sayit($server,$chan,"[$time] - $title - $desc - Uploaded by $user");
+  sayit($server,$chan,"$time - $title - $desc - Uploaded by $user");
   signal_emit('write to file',"<sQ`>[$time] - $title\n");
 }
 

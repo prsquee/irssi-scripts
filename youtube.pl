@@ -43,7 +43,7 @@ sub fetch_tubes {
     $msg .= " - Views: $views" if ($views);
     sayit($server, $chan, $msg);
     #save links
-    signal_emit('write to file',"<sQ`> [YT] $time - $title - Views: $views\n");
+    signal_emit('write to file',"<sQ`> [YT] $time - $title - Views: $views\n") if ($chan =~ /sysarmy|moob/);
   } else { return; }
 }
 
