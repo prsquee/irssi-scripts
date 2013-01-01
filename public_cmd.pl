@@ -199,12 +199,10 @@ sub incoming_public {
   #{{{ GENERAL URL MATCH
 	if ($text =~ m{(https?://[^ ]*)}) {
     my $url = $1;
-    signal_emit('write to file',"<$nick> $text") if ($chan =~ /sysarmy|moob/ and is_loaded('savelink'));
-    if ($url =~ /wikipedia|facebook|fbcdn/i) {
-      signal_emit('write to file',' ') if ($chan =~ /sysarmy|moob/ and is_loaded('savelink'));
-      return;
+    if ($chan =~ /sysarmy|moob/ and is_loaded('savelink')) {
+      signal_emit('write to file',"<$nick> $text");
+      return if ($url =~ /wikipedia|facebook|fbcdn/i);
     }
-
     #{{{ site specific stuff
     if ($url =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
         my $imdb = $1;
@@ -216,6 +214,12 @@ sub incoming_public {
       signal_emit('check tubes',$server,$chan,$1) if (is_loaded('youtube'));
       return;
     }
+    #vimeo vid
+    if ($url =~ m{vimeo\.com/(\d+)$}) {
+      signal_emit('check vimeo',$server,$chan,$1) if (is_loaded('vimeo'));
+      return;
+    }
+    #
     #show twitter user bio info from an url 
     if ($url =~ m{twitter\.com/(\w+)$}) {
       signal_emit('teh fuck is who',$server,$chan,$1) if ($1 and is_loaded('twitter'));
@@ -242,7 +246,14 @@ sub incoming_public {
       if ($url =~ m{http://i\.imgur\.com/(\w{5})h?\.[pjgb]\w{2}$}) { #h is for hires
           $url = "http://imgur.com/$1" if ($1);
       }
-    } #}}}
+    }
+    #quickmeme
+    if ($url =~ /qkme\.me/) {
+      if ($url =~ m{http://i\.qkme\.me/(\w{6})\.[pjgb]\w{2}$}) {
+          $url = "http://www.quickmeme.com/meme/$1" if ($1);
+      }
+    }
+    #}}}
 
     #any other http link fall here
     signal_emit('check title',$server,$chan,$url);
@@ -291,6 +302,7 @@ signal_register( { 'get temp'         => [ 'iobject', 'string'            ]});  
 signal_register( { 'google me'        => [ 'iobject', 'string','string'   ]});  #server,chan,query
 signal_register( { 'check title'      => [ 'iobject', 'string','string'   ]});  #server,chan,url
 signal_register( { 'check tubes'      => [ 'iobject', 'string','string'   ]});  #server,chan,vid
+signal_register( { 'check vimeo'      => [ 'iobject', 'string','string'   ]});  #server,chan,vid
 signal_register( { 'quotes'           => [ 'iobject', 'string','string'   ]});  #server,chan,text
 signal_register( { 'showme the money' => [ 'iobject', 'string','string'   ]});  #server,chan,text
 signal_register( { 'teh fuck is who'  => [ 'iobject', 'string','string'   ]});  #server,chan,who
