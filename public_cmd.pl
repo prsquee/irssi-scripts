@@ -42,17 +42,16 @@ sub incoming_public {
     #{{{ halps 
     if (defined($cmd)) {
       if ($cmd =~ /^h[ea]lp$/) {
-        #my $halps = settings_ge_str('halpcommands');
         sayit($server,$chan, settings_get_str('halpcommands')); 
         return;
       }#}}}
       #{{{ add help
-      if ($cmd eq 'addhalp' and $nick eq 'sQuEE' and $mask =~ /unaffiliated/) {
+      if ($cmd eq 'addhalp' and $nick eq 'sQuEE' and $mask =~ m{unaffiliated/sq/x-\d+}) {
           my ($newhalp) = $text =~ /^!addhalp\s+(.*)$/;
-          my $halps = settings_get_str('halpcommands');
-          $halps .= " $newhalp" if ($newhalp);
-          Irssi::settings_set_str('halpcommands', $halps);
-          sayit($server,$chan,$halps);
+          #my $halps = settings_get_str('halpcommands');
+          #O$halps .= " $newhalp" if ($newhalp);
+          settings_set_str('halpcommands', settings_get_str('halpcommands') . " $newhalp") if (defined($newhalp));
+          sayit($server,$chan,settings_get_str('halpcommands'));
           return;
       }#}}}
       #{{{ fortune cookies
@@ -63,7 +62,7 @@ sub incoming_public {
           return;
       }#}}}
       #{{{ do this and say that
-      if (($cmd eq 'do' or $cmd eq 'say') and $nick eq 'sQuEE' and $mask =~ /unaffiliated/) {
+      if (($cmd eq 'do' or $cmd eq 'say') and $nick eq 'sQuEE' and $mask =~ m{/unaffiliated/sq/x-\d+}) {
             $text =~ s/^!\w+\s//;
             my $serverCmd = ($cmd eq 'say') ? "MSG" : "ACTION";
             $server->command("$serverCmd $chan $text");
@@ -151,9 +150,9 @@ sub incoming_public {
       if ($cmd eq 'mytwitteris') {
         #print (CRAP Dumper($twitterusers_ref));
         my ($givenName) = $text =~ /^!mytwitteris\s+(.+)$/;
-        if (not $givenName) {
+        unless ($givenName) {
           #sayit($server,$chan,"if you tell me your twitter username I will replace your nick with that when I tweet");
-          if (!exists ($twitterusers_ref->{$nick}) or !defined($twitterusers_ref->{$nick})) {
+          if (!exists ($twitterusers_ref->{$nick})) {
             sayit($server,$chan,"I dunno any twitter handle for $nick");
           } else {
               sayit($server,$chan,"I remember $nick is \@$twitterusers_ref->{$nick} on twitter");
@@ -193,6 +192,24 @@ sub incoming_public {
         sayit($server,$chan,"!user <twitter_username>") if (!defined($who));
         return;
       }#}}}
+    #{{{ post tweet to sysarmy 
+      if ($cmd eq 'tt' and $chan =~ /sysarmy|moob/) {
+        if ($text eq '!tt') {
+        sayit($server,$chan,'send a tweet to @sysARmIRC');
+        return;
+      }
+      $text =~ s/!tt\s+//;
+      #check if usernas given a twitter handle
+      unless ($twitterusers_ref->{$nick}) {
+        $text = '[' . '@' . $nick . '] ' . $text;
+      } else {
+        $text = '[' . '@' . $twitterusers_ref->{$nick} . '] ' . $text;
+      }
+      signal_emit('post sysarmy',$server,$chan,$text);
+       return;
+     }
+     #}}}
+      
     }
   } #cmd check ends here. begin general text match
 
