@@ -21,7 +21,6 @@ my $networks = settings_get_str('active_networks');
 
 sub msg_pub {
 	my ($server,$text,$nick,$mask,$chan) = @_;
-  
 	return if ($server->{tag} !~ /$networks/);
 	return if ($text =~ /^!/);
 	if ($text =~ $regex) {
@@ -47,8 +46,7 @@ sub msg_pub {
 	}
 	else {
 		#si no es s///, guardar la linea
-		my $nickk = $nick . $server->{tag};
-		$lastline{$nickk} = $text;
+		$lastline{"$nick"."$server->{tag}"} = $text;
 	}
 }
 sub sayit {
