@@ -173,21 +173,23 @@ sub incoming_public {
         my ($givenName) = $text =~ /^!ishere\s+(.+)$/;
         if ($givenName) {
           $givenName =~ s/^\@//;
+          #check if given is a nick and has a twitter user 
           if (exists ($twitterusers_ref->{$givenName})) {
             sayit($server,$chan,"I know $givenName is \@$twitterusers_ref->{$givenName} on twitter");
             return;
           }
-          else {
-            #no existe como key, buscar por value. o tener un reverse hash for this?
-            while (my ($ircname,$twitteruser) = each(%$twitterusers_ref)) {
-              if ($givenName =~ /^$twitteruser$/i) {
-                sayit($server,$chan,"I've been told \@$givenName is $ircname here on freenode");
-                return;
-              }
+          #check if given is a twitter and has an ircname
+          foreach my $ircname (keys %$twitterusers_ref) {
+            if ($givenName =~ /^$twitterusers_ref->{$ircname}$/i) {
+              sayit($server,$chan,"I've been told \@$givenName is $ircname here on freenode");
+              return;
             }
           }
-         }
-         else {
+          sayit($server,$chan,"nope, I dunno any $givenName");
+          return;
+          #so lazy
+        }
+        else {
           sayit($server,$chan,"I might know who is who on twitter and irc");
           return;
          }
