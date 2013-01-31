@@ -69,7 +69,7 @@ sub do_imdb {
 	sayit($server,$chan,$title);
 	sayit($server,$chan,$genre);
 	sayit($server,$chan,$plot);
-  signal_emit('write to file', "<sQ`> $title\n<sQ`> $genre\n<sQ`> $plot\n") if ($chan =~ /sysarmy|moob/);
+  signal_emit('write to file', "$title\n$genre\n$plot\n") if ($chan =~ /sysarmy|moob/);
 	return;
 }
 
