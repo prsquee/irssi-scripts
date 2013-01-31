@@ -26,12 +26,12 @@ sub do_quotes {
   }
   #}}}
   #{{{ last
-  if ( $text =~ /^!qlast\s?(\d)?$/ ) { 
+  if ( $text =~ /^!qlast\s?(\d+)?$/ ) {
     my $buf = eval { read_file ($qfile, array_ref => 1) };
     if ($buf) {
       my $c = $1 || '1';
       if ($c > scalar(@$buf)) {
-        sayit($server,$chan,"stahp! too much!");
+        sayit($server,$chan,"STAHP! too much D:");
         return;
       }
       sayit($server, $chan, "[quote] $$buf[-${c}]");
