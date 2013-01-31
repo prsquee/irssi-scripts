@@ -35,12 +35,11 @@ sub check_vimeo {
   $time = "[${hours}${mins}${secs}]";
   my $user = $json_text->{'user_name'};
   my $title = $json_text->{'title'};
-  my $desc = $json_text->{'description'};
+  #my $desc = $json_text->{'description'};
 
-  sayit($server,$chan,"$time - $title - $desc - Uploaded by $user");
-  signal_emit('write to file',"<sQ`>[$time] - $title\n");
+  sayit($server,$chan,"[title] $title - Runtime $time - Uploaded by $user");
+  signal_emit('write to file',"[$time] - $title\n");
 }
-
 sub sayit {
   my ($server, $target, $msg) = @_;
   $server->command("MSG $target $msg");
