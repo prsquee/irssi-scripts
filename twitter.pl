@@ -153,7 +153,7 @@ sub do_twitter {
 
  	$result .= ". in reply to " . $shorturl	if ($shorturl);
 	sayit($server,$chan,$result) if ($result);
-  signal_emit('write to file', "<sQ`> $result\n") if ($result and $chan =~ /sysarmy|moob/);
+  signal_emit('write to file', "$result\n") if ($result and $chan =~ /sysarmy|moob/);
 }
 #}}}
 #{{{ new twtrr 

@@ -32,7 +32,7 @@ sub fml {
 
   my $out = "[$condition] $title - $howmuch - Sold: $sold - $city - $pais";
   sayit($server,$chan,$out);
-  signal_emit('write to file',"<sQ`> $out\n") if ($chan =~ /sysarmy|moob/);
+  signal_emit('write to file',"$out\n") if ($chan =~ /sysarmy|moob/);
   return;
 }
 
