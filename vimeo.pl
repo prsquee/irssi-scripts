@@ -38,7 +38,7 @@ sub check_vimeo {
   #my $desc = $json_text->{'description'};
 
   sayit($server,$chan,"[title] $title - Runtime $time - Uploaded by $user");
-  signal_emit('write to file',"[$time] - $title\n");
+  signal_emit('write to file',"[$time] - $title\n") if ($chan =~ /sysarmy|moob/);
 }
 sub sayit {
   my ($server, $target, $msg) = @_;

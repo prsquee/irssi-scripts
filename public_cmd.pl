@@ -225,13 +225,16 @@ sub incoming_public {
     #{{{ post tweet to sysarmy 
       if ($cmd eq 'tt' and $chan =~ /sysarmy|moob/) {
         if ($text eq '!tt') {
-        sayit($server,$chan,'send a tweet to @sysARmIRC');
+          sayit($server,$chan,'send a tweet to @sysARmIRC');
+          return;
+        }
+        $text =~ s/!tt\s+//;
+        foreach my $name (keys %{$twitterusers_ref}) {
+          $text =~ s/\b(?:$name)\b/\@$twitterusers_ref->{$name}/g;
+        }
+        signal_emit('post sysarmy',$server,$chan,$text) if (is_loaded('sysarmy'));
         return;
       }
-      $text =~ s/!tt\s+//;
-      signal_emit('post sysarmy',$server,$chan,$text) if (is_loaded('sysarmy'));
-      return;
-     }
      #}}}
      #{{{ cuac cuac go
       if ($cmd eq 'ddg') {
@@ -294,7 +297,7 @@ sub incoming_public {
     #future reddit api here 
     #imgur api?
     if ($url =~ /imgur/) {
-      if ($url =~ m{http://i\.imgur\.com/(\w{5})h?\.[pjgb]\w{2}$}) { #h is for hires
+      if ($url =~ m{http://i\.imgur\.com/(\w{5,8})h?\.[pjgb]\w{2}$}) { #h is for hires
           $url = "http://imgur.com/$1" if ($1);
       }
     }
