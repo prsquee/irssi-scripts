@@ -26,20 +26,24 @@ sub fetch_tubes {
   my $views  = $result->{'yt$statistics'}->{'viewCount'};
 
   #my ($title, $desc, $time, $views) = get_title($vid) if ($vid);
-  if($title) {
-    my $hours = sprintf ("%02d:", $time/3600) if ($time >= 3600);
-    $time = $time - 3600 * int($hours) if ($hours);
-    my $mins = '00:';
-    my $secs;
-    if ($time >= 60) {
-      $mins = sprintf ("%02d:", $time/60);
-      $secs = sprintf ("%02d",  $time%60);
-    } elsif ($time < 60) {
-      $secs = sprintf("%02d", $time);
+  if ($title) {
+    if ($time == 0) {
+      $time = '[LIVE]';
+    } else {
+      my $hours = sprintf ("%02d:", $time/3600) if ($time >= 3600);
+      $time = $time - 3600 * int($hours) if ($hours);
+      my $mins = '00:';
+      my $secs;
+      if ($time >= 60) {
+        $mins = sprintf ("%02d:", $time/60);
+        $secs = sprintf ("%02d",  $time%60);
+      } elsif ($time < 60) {
+        $secs = sprintf("%02d", $time);
+      }
+      $time = '[' . $hours . $mins . $secs . ']';
     }
-    $time = '[' . $hours . $mins . $secs . ']';
-    my $msg = "[YT]${time} - ${title}";
-    $msg .= " - $desc" if ($desc);
+    my $msg = "[YT] - ${time} - ${title}";
+    #$msg .= " - $desc" if ($desc);
     $msg .= " - Views: $views" if ($views);
     sayit($server, $chan, $msg);
     #save links
