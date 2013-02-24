@@ -4,7 +4,7 @@ use strict;
 use Irssi qw( signal_add print );
 
 
-my $error = 'INSUFFICIENT DATA FOR A MEANINGFUL ANSWER';
+my $error = 'INSUFFICIENT DATA FOR MEANINGFUL ANSWER';
 
 sub do_calculate {
 	my ($server, $chan, $text) = @_;
@@ -12,12 +12,13 @@ sub do_calculate {
   $text =~ s/^!calc //;
   $text =~ s/,/./g;
   $text =~ s/[^*.+0-9&|)(x\/^-]//g;   # remove anything that is not a math symbol
-  $text =~ s/\*\*/^/g;				        # teh powah!
-  $text =~ s/([*+\\.\/x-])\1*/$1/g;		# borrar simbolos repetidos
+  $text =~ s/\*\*/^/g;				  # to teh powah!
+  $text =~ s/([*+\\.\/x-])\1*/$1/g;	  # borrar simbolos repetidos
   $text =~ s/\^/**/g;                 #TODO arreglar el regex de ariiba
   $text =~ s/(?<!0)x//g;              #stripar hex con lookback
 
   my $answer = eval("($text) || 0");
+  $answer = "I can't hold all these numbers :(" if ($answer eq 'inf');
 			
   my $out = $@ ? $error : $answer;
   sayit($server,$chan,$out);
