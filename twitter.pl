@@ -16,11 +16,14 @@ signal_add("post twitter",    "update");
 
 my $twitterObj  = newtwitter();
 
+#do a polling of new tweets or stream?
+#
+#{{{ update twitter 
 sub update {
   my $text = shift;
   eval { $twitterObj->update($text) };
   print (CRAP "$@") if $@;
-}
+}#}}}
 #{{{ fetch last tweet
 sub do_last {
 	my ($server,$chan,$user) = @_;
@@ -42,7 +45,6 @@ sub do_last {
   }
 }
 #}}}
-
 #{{{ time diff 
 sub moment_ago {
   my ($time,$offset) = @_;

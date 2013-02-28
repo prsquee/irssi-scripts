@@ -25,7 +25,7 @@ my $json = new JSON;
 sub do_google {
   my ($server,$chan,$query) = @_;
   my $res = $engine->search($query);
-  print (CRAP Dumper($res));
+  #print (CRAP Dumper($res));
 
   my $q = shift @{$res->{queries}->{request}};
   #print (CRAP Dumper($q));

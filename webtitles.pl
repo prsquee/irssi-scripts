@@ -13,7 +13,7 @@ $ua->protocols_allowed( [ 'http', 'https'] );
 $ua->max_redirect( 4 );
 $ua->timeout( 15 );
 
-sub do_fetch {
+sub go_fetch {
 	my ($server,$chan,$url) = @_;
   my $out = "\n";
 	my $response = $ua->head( $url ); #para ver q es 
@@ -34,6 +34,7 @@ sub do_fetch {
         $title = $t;
       }
 			return if ($title =~ /the simple image sharer/i);       #we all know this already
+      $title =~ s/9gag/9FAG/ig;
       if ($title) {
         $out = "[link title] $title";
         sayit($server, $chan, "$out");
@@ -55,4 +56,4 @@ sub sayit {
   my ($server, $target, $msg) = @_;
   $server->command("MSG $target $msg");
 }
-signal_add("check title","do_fetch");
+signal_add("check title","go_fetch");
