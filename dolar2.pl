@@ -1,47 +1,49 @@
 #dolar2.pl
-#TODO: save the prices. do a lastcheck
+#http://www.eldolarblue.net/getDolarBlue.php?as=json
+#http://www.eldolarblue.net/getDolarLibre.php?as=json
 
 use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
 use LWP::UserAgent;
 use strict;
+use warnings;
+use Data::Dumper;
+use JSON;
 use POSIX qw( strftime );
 
 #{{{ init and stuff
 
-my $dolarC;
-my $dolarV;
+my $libreC;
+my $libreV;
 my $blueC;
 my $blueV;
-my $euroC;
-my $euroV;
-my $fetched;
+my $dateFetched;
+
+my $blueURL   = qw( http://www.eldolarblue.net/getDolarBlue.php?as=json );
+my $libreURL  = qw( http://www.eldolarblue.net/getDolarLibre.php?as=json );
 
 sub init {
-  #initial fetch and theyll stay in ram
-  ($blueC, $blueV) = getBlue(do_fetch("http://www.preciodolarblue.com.ar"));
-  ($dolarC, $dolarV, $euroC, $euroV) = getDollar(do_fetch("http://www.cotizacion-dolar.com.ar"));
+  #initial fetch and they'll stay in ram
+  ($blueC, $blueV) = gimmeMoney($blueURL);
+  ($libreC, $libreV) = gimmeMoney($libreURL);
+  #print (CRAP "blues $blueC and $blueV");
+  #print (CRAP "libres $libreC and $libreV");
 
-  if ($dolarC and $dolarV and $euroC and $euroV and $blueC and $blueV) {
-    $fetched = strftime "%F", localtime;
-    #print (CRAP $fetched);
-  }
+  $dateFetched = strftime "%F", localtime if ($libreC and $libreV and $blueC and $blueV);
+  #TODO: get the date from json
 }
 #}}}
 
+#{{{ do_dolar
 sub do_dolar {
 	my ($server,$chan,$text) = @_;
-	my ($ask, $howmuch) = $text =~ /^!(\w+)\s*(\d*)$/;
+  my ($ask, $howmuch) = $text =~ /^!(\w+)\s*(\d*)$/;
   if ($ask eq 'pesos' and not $howmuch) {
     sayit($server, $chan, "!pesos <CANTIDAD>");
 		return;
   }
-  init() if ($fetched ne strftime("%F",localtime));
+  init() if ($dateFetched ne strftime("%F",localtime));
 
-  unless (($dolarC and $dolarV) or ($blueC and $blueV)) {
-    sayit($server, $chan, "no encontre los precios. check the sauces!");
-		return;
-	}
-	my $output = "[Dolar Oficial] => $dolarC/$dolarV | [Dolar Blue] => $blueC/$blueV | [Euro] => $euroC/$euroV";
+  my $output = "[Oficial] => $libreC/$libreV | [Blue] => $blueC/$blueV";
 
 	if ($ask eq 'dolar' and not $howmuch) {
 		sayit($server, $chan, $output);
@@ -49,57 +51,34 @@ sub do_dolar {
 	}
 	if ($ask eq 'dolar' and $howmuch > 0) {
 		#print_msg("calcular el dolar en pesos");
-		my $stinkyPesos = "[Oficial] " . eval("$howmuch * $dolarC")  . " pesos" . " | [Tarjeta] " . sprintf("%.2f", eval("$howmuch * $dolarC * 1.15")) . " pesos" . " | [Blue] " . eval($howmuch * $blueC) . " pesos";
+		my $stinkyPesos = "[Oficial] " . eval("$howmuch * $libreC")  . " pesos" . " | [Tarjeta] " . sprintf("%.2f", eval("$howmuch * $libreC * 1.15")) . " pesos" . " | [Blue] " . eval($howmuch * $blueC) . " pesos";
 		sayit($server, $chan, $stinkyPesos) if ($stinkyPesos and !$@);
 		return;
 	}
 	if ($ask eq 'pesos' and $howmuch) {
-		#print_msg("calcular esa cantidad de pesos en dolares");
-		my $dollars     = sprintf("%.2f", eval("$howmuch / $dolarV"));
-		my $blueDollars = sprintf("%.2f", eval("$howmuch / $blueV" ));
-        my $euros       = sprintf("%.2f", eval("$howmuch / $euroV" ));
-		sayit($server, $chan, "[Dolar Oficial] $dollars | [Dolar Blue] $blueDollars | [Euro] $euros") if ($dollars and $blueDollars and $euros and !$@);
+		my $dollars     = sprintf("%.2f", eval("$howmuch / $libreV"));
+	  my $blueDollars = sprintf("%.2f", eval("$howmuch / $blueV" ));
+	  my $tarjeta     = sprintf("%.2f", eval("$howmuch / $blueV " ));
+		sayit($server, $chan, "[Oficial] $dollars | [Blue] $blueDollars") if ($dollars and $blueDollars and !$@);
 		return;
 	}
 }
+#}}}
 
-#{{{ get stuff 
-sub getDollar  {
-  my $content = shift;
-	my ($dCompra, $dVenta) = $content =~ /\bDolar\b\s(\d.\d\d)\s(\d\.\d\d)/;
-	my ($eCompra, $eVenta) = $content =~ /Euro\s(\d\.\d\d)\s(\d\.\d\d)/;
-  return ($dCompra, $dVenta, $eCompra, $eVenta) if ($dCompra and $dVenta and $eCompra and $eVenta );
-}
-
-sub getBlue {
-  my $content = shift;
-  my ($compra, $venta) = $content =~ /\bCompra: Venta: (\d\.\d\d) (\d\.\d\d)\b/;
-  return ($compra, $venta) if ($compra and $venta);
-
-}#}}}
 #{{{  fetch prices
-sub do_fetch {
-  my $fetchme = shift;
+sub gimmeMoney {
+  my $url = shift;
 	my $ua = new LWP::UserAgent;
+
   $ua->agent(Irssi::settings_get_str('myUserAgent'));
-	$ua->max_redirect(2);
-	$ua->timeout(20);
-	my $content;
-	my $response = $ua->get( $fetchme );
-  if ($response->is_success) {
-		$content = $response->decoded_content;
-  } else {
-  print_msg("me parece q no anda $fetchme");
-	return;
-  }
-	#$content =~ s/<[^>]*>/ /gs;
-	$content =~ s/<(?:[^>'"]*|(['"]).*?\1)*>/ /gs;
-	$content =~ s/<\/(?:[^>'"]*|(['"]).*?\1)*>/ /gs;
-	$content =~ s/google_*//g;
-	$content =~ s/&nbsp;//g;
-	$content =~ s/\s+/ /g;
-    #print ("$content");
-  return $content;
+	$ua->max_redirect(1);
+	$ua->timeout(10);
+
+	my $req = $ua->get($url);
+  my $result = $req->content;
+  #print (CRAP $result);
+  my ($compra, $venta) = $result =~ m{buy:(\d\.\d{4}),sell:(\d\.\d{4})};
+  return ($compra, $venta);
 }#}}}
 #{{{ signal and stuff
 sub sayit {

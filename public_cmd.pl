@@ -12,6 +12,7 @@ use strict;
 use warnings;
 use Storable qw (store retrieve);
 use Data::Dumper;
+use utf8;
 
 #{{{ init stuff
 #nick 2 twitter list
@@ -211,6 +212,14 @@ sub incoming_public {
           sayit($server,$chan,"my karma is over 9000 already!");
           return;
         }
+        if ($name eq 'sQuEE') {
+          sayit($server,$chan,"karma for $name: 🍺 ");
+          return;
+        }
+        if ($name eq 'komodin') {
+          sayit($server,$chan,"karma for $name: too low to show");
+          return;
+        }
         $name .= $server->{tag};
         signal_emit("karma check",$server,$chan,$name) if (is_loaded('karma'));
         return;
@@ -300,6 +309,11 @@ sub incoming_public {
       if ($url =~ m{http://i\.imgur\.com/(\w{5,8})h?\.[pjgb]\w{2}$}) { #h is for hires
           $url = "http://imgur.com/$1" if ($1);
       }
+      #elsif ($url =~ m{http://imgur.com/a/\w+}) {
+      #  $url =~ s{^http://}{};
+      #  signal_emit('karmadecay',$server,$chan,$url);
+      #  return;
+      #}
     }
     #quickmeme
     if ($url =~ /qkme\.me/) {
@@ -355,6 +369,7 @@ signal_register( { 'search isohunt'   => [ 'iobject', 'string','string' ]}); #se
 signal_register( { 'get temp'         => [ 'iobject', 'string'          ]}); #server,chan
 signal_register( { 'google me'        => [ 'iobject', 'string','string' ]}); #server,chan,query
 signal_register( { 'check title'      => [ 'iobject', 'string','string' ]}); #server,chan,url
+signal_register( { 'karmadecay'       => [ 'iobject', 'string','string' ]}); #server,chan,url
 signal_register( { 'check tubes'      => [ 'iobject', 'string','string' ]}); #server,chan,vid
 signal_register( { 'check vimeo'      => [ 'iobject', 'string','string' ]}); #server,chan,vid
 signal_register( { 'quotes'           => [ 'iobject', 'string','string' ]}); #server,chan,text
