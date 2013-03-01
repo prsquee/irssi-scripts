@@ -17,8 +17,8 @@ sub do_calculate {
   $text =~ s/\^/**/g;                 #TODO arreglar el regex de ariiba
   $text =~ s/(?<!0)x//g;              #stripar hex con lookback
 
-  my $answer = eval("($text) || 0");
-  $answer = "I can't hold all these numbers :(" if ($answer eq 'inf');
+  my $answer = eval("($text) || '0'");
+  $answer = "I can't hold all these numbers :(" if (defined($answer) and $answer eq 'inf');
 			
   my $out = $@ ? $error : $answer;
   sayit($server,$chan,$out);
