@@ -40,11 +40,11 @@ sub fetch_tubes {
       } elsif ($time < 60) {
         $secs = sprintf("%02d", $time);
       }
-      $time = '[' . $hours . $mins . $secs . ']';
+      $time = '[time ' . $hours . $mins . $secs . ']';
     }
-    my $msg = "[YT] - ${time} - ${title}";
+    my $msg = "[title] ${title} - ${time}";
     #$msg .= " - $desc" if ($desc);
-    $msg .= " - Views: $views" if ($views);
+    $msg .= " - [views $views]" if ($views);
     sayit($server, $chan, $msg);
     #save links
     signal_emit('write to file',"[YT] $time - $title - Views: $views\n") if ($chan =~ /sysarmy|moob/);
