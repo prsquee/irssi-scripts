@@ -40,8 +40,8 @@ sub incoming_public {
   #check if someone said a command
   if ($text =~ /^!/) {
     my ($cmd) = $text =~ /^!(\w+)\b/;
-    #{{{ halps 
     if (defined($cmd)) {
+      #{{{ halps 
       if ($cmd =~ /^h[ea]lp$/) {
         sayit($server,$chan, settings_get_str('halpcommands')); 
         return;
@@ -224,14 +224,14 @@ sub incoming_public {
         signal_emit("karma check",$server,$chan,$name) if (is_loaded('karma'));
         return;
       }#}}}
-      #{{{ checout user on twitter 
+      #{{{ checkout user on twitter 
       if ($cmd eq 'user') {
         my ($who) = $text =~ /^!user\s+@?(\w+)/;
         signal_emit('teh fuck is who',$server,$chan,$who) if ($who and is_loaded('twitter'));
         sayit($server,$chan,"!user <twitter_username>") if (!defined($who));
         return;
       }#}}}
-    #{{{ post tweet to sysarmy 
+      #{{{ post tweet to sysarmy 
       if ($cmd eq 'tt' and $chan =~ /sysarmy|moob/) {
         if ($text eq '!tt') {
           sayit($server,$chan,'send a tweet to @sysARmIRC');
@@ -243,9 +243,8 @@ sub incoming_public {
         }
         signal_emit('post sysarmy',$server,$chan,$text) if (is_loaded('sysarmy'));
         return;
-      }
-     #}}}
-     #{{{ cuac cuac go
+      } #}}}
+      #{{{ cuac cuac go
       if ($cmd eq 'ddg') {
         my ($query) = $text =~ /^!ddg\s+(.*)$/;
         unless ($query) {
@@ -254,8 +253,11 @@ sub incoming_public {
         } else {
           signal_emit('cuac cuac go',$server,$chan,$query) if (is_loaded('duckduckgo'));
         }
-     }
-     #}}}
+      }#}}}
+     #{{{ bitcoins
+      if ($cmd eq 'btc') {
+        signal_emit('not real money',$server,$chan) if (is_loaded('bitcoins'));
+      }#}}}
     }
   } #cmd check ends here. begin general text match
 
@@ -337,6 +339,7 @@ sub incoming_public {
     signal_emit('karma bitch',$name,$op) if (is_loaded('karma'));
   } #}}}
 } #incoming puiblic message ends here
+
 #{{{ signal and stuff
 sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
 sub sayit {
@@ -386,6 +389,7 @@ signal_register( { 'mercadolibre'     => [ 'iobject', 'string','string' ]}); #se
 signal_register( { 'reimgur'          => [ 'iobject', 'string','string' ]}); #server,chan,url
 signal_register( { 'write to file'    => [            'string'          ]}); #text
 signal_register( { 'cuac cuac go'     => [ 'iobject', 'string','string' ]}); #server,chan,query
+signal_register( { 'not real money'   => [ 'iobject', 'string'          ]}); #server,chan
 
 #}}} 
 #{{{ signal register halp

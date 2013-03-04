@@ -5,7 +5,7 @@ use strict;
 use Data::Dumper;
 use LWP::UserAgent;
 use JSON;
-use Data::Dump;
+use Data::Dumper;
 
 my $json = new JSON;
 my $ua = new LWP::UserAgent;
