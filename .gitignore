@@ -1,6 +1,6 @@
 *.txt
-
 *.un~
-
 .DS_Store
+autorun/
 test/
+datafiles/
