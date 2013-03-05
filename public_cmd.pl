@@ -255,8 +255,8 @@ sub incoming_public {
         }
       }#}}}
      #{{{ bitcoins
-      if ($cmd eq 'btc') {
-        signal_emit('not real money',$server,$chan) if (is_loaded('bitcoins'));
+      if ($cmd =~ m{^bi?tc(?:oin)?s?}) {
+        signal_emit('gold digger',$server,$chan) if (is_loaded('bitcoins'));
       }#}}}
     }
   } #cmd check ends here. begin general text match
@@ -389,7 +389,7 @@ signal_register( { 'mercadolibre'     => [ 'iobject', 'string','string' ]}); #se
 signal_register( { 'reimgur'          => [ 'iobject', 'string','string' ]}); #server,chan,url
 signal_register( { 'write to file'    => [            'string'          ]}); #text
 signal_register( { 'cuac cuac go'     => [ 'iobject', 'string','string' ]}); #server,chan,query
-signal_register( { 'not real money'   => [ 'iobject', 'string'          ]}); #server,chan
+signal_register( { 'gold digger'      => [ 'iobject', 'string'          ]}); #server,chan
 
 #}}} 
 #{{{ signal register halp
