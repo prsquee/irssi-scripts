@@ -258,6 +258,10 @@ sub incoming_public {
       if ($cmd =~ m{^bi?tc(?:oin)?s?}) {
         signal_emit('gold digger',$server,$chan) if (is_loaded('bitcoins'));
       }#}}}
+      #{{{ the pirate bay
+      if ($cmd eq 'tpb') {
+        signal_emit('arrr',$server,$chan,$text) if (is_loaded('tpb'));
+      }#}}}
     }
   } #cmd check ends here. begin general text match
 
@@ -389,6 +393,7 @@ signal_register( { 'reimgur'          => [ 'iobject', 'string','string' ]}); #se
 signal_register( { 'write to file'    => [            'string'          ]}); #text
 signal_register( { 'cuac cuac go'     => [ 'iobject', 'string','string' ]}); #server,chan,query
 signal_register( { 'gold digger'      => [ 'iobject', 'string'          ]}); #server,chan
+signal_register( { 'arrr'             => [ 'iobject', 'string','string' ]}); #server,chan,$text
 
 #}}} 
 #{{{ signal register halp
