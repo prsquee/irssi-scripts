@@ -217,7 +217,7 @@ sub incoming_public {
           return;
         }
         if ($name eq 'komodin') {
-          sayit($server,$chan,"karma for $name: too low to show");
+          sayit($server,$chan,"karma for $name: so low, I almost buffer underflow!");
           return;
         }
         $name .= $server->{tag};
@@ -262,7 +262,7 @@ sub incoming_public {
   } #cmd check ends here. begin general text match
 
   #{{{ GENERAL URL MATCH
-	if ($text =~ m{(https?://[^ ]*)}) {
+  if ($text =~ m{(https?://[^ ]*)}) {
     my $url = $1;
     if ($chan =~ /sysarmy|moob/ and is_loaded('savelink')) {
       signal_emit('write to file',"<$nick> $text");
@@ -270,8 +270,7 @@ sub incoming_public {
     }
     #{{{ site specific stuff
     if ($url =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
-        my $imdb = $1;
-        signal_emit('search imdb',$server,$chan,$imdb) if (is_loaded('imdb'));
+        signal_emit('search imdb',$server,$chan,$1) if ($1 and is_loaded('imdb'));
         return;
     }
     #youtube here
@@ -343,8 +342,8 @@ sub incoming_public {
 #{{{ signal and stuff
 sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
 sub sayit {
-	my ($server, $target, $msg) = @_;
-	$server->command("MSG $target $msg");
+  my ($server, $target, $msg) = @_;
+  $server->command("MSG $target $msg");
 }
 #signal_add("message private","msg_priv");
 
