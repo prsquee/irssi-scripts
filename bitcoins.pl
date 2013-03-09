@@ -20,18 +20,18 @@ sub bitcoin {
   my $url = 'https://mtgox.com/api/1/BTCUSD/ticker';
   my $req = $ua->get($url);
   my $r = $json->utf8->decode($req->decoded_content);
-	#print (CRAP Dumper($r));
-	#return;
+  #print (CRAP Dumper($r));
+  #return;
 
-	if ($r->{result} eq 'success') {
-		my $ret = $r->{return};
-		my $out = '[sell] '			. $r->{return}->{sell}->{display_short};
-		$out .= ' | [buy] '			. $r->{return}->{buy}->{display_short};
-		$out .= ' | [highest] ' . $r->{return}->{high}->{display_short};
-		$out .= ' | [lowerst] ' . $r->{return}->{low}->{display_short};
-		sayit ($server,$chan,$out);
-		return;
-	}
+  if ($r->{result} eq 'success') {
+    my $ret = $r->{return};
+    my $out = '[sell] '     . $r->{return}->{sell}->{display_short};
+    $out .= ' | [buy] '     . $r->{return}->{buy}->{display_short};
+    $out .= ' | [highest] ' . $r->{return}->{high}->{display_short};
+    $out .= ' | [lowerst] ' . $r->{return}->{low}->{display_short};
+    sayit ($server,$chan,$out);
+    return;
+  }
 #  my $condition = uc $result->{condition};
 #  my $price = $result->{price};
 #  my $currency = $result->{currency_id};
