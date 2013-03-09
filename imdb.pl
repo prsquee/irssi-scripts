@@ -25,7 +25,10 @@ sub do_imdb {
     $query = uri_escape($query);
   }
     
-  return if (!$query);
+  if (!$query) {
+    sayit($server,$chan,"I need a movie title");
+    return;
+  }
   my $url = "http://www.omdbapi.com/?${param}=${query}" if ($param and $query);
   
   my $got = $ua->get($url);
@@ -44,13 +47,13 @@ sub do_imdb {
     $link = '';
   }
 
-  my $title = "$imdb->{Title} - Directed by $imdb->{Director}";
-  my $genre = "Year: $imdb->{Year} - Genre: $imdb->{Genre} - Rating: $imdb->{imdbRating} - Votes: $imdb->{imdbVotes}";
+  my $title = "$imdb->{Title} [$imdb->{Year}] - $imdb->{Genre} - Directed by $imdb->{Director}";
+  my $actor = "Actors: $imdb->{Actors}";
   my $plot  = "Plot: $imdb->{Plot} $link";
   sayit($server,$chan,$title);
-  sayit($server,$chan,$genre);
+  sayit($server,$chan,$actor);
   sayit($server,$chan,$plot);
-  signal_emit('write to file', "$title\n$genre\n$plot\n") if ($chan =~ /sysarmy|moob/);
+  signal_emit('write to file', "$title\n$actor\n$plot\n") if ($chan =~ /sysarmy|moob/);
   return;
 }
 
