@@ -3,7 +3,7 @@
 
 use Irssi qw(signal_emit signal_add print settings_add_str settings_get_str settings_set_str ) ;
 use strict;
-use Net::Twitter::Lite; 
+use Net::Twitter::Lite::WithAPIv1_1;
 use HTML::Entities;
 use Data::Dumper;
 use Date::Parse qw(str2time); #thank godess for this black magic
@@ -165,10 +165,18 @@ sub newtwitter {
   consumer_key    => settings_get_str('twitter_apikey'),
   consumer_secret => settings_get_str('twitter_secret'),
   );
-  my $twitter = Net::Twitter::Lite->new(
-    %consumer_tokens,
-    legacy_lists_api  =>  0,
-  );
+  my $twitter;
+  if (%consumer_tokens) {
+    $twitter = Net::Twitter::Lite->new(
+      %consumer_tokens,
+      legacy_lists_api  =>  0,
+      ssl               =>  0,
+      #TODO: who ssl is so slow
+    );
+  } else {
+    print (CRAP "no keys!");
+    return;
+  }
   #my ($at, $ats) = restore_tokens(); #this seems like forever
   my $at  = settings_get_str('twitter_access_token');
   my $ats = settings_get_str('twitter_access_token_secret');
@@ -177,6 +185,7 @@ sub newtwitter {
     $twitter->access_token_secret($ats);
   } else {
     print (CRAP "no tokens!");
+    return;
   }
   return $twitter;
 }

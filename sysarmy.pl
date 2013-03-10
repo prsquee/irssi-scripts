@@ -3,21 +3,28 @@
 
 use Irssi qw(signal_add print settings_add_str settings_get_str settings_set_str ) ;
 use strict;
-use Net::Twitter::Lite;
+use Net::Twitter::Lite::WithAPIv1_1;
 use Data::Dumper;
 use Encode qw (encode decode);
 
 #{{{ #init 
 signal_add("post sysarmy",  "post_twitter");
 
+
 my %consumer_tokens = (
   consumer_key    => settings_get_str('twitter_apikey'),
   consumer_secret => settings_get_str('twitter_secret'),
 );
-my $twitter = Net::Twitter::Lite->new(
-  %consumer_tokens,
-  legacy_lists_api      =>  0,
-);
+my $twitter;
+if (%consumer_tokens) {
+  $twitter = Net::Twitter::Lite->new(
+    %consumer_tokens,
+    legacy_lists_api      =>  0,
+  );
+} else {
+  print (CRAP "no keys!");
+  return;
+}
 
 my $at      = settings_get_str('sysarmy_access_token');
 my $ats     = settings_get_str('sysarmy_access_token_secret');
@@ -27,6 +34,7 @@ if ($at && $ats) {
   $twitter->access_token_secret($ats);
 } else {
   print (CRAP "I cant hold all these non existen token in my hands!");
+  return;
 }
 #print (CRAP Dumper($army));
 #}}} 
