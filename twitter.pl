@@ -26,7 +26,7 @@ sub update {
 }#}}}
 #{{{ fetch last tweet
 sub do_last {
-	my ($server,$chan,$user) = @_;
+  my ($server,$chan,$user) = @_;
   if ($user) {
     #my $twitter = newtwitter();
     #my $a = Dumper($twitter);
@@ -89,10 +89,11 @@ sub moment_ago {
 }#}}}
 #{{{ user info
 sub userbio {
-	my ($server,$chan,$who) = @_;
+  my ($server,$chan,$who) = @_;
   if ($who) {
     eval {
       my $r = $twitterObj->show_user($who);
+      #print (CRAP Dumper($r));
       my $user = "[\@$who] " . "Name: " . $r->{name};
       $user .= " - " . "Bio: " . $r->{description} if ($r->{description}); 
       $user .= " - " . "Location: " . $r->{location} if ($r->{location});
@@ -109,52 +110,52 @@ sub userbio {
 #}}}
 #{{{ search twt
 sub do_search {
-	my ($text, $chan, $server) = @_;
-	if ($text =~ /^!searchtwt$/) {
-		sayit($server,$chan,"i will search anything on twittersphere!");
-	} else {
-		my ($query) = $text =~ /^!searchtwt (.*)/i;
-		if ($query) {
+  my ($text, $chan, $server) = @_;
+  if ($text =~ /^!searchtwt$/) {
+    sayit($server,$chan,"i will search anything on twittersphere!");
+  } else {
+    my ($query) = $text =~ /^!searchtwt (.*)/i;
+    if ($query) {
       #my $twitter = newtwitter();
-			eval {
-				my $r = $twitterObj->search($query);
-				for (0..9) {
-					#for (all) my $status ( @${$r->{results}}) {
-					for my $status ( ${$r->{results}}[$_]) {
-						#my $a = Dumper($status);
-						#print_msg("$a");
-						return if (!$status); 
-						my $tweet = decode_entities($status->{text});
-						my $msg = "\@" . $status->{from_user} . ": " . $tweet;
-						sayit($server, $chan, $msg);
-					}
-				}
-			};
-			return if $@;
-		}
-	}
+      eval {
+        my $r = $twitterObj->search($query);
+        for (0..9) {
+          #for (all) my $status ( @${$r->{results}}) {
+          for my $status ( ${$r->{results}}[$_]) {
+            #my $a = Dumper($status);
+            #print_msg("$a");
+            return if (!$status); 
+            my $tweet = decode_entities($status->{text});
+            my $msg = "\@" . $status->{from_user} . ": " . $tweet;
+            sayit($server, $chan, $msg);
+          }
+        }
+      };
+      return if $@;
+    }
+  }
 }
 #}}}
 #{{{ do twitter
 sub do_twitter {
-	my ($server,$chan,$text) = @_;
-	my ($user,$statusid) = $text =~ m{twitter\.com(?:/#!)?/([^/]+)/status(?:es)?/(\d+)}i; 
+  my ($server,$chan,$text) = @_;
+  my ($user,$statusid) = $text =~ m{twitter\.com(?:/#!)?/([^/]+)/status(?:es)?/(\d+)}i; 
 
-	my $status = eval { $twitterObj->show_status($statusid) };
+  my $status = eval { $twitterObj->show_status($statusid) };
   #print (CRAP Dumper($status));
-	return if $@;
+  return if $@;
 
   my $delta = moment_ago($status->{created_at},$status->{user}->{utc_offset});
-	my ($client) = $status->{source} =~ m{<a\b[^>]+>(.*?)</a>};
-	$client = $status->{source} if (!$client);
-	my $result = "\@${user} " . 'tweeted: '. '"'. decode_entities($status->{text}) . '" ';
+  my ($client) = $status->{source} =~ m{<a\b[^>]+>(.*?)</a>};
+  $client = $status->{source} if (!$client);
+  my $result = "\@${user} " . 'tweeted: '. '"'. decode_entities($status->{text}) . '" ';
   $result .= 'from ' . $delta . ' ago' if ($delta);
 
-	my $replyurl = "http://twitter.com/" . $user . "/status/" . $status->{in_reply_to_status_id} if ($status->{in_reply_to_status_id});
+  my $replyurl = "http://twitter.com/" . $user . "/status/" . $status->{in_reply_to_status_id} if ($status->{in_reply_to_status_id});
   my $shorturl = scalar('Irssi::Script::ggl')->can('do_shortme')->($replyurl) if ($replyurl);
 
- 	$result .= ". in reply to " . $shorturl	if ($shorturl);
-	sayit($server,$chan,$result) if ($result);
+  $result .= ". in reply to " . $shorturl if ($shorturl);
+  sayit($server,$chan,$result) if ($result);
   signal_emit('write to file', "$result\n") if ($result and $chan =~ /sysarmy|moob/);
 }
 #}}}
@@ -164,25 +165,25 @@ sub newtwitter {
   consumer_key    => settings_get_str('twitter_apikey'),
   consumer_secret => settings_get_str('twitter_secret'),
   );
-	my $twitter = Net::Twitter::Lite->new(
+  my $twitter = Net::Twitter::Lite->new(
     %consumer_tokens,
     legacy_lists_api  =>  0,
-	);
+  );
   #my ($at, $ats) = restore_tokens(); #this seems like forever
-	my $at  = settings_get_str('twitter_access_token');
-	my $ats = settings_get_str('twitter_access_token_secret');
-	if ($at && $ats) {
-		$twitter->access_token($at);
-		$twitter->access_token_secret($ats);
-	} else {
+  my $at  = settings_get_str('twitter_access_token');
+  my $ats = settings_get_str('twitter_access_token_secret');
+  if ($at && $ats) {
+    $twitter->access_token($at);
+    $twitter->access_token_secret($ats);
+  } else {
     print (CRAP "no tokens!");
   }
-	return $twitter;
+  return $twitter;
 }
 #}}}
 #{{{ signals and stuff
 sub sayit {
-	my ($server, $target, $msg) = @_;
-	$server->command("MSG $target $msg");
+  my ($server, $target, $msg) = @_;
+  $server->command("MSG $target $msg");
 }
 #}}}
