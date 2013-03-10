@@ -1,7 +1,7 @@
 #check youtube title and desc
 
 use Irssi qw (signal_add signal_emit print settings_get_str );
-#use warnings;
+use warnings;
 use strict;
 use Data::Dumper;
 use LWP::UserAgent;
@@ -24,25 +24,24 @@ sub fetch_tubes {
   my $desc   = $result->{'media$group'}->{'media$description'}->{'$t'};
   my $time   = $result->{'media$group'}->{'yt$duration'}->{seconds};
   my $views  = $result->{'yt$statistics'}->{'viewCount'};
+  my $hour = '';
+  my $mins = '00:';
+  my $secs = 0;
 
-  #my ($title, $desc, $time, $views) = get_title($vid) if ($vid);
   if ($title) {
     if ($time == 0) {
       $time = '[LIVE]';
     } else {
-      my $hours = sprintf ("%02d:", $time/3600) if ($time >= 3600);
-      $time = $time - 3600 * int($hours) if ($hours);
-      my $mins = '00:';
-      my $secs;
+      $hour = sprintf ("%02d:", $time/3600) if ($time >= 3600);
+      $time = $time - 3600 * int($hour) if ($hour);
       if ($time >= 60) {
         $mins = sprintf ("%02d:", $time/60);
         $secs = sprintf ("%02d",  $time%60);
       } elsif ($time < 60) {
         $secs = sprintf("%02d", $time);
       }
-      $time = '[time ' . $hours . $mins . $secs . ']';
     }
-    my $msg = "[title] ${title} - ${time}";
+    my $msg = "[${hour}${mins}${secs}] ${title}";
     #$msg .= " - $desc" if ($desc);
     $msg .= " - [views $views]" if ($views);
     sayit($server, $chan, $msg);
