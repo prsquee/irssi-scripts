@@ -154,7 +154,7 @@ sub incoming_public {
         unless ($givenName) {
           #sayit($server,$chan,"if you tell me your twitter username I will replace your nick with that when I tweet");
           if (not exists ($twitterusers_ref->{$nick})) {
-            sayit($server,$chan,"I dunno any twitter handle for $nick");
+            sayit($server,$chan,"I dunno any twitter handle for $nick. Add yours with !mytwitteris \@yourtwitter.");
           }
           else {
             sayit($server,$chan,"I remember $nick is \@$twitterusers_ref->{$nick} on twitter");
