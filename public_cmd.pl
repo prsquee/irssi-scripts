@@ -125,6 +125,7 @@ sub incoming_public {
       if ($cmd eq 'ping') { sayit($server,$chan,"pong"); return; }#}}}
       #{{{ dolar and pesos
       if ($cmd eq 'dolar' or $cmd eq 'pesos') {
+        #sayit($server,$chan,"service down. but I can guess the price is still high :(");
         signal_emit('showme the money',$server,$chan,$text) if (is_loaded('dolar2'));
         return;
       }#}}}

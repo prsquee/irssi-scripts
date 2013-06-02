@@ -1,5 +1,4 @@
 #omdb api http://omdbapi.com/
-
 use Irssi qw(signal_add print signal_emit) ;
 use strict;
 use LWP::UserAgent;
@@ -24,13 +23,11 @@ sub do_imdb {
     $query = $1;
     $query = uri_escape($query);
   }
-    
   if (!$query) {
     sayit($server,$chan,"I need a movie title");
     return;
   }
   my $url = "http://www.omdbapi.com/?${param}=${query}" if ($param and $query);
-  
   my $got = $ua->get($url);
   my $content = $got->decoded_content;
   my $imdb = $json->allow_nonref->decode($content);

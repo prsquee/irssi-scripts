@@ -40,8 +40,9 @@ sub fetch_tubes {
       } elsif ($time < 60) {
         $secs = sprintf("%02d", $time);
       }
+      $time = "[${hour}${mins}${secs}]";
     }
-    my $msg = "[${hour}${mins}${secs}] ${title}";
+    my $msg = "${time} ${title}";
     #$msg .= " - $desc" if ($desc);
     $msg .= " - [views $views]" if ($views);
     sayit($server, $chan, $msg);

@@ -1,4 +1,4 @@
-#bit
+#bitcoins ❤
 #https://en.bitcoin.it/wiki/MtGox/API/HTTP/v1#HTTP_API_version_1_methods
 
 use Irssi qw (signal_add print settings_get_str signal_emit);
@@ -17,7 +17,7 @@ $ua->timeout(15);
 
 sub bitcoin {
   my ($server,$chan,$mla) = @_;
-  my $url = 'https://mtgox.com/api/1/BTCUSD/ticker';
+  my $url = 'https://data.mtgox.com/api/1/BTCUSD/ticker';
   my $req = $ua->get($url);
   my $r = $json->utf8->decode($req->decoded_content);
   #print (CRAP Dumper($r));
@@ -28,7 +28,7 @@ sub bitcoin {
     my $out = '[sell] '     . $r->{return}->{sell}->{display_short};
     $out .= ' | [buy] '     . $r->{return}->{buy}->{display_short};
     $out .= ' | [highest] ' . $r->{return}->{high}->{display_short};
-    $out .= ' | [lowerst] ' . $r->{return}->{low}->{display_short};
+    $out .= ' | [lowest] ' . $r->{return}->{low}->{display_short};
     sayit ($server,$chan,$out);
     return;
   }
