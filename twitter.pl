@@ -167,7 +167,7 @@ sub newtwitter {
   );
   my $twitter;
   if (%consumer_tokens) {
-    $twitter = Net::Twitter::Lite->new(
+    $twitter = Net::Twitter::Lite::WithAPIv1_1->new(
       %consumer_tokens,
       legacy_lists_api  =>  0,
       ssl               =>  0,
