@@ -91,8 +91,9 @@ sub do_quotes {
       my @found = eval { read_file $qfile };
       if (@found) {
         foreach (@words2find) {
-          my $singleWord = qr/$_/i;
-          eval { @found = grep { /$singleWord/ } @found; }
+          my $singleWord = eval { qr/$_/i } ;
+          #$singleWord =~ s%/%%;
+          eval { @found = grep { /$singleWord/ } @found; } if ($singleWord and not $@);
         }
 
         if (scalar(@found) == 0) {
