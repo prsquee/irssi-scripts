@@ -213,18 +213,20 @@ sub incoming_public {
           sayit($server,$chan,"my karma is over 9000 already!");
           return;
         }
-        if ($name eq 'sQuEE') {
-          sayit($server,$chan,"karma for $name: 🍺 ");
-          return;
-        }
-        if ($name eq 'komodin') {
-          sayit($server,$chan,"karma for $name: so low, I almost buffer underflow!");
-          return;
-        }
+        if ($name eq 'sQuEE') { sayit($server,$chan,"karma for $name: 🍺 "); return; }
+        if ($name =~ /^osx$/i) { sayit($server,$chan,"karma for $name: "); return; }
+        #if ($name eq 'komodin') { sayit($server,$chan,"karma for $name: so low, I almost buffer underflow!"); return; }
         $name .= $server->{tag};
         signal_emit("karma check",$server,$chan,$name) if (is_loaded('karma'));
         return;
-      }#}}}
+      }
+      #set karma
+      if ($cmd eq 'setkarma' and $nick eq 'sQuEE' and $mask =~ m{unaffiliated/sq/x-\d+}) { #hacer un isMaster($nick)
+        my ($key,$val) = $text =~ /^!setkarma\s(.+)=(.*)$/;
+        signal_emit("karma set",$server,$chan,$key.$server->{tag},$val) if (is_loaded('karma') and $key and $val);
+        return;
+      }
+      #}}}
       #{{{ checkout user on twitter 
       if ($cmd eq 'user') {
         my ($who) = $text =~ /^!user\s+@?(\w+)/;
@@ -369,32 +371,33 @@ settings_add_str('imgur'  , 'imgurkey',                     '');
 
 #}}}
 #{{{ #signal registration
-signal_register( { 'show uptime'      => [ 'iobject', 'string'          ]}); #server,chan
-signal_register( { 'search imdb'      => [ 'iobject', 'string','string' ]}); #server,chan,text
-signal_register( { 'calculate'        => [ 'iobject', 'string','string' ]}); #server,chan,text
-signal_register( { 'search isohunt'   => [ 'iobject', 'string','string' ]}); #server,chan,text
-signal_register( { 'get temp'         => [ 'iobject', 'string'          ]}); #server,chan
-signal_register( { 'google me'        => [ 'iobject', 'string','string' ]}); #server,chan,query
-signal_register( { 'check title'      => [ 'iobject', 'string','string' ]}); #server,chan,url
-signal_register( { 'karmadecay'       => [ 'iobject', 'string','string' ]}); #server,chan,url
-signal_register( { 'check tubes'      => [ 'iobject', 'string','string' ]}); #server,chan,vid
-signal_register( { 'check vimeo'      => [ 'iobject', 'string','string' ]}); #server,chan,vid
-signal_register( { 'quotes'           => [ 'iobject', 'string','string' ]}); #server,chan,text
-signal_register( { 'showme the money' => [ 'iobject', 'string','string' ]}); #server,chan,text
-signal_register( { 'teh fuck is who'  => [ 'iobject', 'string','string' ]}); #server,chan,who
-signal_register( { 'fetch tweet'      => [ 'iobject', 'string','string' ]}); #server,chan,url
-signal_register( { 'last tweet'       => [ 'iobject', 'string','string' ]}); #server,chan,user
-signal_register( { 'karma check'      => [ 'iobject', 'string','string' ]}); #server,chan,name
-signal_register( { 'karma bitch'      => [            'string','string' ]}); #name,op
-signal_register( { 'post twitter'     => [ 'iobject', 'string','string' ]}); #server,chan,text
-signal_register( { 'post sysarmy'     => [ 'iobject', 'string','string' ]}); #server,chan,text
-signal_register( { 'tweet quote'      => [            'string'          ]}); #addme
-signal_register( { 'mercadolibre'     => [ 'iobject', 'string','string' ]}); #server,chan,mla
-signal_register( { 'reimgur'          => [ 'iobject', 'string','string' ]}); #server,chan,url
-signal_register( { 'write to file'    => [            'string'          ]}); #text
-signal_register( { 'cuac cuac go'     => [ 'iobject', 'string','string' ]}); #server,chan,query
-signal_register( { 'gold digger'      => [ 'iobject', 'string'          ]}); #server,chan
-signal_register( { 'arrr'             => [ 'iobject', 'string','string' ]}); #server,chan,$text
+signal_register( { 'show uptime'      => [ 'iobject','string'                      ]}); #server,chan
+signal_register( { 'search imdb'      => [ 'iobject','string','string'             ]}); #server,chan,text
+signal_register( { 'calculate'        => [ 'iobject','string','string'             ]}); #server,chan,text
+signal_register( { 'search isohunt'   => [ 'iobject','string','string'             ]}); #server,chan,text
+signal_register( { 'get temp'         => [ 'iobject','string'                      ]}); #server,chan
+signal_register( { 'google me'        => [ 'iobject','string','string'             ]}); #server,chan,query
+signal_register( { 'check title'      => [ 'iobject','string','string'             ]}); #server,chan,url
+signal_register( { 'karmadecay'       => [ 'iobject','string','string'             ]}); #server,chan,url
+signal_register( { 'check tubes'      => [ 'iobject','string','string'             ]}); #server,chan,vid
+signal_register( { 'check vimeo'      => [ 'iobject','string','string'             ]}); #server,chan,vid
+signal_register( { 'quotes'           => [ 'iobject','string','string'             ]}); #server,chan,text
+signal_register( { 'showme the money' => [ 'iobject','string','string'             ]}); #server,chan,text
+signal_register( { 'teh fuck is who'  => [ 'iobject','string','string'             ]}); #server,chan,who
+signal_register( { 'fetch tweet'      => [ 'iobject','string','string'             ]}); #server,chan,url
+signal_register( { 'last tweet'       => [ 'iobject','string','string'             ]}); #server,chan,user
+signal_register( { 'karma check'      => [ 'iobject','string','string'             ]}); #server,chan,name
+signal_register( { 'karma set'        => [ 'iobject','string','string','string'    ]}); #server,chan,key,val
+signal_register( { 'karma bitch'      => [           'string','string'             ]}); #name,op
+signal_register( { 'post twitter'     => [ 'iobject','string','string'             ]}); #server,chan,text
+signal_register( { 'post sysarmy'     => [ 'iobject','string','string'             ]}); #server,chan,text
+signal_register( { 'tweet quote'      => [           'string'                      ]}); #addme
+signal_register( { 'mercadolibre'     => [ 'iobject','string','string'             ]}); #server,chan,mla
+signal_register( { 'reimgur'          => [ 'iobject','string','string'             ]}); #server,chan,url
+signal_register( { 'write to file'    => [           'string'                      ]}); #text
+signal_register( { 'cuac cuac go'     => [ 'iobject','string','string'             ]}); #server,chan,query
+signal_register( { 'gold digger'      => [ 'iobject','string'                      ]}); #server,chan
+signal_register( { 'arrr'             => [ 'iobject','string','string'             ]}); #server,chan,$text
 
 #}}} 
 #{{{ signal register halp

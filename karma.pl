@@ -17,7 +17,7 @@ sub calc_karma {
 }
 sub show_karma {
   my ($server,$chan,$name) = @_;
-  if (!exists ($karma->{$name}) or !defined($karma->{$name}) or $karma->{$name} == 0) {
+  if (!exists ($karma->{$name}) or !defined($karma->{$name}) or $karma->{$name} eq '0') {
     $name =~ s/$server->{tag}$//;
     sayit($server,$chan,"$name has neutral karma");
   }
@@ -27,9 +27,16 @@ sub show_karma {
     sayit($server,$chan,"karma for $name: $k");
   }
 }
+sub set_karma {
+	my ($server,$chan,$key,$val) = @_;
+	$karma->{$key} = $val;
+  store $karma, $karmaStorable;
+	show_karma($server,$chan,$key);
+}
 sub sayit {
   my ($server, $target, $msg) = @_;
 	$server->command("MSG $target $msg");
 }
 signal_add('karma check','show_karma');
 signal_add('karma bitch','calc_karma');
+signal_add('karma set',	'set_karma');
