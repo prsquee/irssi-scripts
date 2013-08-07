@@ -43,11 +43,13 @@ sub incoming_public {
     if (defined($cmd)) {
       #{{{ halps 
       if ($cmd =~ /^h[ea]lp$/) {
-        sayit($server,$chan, settings_get_str('halpcommands')); 
+        my $defaultcmd = settings_get_str('halpcommands');
+        $defaultcmd .= ' !tt !ishere !mytwitteris' if ($chan eq '#sysarmy');
+        sayit($server,$chan,$defaultcmd);
         return;
       }#}}}
       #{{{ add help
-      if ($cmd eq 'addhalp' and $nick eq 'sQuEE' and $mask =~ m{unaffiliated/sq/x-\d+}) {
+      if ($cmd eq 'addhalp' and isMaster($nick,$mask)) {
           my ($newhalp) = $text =~ /^!addhalp\s+(.*)$/;
           #my $halps = settings_get_str('halpcommands');
           #O$halps .= " $newhalp" if ($newhalp);
@@ -63,11 +65,11 @@ sub incoming_public {
           return;
       }#}}}
       #{{{ do this and say that
-      if (($cmd eq 'do' or $cmd eq 'say') and $nick eq 'sQuEE' and $mask =~ m{/unaffiliated/sq/x-\d+}) {
-            $text =~ s/^!\w+\s//;
-            my $serverCmd = ($cmd eq 'say') ? "MSG" : "ACTION";
-            $server->command("$serverCmd $chan $text");
-            return;
+      if (($cmd eq 'do' or $cmd eq 'say') and isMaster($nick,$mask)) {
+        $text =~ s/^!\w+\s//;
+        my $serverCmd = ($cmd eq 'say') ? "MSG" : "ACTION";
+        $server->command("$serverCmd $chan $text");
+        return;
       }#}}}
       #{{{ uptime
       if ($cmd eq 'uptime') {
@@ -85,17 +87,17 @@ sub incoming_public {
         print (CRAP "fix me");
         return;
       }#}}}
-      #{{{ calculating
+      #{{{ !calc(ulate)
       if ($cmd eq 'calc') {
         signal_emit('calculate',$server,$chan,$text) if (is_loaded('calc'));
         return;
       }#}}}
-      #{{{ isohunt
+      #{{{ !ihq isohunt
       if ($cmd eq 'ihq') {
         signal_emit('search isohunt',$server,$chan,$text) if (is_loaded('isohunt'));
         return;
       }#}}}
-      #{{{ shorten 
+      #{{{ !short
       if ($cmd eq 'short') {
         my ($url) = $text =~ m{(https?://[^ ]+)}i;
         if ($url and is_loaded('ggl')) {
@@ -105,7 +107,7 @@ sub incoming_public {
         sayit($server,$chan,"I need a http://yourmom.com") if (not defined($url));
         return;
       }#}}}
-      #{{{ get temp
+      #{{{ !temp
       if ($cmd eq 'temp') {
         signal_emit('get temp',$server,$chan) if (is_loaded('smn'));
         return;
@@ -148,7 +150,37 @@ sub incoming_public {
         return;
       }
       #}}}
-      #{{{ my twitter is 
+      #{{{ reimgur 
+      if ($cmd eq 'imgur') {
+        my ($url) = $text =~ m{^!imgur\s+(http://.*)$}i;
+        signal_emit('reimgur',$server,$chan,$url) if (is_loaded('reimgur') and $url);
+        sayit($server,$chan,"Imguraffe is my best friend!") if (not $url);
+        return;
+      }
+      #}}}
+      #{{{ karma is a bitch
+      if ($cmd eq 'karma') {
+        my ($name) = $text =~ /!karma\s+(.*)$/;
+        $name = $nick if (not defined($name));
+        if ($name eq $server->{nick}) {
+          sayit($server,$chan,"my karma is over 9000 already!");
+          return;
+        }
+        if ($name eq 'sQuEE') { sayit($server,$chan,"karma for $name: 🍺 "); return; }
+        if ($name =~ /^osx$/i) { sayit($server,$chan,"karma for $name: "); return; }
+        #if ($name eq 'komodin') { sayit($server,$chan,"karma for $name: so low, I almost buffer underflow!"); return; }
+        $name .= $server->{tag};
+        signal_emit("karma check",$server,$chan,$name) if (is_loaded('karma'));
+        return;
+      }
+      #set karma
+      if ($cmd eq 'setkarma' and isMaster($nick,$mask)) {
+        my ($key,$val) = $text =~ /^!setkarma\s(.+)=(.*)$/;
+        signal_emit("karma set",$server,$chan,$key.$server->{tag},$val) if (is_loaded('karma') and $key and $val);
+        return;
+      }
+      #}}}
+      #{{{ [TWITTER] my twitter is 
       if ($cmd eq 'mytwitteris') {
         #print (CRAP Dumper($twitterusers_ref));
         my ($givenName) = $text =~ /^!mytwitteris\s+(.+)$/;
@@ -170,7 +202,7 @@ sub incoming_public {
         }
       }
       #}}}
-      #{{{ #his twitter is
+      #{{{ [TWITTER] his twitter is
       if ($cmd eq 'ishere') {
         my ($givenName) = $text =~ /^!ishere\s+(.+)$/;
         if ($givenName) {
@@ -197,44 +229,14 @@ sub incoming_public {
          }
        }
       #}}}
-      #{{{ reimgur 
-      if ($cmd eq 'imgur') {
-        my ($url) = $text =~ m{^!imgur\s+(http://.*)$}i;
-        signal_emit('reimgur',$server,$chan,$url) if (is_loaded('reimgur') and $url);
-        sayit($server,$chan,"Imguraffe is my best friend!") if (not $url);
-        return;
-      }
-      #}}}
-      #{{{ karma is a bitch
-      if ($cmd eq 'karma') {
-        my ($name) = $text =~ /!karma\s+(.*)$/;
-        $name = $nick if (not defined($name));
-        if ($name eq $server->{nick}) {
-          sayit($server,$chan,"my karma is over 9000 already!");
-          return;
-        }
-        if ($name eq 'sQuEE') { sayit($server,$chan,"karma for $name: 🍺 "); return; }
-        if ($name =~ /^osx$/i) { sayit($server,$chan,"karma for $name: "); return; }
-        #if ($name eq 'komodin') { sayit($server,$chan,"karma for $name: so low, I almost buffer underflow!"); return; }
-        $name .= $server->{tag};
-        signal_emit("karma check",$server,$chan,$name) if (is_loaded('karma'));
-        return;
-      }
-      #set karma
-      if ($cmd eq 'setkarma' and $nick eq 'sQuEE' and $mask =~ m{unaffiliated/sq/x-\d+}) { #hacer un isMaster($nick)
-        my ($key,$val) = $text =~ /^!setkarma\s(.+)=(.*)$/;
-        signal_emit("karma set",$server,$chan,$key.$server->{tag},$val) if (is_loaded('karma') and $key and $val);
-        return;
-      }
-      #}}}
-      #{{{ checkout user on twitter 
+      #{{{ [TWITTER] checkout user on twitter 
       if ($cmd eq 'user') {
         my ($who) = $text =~ /^!user\s+@?(\w+)/;
         signal_emit('teh fuck is who',$server,$chan,$who) if ($who and is_loaded('twitter'));
         sayit($server,$chan,"!user <twitter_username>") if (!defined($who));
         return;
       }#}}}
-      #{{{ post tweet to sysarmy 
+      #{{{ [TWITTER] post tweet to sysarmy 
       if ($cmd eq 'tt' and $chan =~ /sysarmy|moob/) {
         if ($text eq '!tt') {
           sayit($server,$chan,'send a tweet to @sysARmIRC');
@@ -347,6 +349,14 @@ sub incoming_public {
 } #incoming puiblic message ends here
 
 #{{{ signal and stuff
+sub isMaster {
+  my ($nick,$mask) = @_;
+  if ($nick eq 'sQuEE' and $mask =~ m{unaffiliated/sq/x-\d+}) {
+    return 1;
+  } else {
+    return undef;
+  }
+}
 sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
 sub sayit {
   my ($server, $target, $msg) = @_;
