@@ -3,7 +3,7 @@
 
 use Irssi qw(signal_emit signal_add print settings_add_str settings_get_str settings_set_str ) ;
 use strict;
-use Net::Twitter::Lite::WithAPIv1_1;
+use Net::Twitter::Lite::WithAPIv1_1 0.12004;
 use HTML::Entities;
 use Data::Dumper;
 use Date::Parse qw(str2time); #thank godess for this black magic
@@ -32,7 +32,7 @@ sub do_last {
     #my $a = Dumper($twitter);
     #print_msg("$a");
     eval {
-      my $r = $twitterObj->show_user($user);
+      my $r = $twitterObj->show_user({screen_name => $user});   #changed since v1.1 need to pass screen_name or user_id directly
       #print(CRAP Dumper($r));
       #my ($client) = $r->{status}{source} =~ m{<a\b[^>]+>(.*?)</a>};
       #$client = $r->{status}{source} if (!$client);
@@ -91,8 +91,14 @@ sub moment_ago {
 sub userbio {
   my ($server,$chan,$who) = @_;
   if ($who) {
+    #no strict 'refs';
+    #print (CRAP Dumper( \%{ref ($twitterObj)."::" }));
+    #print (CRAP Dumper( $twitterObj ));
+    #print (CRAP $who);
+    #my $r = $twitterObj->show_user({screen_name => $who});
+    #print (CRAP Dumper($r));
     eval {
-      my $r = $twitterObj->show_user($who);
+      my $r = $twitterObj->show_user({screen_name => $who});
       #print (CRAP Dumper($r));
       my $user = "[\@$who] " . "Name: " . $r->{name};
       $user .= " - " . "Bio: " . $r->{description} if ($r->{description}); 
@@ -170,8 +176,7 @@ sub newtwitter {
     $twitter = Net::Twitter::Lite::WithAPIv1_1->new(
       %consumer_tokens,
       legacy_lists_api  =>  0,
-      ssl               =>  0,
-      #TODO: who ssl is so slow
+      ssl               =>  1,
     );
   } else {
     print (CRAP "no keys!");
