@@ -30,7 +30,7 @@ sub show_karma {
 sub set_karma {
 	my ($server,$chan,$key,$val) = @_;
 	$karma->{$key} = $val;
-  store $karma, $karmaStorable;
+	store $karma, $karmaStorable;
 	show_karma($server,$chan,$key);
 }
 sub sayit {
