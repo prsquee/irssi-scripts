@@ -74,12 +74,12 @@ sub incoming_public {
       #{{{ uptime
       if ($cmd eq 'uptime') {
         #get_uptime($chan,$server);
-        signal_emit('show uptime',$server,$chan) if (is_loaded('uptime'));
+        signal_emit('show uptime',$server,$chan) if (isLoaded('uptime'));
         return;
       }#}}}
       #{{{ imdb
       if ($cmd eq 'imdb') {
-        signal_emit('search imdb',$server,$chan,$text) if (is_loaded('imdb'));
+        signal_emit('search imdb',$server,$chan,$text) if (isLoaded('imdb'));
         return;
       }#}}}
       #{{{ test nick stuff
@@ -89,18 +89,18 @@ sub incoming_public {
       }#}}}
       #{{{ !calc(ulate)
       if ($cmd eq 'calc') {
-        signal_emit('calculate',$server,$chan,$text) if (is_loaded('calc'));
+        signal_emit('calculate',$server,$chan,$text) if (isLoaded('calc'));
         return;
       }#}}}
       #{{{ !ihq isohunt
       if ($cmd eq 'ihq') {
-        signal_emit('search isohunt',$server,$chan,$text) if (is_loaded('isohunt'));
+        signal_emit('search isohunt',$server,$chan,$text) if (isLoaded('isohunt'));
         return;
       }#}}}
       #{{{ !short
       if ($cmd eq 'short') {
         my ($url) = $text =~ m{(https?://[^ ]+)}i;
-        if ($url and is_loaded('ggl')) {
+        if ($url and isLoaded('ggl')) {
           my $shorten = scalar('Irssi::Script::ggl')->can('do_shortme')->($url);
           sayit($server,$chan,"[shorten] $shorten");
         }
@@ -109,7 +109,7 @@ sub incoming_public {
       }#}}}
       #{{{ !temp
       if ($cmd eq 'temp') {
-        signal_emit('get temp',$server,$chan) if (is_loaded('smn'));
+        signal_emit('get temp',$server,$chan) if (isLoaded('smn'));
         return;
       }#}}}
       #{{{  googling
@@ -119,22 +119,25 @@ sub incoming_public {
           sayit ($server,$chan,"no! this will break the interwebz!");
           return;
         } elsif ($query) {
-          signal_emit('google me',$server,$chan,$query) if (is_loaded('google3'));
+          signal_emit('google me',$server,$chan,$query) if (isLoaded('google3'));
           return;
         }
       }#}}}
-      #{{{ ping pong
-      if ($cmd eq 'ping') { sayit($server,$chan,"pong"); return; }#}}}
+      #{{{ !ping !pong
+      if ($cmd =~ /p([ioua])ng/) { 
+        my $v = { 'i' => 'o', 'o' => 'i', 'u' => 'a', 'a' => 'u' };
+        sayit($server,$chan,'p'.${$v}{$1}.'ng'); return; 
+      }#}}}
       #{{{ dolar and pesos
       if ($cmd eq 'dolar' or $cmd eq 'pesos') {
         #sayit($server,$chan,"service down. but I can guess the price is still high :(");
-        signal_emit('showme the money',$server,$chan,$text) if (is_loaded('dolar2'));
+        signal_emit('showme the money',$server,$chan,$text) if (isLoaded('dolar2'));
         return;
       }#}}}
       #{{{ last tweet from a uesr
       if ($cmd =~ /^l(?:ast)?t(?:weet)?$/) {
         my ($user) = $text =~ /^!l(?:ast)?t(?:weet)? @?(\w+)/;
-        signal_emit("last tweet",$server,$chan,$user) if ($user and is_loaded('twitter'));
+        signal_emit("last tweet",$server,$chan,$user) if ($user and isLoaded('twitter'));
         sayit($server,$chan,"I need a twitter username") if (not $user);
         return;
       }#}}}
@@ -146,14 +149,14 @@ sub incoming_public {
             $text =~ s/\b(?:$name)\b/\@$twitterusers_ref->{$name}/g;
           }
         }
-        signal_emit('quotes',$server,$chan,$text) if (is_loaded('quotes'));
+        signal_emit('quotes',$server,$chan,$text) if (isLoaded('quotes'));
         return;
       }
       #}}}
       #{{{ reimgur 
       if ($cmd eq 'imgur') {
         my ($url) = $text =~ m{^!imgur\s+(http://.*)$}i;
-        signal_emit('reimgur',$server,$chan,$url) if (is_loaded('reimgur') and $url);
+        signal_emit('reimgur',$server,$chan,$url) if (isLoaded('reimgur') and $url);
         sayit($server,$chan,"Imguraffe is my best friend!") if (not $url);
         return;
       }
@@ -170,13 +173,13 @@ sub incoming_public {
         if ($name =~ /^osx$/i) { sayit($server,$chan,"karma for $name: "); return; }
         #if ($name eq 'komodin') { sayit($server,$chan,"karma for $name: so low, I almost buffer underflow!"); return; }
         $name .= $server->{tag};
-        signal_emit("karma check",$server,$chan,$name) if (is_loaded('karma'));
+        signal_emit("karma check",$server,$chan,$name) if (isLoaded('karma'));
         return;
       }
       #set karma
       if ($cmd eq 'setkarma' and isMaster($nick,$mask)) {
         my ($key,$val) = $text =~ /^!setkarma\s(.+)=(.*)$/;
-        signal_emit("karma set",$server,$chan,$key.$server->{tag},$val) if (is_loaded('karma') and $key and $val);
+        signal_emit("karma set",$server,$chan,$key.$server->{tag},$val) if (isLoaded('karma') and $key and $val);
         return;
       }
       #}}}
@@ -232,7 +235,7 @@ sub incoming_public {
       #{{{ [TWITTER] checkout user on twitter 
       if ($cmd eq 'user') {
         my ($who) = $text =~ /^!user\s+@?(\w+)/;
-        signal_emit('teh fuck is who',$server,$chan,$who) if ($who and is_loaded('twitter'));
+        signal_emit('teh fuck is who',$server,$chan,$who) if ($who and isLoaded('twitter'));
         sayit($server,$chan,"!user <twitter_username>") if (!defined($who));
         return;
       }#}}}
@@ -246,7 +249,7 @@ sub incoming_public {
         foreach my $name (keys %{$twitterusers_ref}) {
           $text =~ s/\b(?:$name)\b/\@$twitterusers_ref->{$name}/g;
         }
-        signal_emit('post sysarmy',$server,$chan,$text) if (is_loaded('sysarmy'));
+        signal_emit('post sysarmy',$server,$chan,$text) if (isLoaded('sysarmy'));
         return;
       } #}}}
       #{{{ cuac cuac go
@@ -256,16 +259,16 @@ sub incoming_public {
           sayit($server,$chan,"cuac cuac go!");
           return;
         } else {
-          signal_emit('cuac cuac go',$server,$chan,$query) if (is_loaded('duckduckgo'));
+          signal_emit('cuac cuac go',$server,$chan,$query) if (isLoaded('duckduckgo'));
         }
       }#}}}
      #{{{ bitcoins
       if ($cmd =~ m{^bi?tc(?:oin)?s?}) {
-        signal_emit('gold digger',$server,$chan) if (is_loaded('bitcoins'));
+        signal_emit('gold digger',$server,$chan) if (isLoaded('bitcoins'));
       }#}}}
       #{{{ the pirate bay
       if ($cmd eq 'tpb') {
-        signal_emit('arrr',$server,$chan,$text) if (is_loaded('tpb'));
+        signal_emit('arrr',$server,$chan,$text) if (isLoaded('tpb'));
       }#}}}
     }
   } #cmd check ends here. begin general text match
@@ -273,39 +276,39 @@ sub incoming_public {
   #{{{ GENERAL URL MATCH
   if ($text =~ m{(https?://[^ ]*)}) {
     my $url = $1;
-    if ($chan =~ /sysarmy|moob/ and is_loaded('savelink')) {
+    if ($chan =~ /sysarmy|moob/ and isLoaded('savelink')) {
       signal_emit('write to file',"<$nick> $text");
       return if ($url =~ /wikipedia|facebook|fbcdn/i);
     }
     #{{{ site specific stuff
     if ($url =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
-        signal_emit('search imdb',$server,$chan,$1) if ($1 and is_loaded('imdb'));
+        signal_emit('search imdb',$server,$chan,$1) if ($1 and isLoaded('imdb'));
         return;
     }
     #youtube here
     if ($url =~ /$youtubex/) {
-      signal_emit('check tubes',$server,$chan,$1) if (is_loaded('youtube'));
+      signal_emit('check tubes',$server,$chan,$1) if (isLoaded('youtube'));
       return;
     }
     #vimeo vid
     if ($url =~ m{vimeo\.com/(\d+)$}) {
-      signal_emit('check vimeo',$server,$chan,$1) if (is_loaded('vimeo'));
+      signal_emit('check vimeo',$server,$chan,$1) if (isLoaded('vimeo'));
       return;
     }
     #
     #show twitter user bio info from an url 
     if ($url =~ m{twitter\.com/(\w+)$}) {
-      signal_emit('teh fuck is who',$server,$chan,$1) if ($1 and is_loaded('twitter'));
+      signal_emit('teh fuck is who',$server,$chan,$1) if ($1 and isLoaded('twitter'));
       return;
     }
     #twitter status fetch
     if ($url =~ m{twitter\.com(?:/#!)?/[^/]+/status(?:es)?/\d+}) {
-      signal_emit('fetch tweet',$server,$chan,$url) if (is_loaded('twitter'));
+      signal_emit('fetch tweet',$server,$chan,$url) if (isLoaded('twitter'));
       return;
     }
     # http://www.chromaplay.com
     if ($url =~ m{chromaplay\.com/\?ytid=([^ &]{11})$}) {
-      signal_emit('check tubes',$server,$chan,$1) if ($1 and is_loaded('youtube'));
+      signal_emit('check tubes',$server,$chan,$1) if ($1 and isLoaded('youtube'));
       return;
     }
     if ($url =~ m{mercadolibre\.com\.ar/(MLA-\d+)}) {
@@ -344,7 +347,7 @@ sub incoming_public {
     return if ($nick =~ /^${1}$/i);
     my $name = $1 . $server->{tag} if $1;
     my $op = $2 if $2;
-    signal_emit('karma bitch',$name,$op) if (is_loaded('karma'));
+    signal_emit('karma bitch',$name,$op) if (isLoaded('karma'));
   } #}}}
 } #incoming puiblic message ends here
 
@@ -357,7 +360,7 @@ sub isMaster {
     return undef;
   }
 }
-sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
+sub isLoaded { return exists($Irssi::Script::{shift(@_).'::'}); }
 sub sayit {
   my ($server, $target, $msg) = @_;
   $server->command("MSG $target $msg");
