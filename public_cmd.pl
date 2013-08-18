@@ -128,32 +128,36 @@ sub incoming_public {
         my $v = { 'i' => 'o', 'o' => 'i', 'u' => 'a', 'a' => 'u' };
         sayit($server,$chan,'p'.${$v}{$1}.'ng'); return; 
       }#}}}
-      #{{{ dolar and pesos
+      #{{{ !dolar and !pesos
       if ($cmd eq 'dolar' or $cmd eq 'pesos') {
         #sayit($server,$chan,"service down. but I can guess the price is still high :(");
         signal_emit('showme the money',$server,$chan,$text) if (isLoaded('dolar2'));
         return;
       }#}}}
-      #{{{ last tweet from a uesr
+      #{{{ !lt last tweet from a user
       if ($cmd =~ /^l(?:ast)?t(?:weet)?$/) {
         my ($user) = $text =~ /^!l(?:ast)?t(?:weet)? @?(\w+)/;
         signal_emit("last tweet",$server,$chan,$user) if ($user and isLoaded('twitter'));
         sayit($server,$chan,"I need a twitter username") if (not $user);
         return;
       }#}}}
-      #{{{ quotes and stuff
+      #{{{ !quotes and stuff
       if ($cmd =~ /^q(?:uote|add|del|last|search)?/) {
         if ($cmd eq 'qadd' and $chan =~ /sysarmy|moob/) {
-          #keys are irc names, values are twitter @users 
-          foreach my $name (keys %{$twitterusers_ref}) {
-            $text =~ s/\b(?:$name)\b/\@$twitterusers_ref->{$name}/g;
+          my $tweetme = $text;
+          #keys are irc $nicknames, values are @twitterhandle
+          foreach (keys %{$twitterusers_ref}) {
+            $tweetme =~ s/\b\Q$_\E\b/\@$twitterusers_ref->{$_}/g;
           }
+          $tweetme .= " \n".'#sysarmy';
+          #my $tweeturl = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($tweetme);
+          #if ($tweeturl) 
         }
         signal_emit('quotes',$server,$chan,$text) if (isLoaded('quotes'));
         return;
       }
       #}}}
-      #{{{ reimgur 
+      #{{{ !imgur reimgur 
       if ($cmd eq 'imgur') {
         my ($url) = $text =~ m{^!imgur\s+(http://.*)$}i;
         signal_emit('reimgur',$server,$chan,$url) if (isLoaded('reimgur') and $url);
@@ -169,21 +173,20 @@ sub incoming_public {
           sayit($server,$chan,"my karma is over 9000 already!");
           return;
         }
-        if ($name eq 'sQuEE') { sayit($server,$chan,"karma for $name: 🍺 "); return; }
-        if ($name =~ /^osx$/i) { sayit($server,$chan,"karma for $name: "); return; }
-        #if ($name eq 'komodin') { sayit($server,$chan,"karma for $name: so low, I almost buffer underflow!"); return; }
+        if ($name eq 'sQuEE')   { sayit($server,$chan,"karma for $name: 🍺 "); return; }
+        if ($name =~ /^osx$/i)  { sayit($server,$chan,"karma for $name: ");  return; }
         $name .= $server->{tag};
         signal_emit("karma check",$server,$chan,$name) if (isLoaded('karma'));
         return;
       }
-      #set karma
+      # !setkarma
       if ($cmd eq 'setkarma' and isMaster($nick,$mask)) {
         my ($key,$val) = $text =~ /^!setkarma\s(.+)=(.*)$/;
         signal_emit("karma set",$server,$chan,$key.$server->{tag},$val) if (isLoaded('karma') and $key and $val);
         return;
       }
       #}}}
-      #{{{ [TWITTER] my twitter is 
+      #{{{ [TWITTER] !mytwitteris 
       if ($cmd eq 'mytwitteris') {
         #print (CRAP Dumper($twitterusers_ref));
         my ($givenName) = $text =~ /^!mytwitteris\s+(.+)$/;
@@ -205,7 +208,7 @@ sub incoming_public {
         }
       }
       #}}}
-      #{{{ [TWITTER] his twitter is
+      #{{{ [TWITTER] !ishere
       if ($cmd eq 'ishere') {
         my ($givenName) = $text =~ /^!ishere\s+(.+)$/;
         if ($givenName) {
@@ -231,7 +234,20 @@ sub incoming_public {
           return;
          }
        }
-      #}}}
+      #}}} 
+      #{{{ [TWITTER] !isnolongerhere 
+      if ($cmd eq 'isnolongerhere' and isMaster($nick,$mask)) {
+        my ($givenName) = $text =~ /^!isnolongerhere\s+(.+)$/;
+        if ($givenName) {
+          $givenName =~ s/^\@//;
+          delete $twitterusers_ref->{$givenName}; # if (exist ($twitterusers_ref->{$givenName}));
+          if (not exists $twitterusers_ref->{$givenName}) {
+            store $twitterusers_ref, $twitterusersFile;
+            sayit($server,$chan,"deleted!") 
+          }
+          return;
+        }
+      }#}}}
       #{{{ [TWITTER] checkout user on twitter 
       if ($cmd eq 'user') {
         my ($who) = $text =~ /^!user\s+@?(\w+)/;
@@ -239,15 +255,15 @@ sub incoming_public {
         sayit($server,$chan,"!user <twitter_username>") if (!defined($who));
         return;
       }#}}}
-      #{{{ [TWITTER] post tweet to sysarmy 
+      #{{{ [TWITTER] !tt post tweet to sysarmy 
       if ($cmd eq 'tt' and $chan =~ /sysarmy|moob/) {
         if ($text eq '!tt') {
           sayit($server,$chan,'send a tweet to @sysARmIRC');
           return;
         }
         $text =~ s/!tt\s+//;
-        foreach my $name (keys %{$twitterusers_ref}) {
-          $text =~ s/\b(?:$name)\b/\@$twitterusers_ref->{$name}/g;
+        foreach (keys %{$twitterusers_ref}) {
+          $text =~ s/\b\Q$_\E\b/\@$twitterusers_ref->{$_}/g;
         }
         signal_emit('post sysarmy',$server,$chan,$text) if (isLoaded('sysarmy'));
         return;
@@ -395,6 +411,7 @@ signal_register( { 'karmadecay'       => [ 'iobject','string','string'          
 signal_register( { 'check tubes'      => [ 'iobject','string','string'             ]}); #server,chan,vid
 signal_register( { 'check vimeo'      => [ 'iobject','string','string'             ]}); #server,chan,vid
 signal_register( { 'quotes'           => [ 'iobject','string','string'             ]}); #server,chan,text
+signal_register( { 'add quotes'       => [ 'iobject','string','string'             ]}); #server,chan,text
 signal_register( { 'showme the money' => [ 'iobject','string','string'             ]}); #server,chan,text
 signal_register( { 'teh fuck is who'  => [ 'iobject','string','string'             ]}); #server,chan,who
 signal_register( { 'fetch tweet'      => [ 'iobject','string','string'             ]}); #server,chan,url
