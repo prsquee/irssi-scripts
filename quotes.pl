@@ -13,9 +13,11 @@ sub do_quotes { #{{{
   #{{{ add 
   if ( $text =~ /^!qadd(.*)$/ ) { 
     my $addme = strip_all($1) if ($1);
+    #print (CRAP $addme);
     unless ($addme) { sayit($server,$chan,"I only accept funny quotes!"); return; }
     my ($saveme,$tweeturl) = split ('======', $addme);
     $addme = $saveme if (defined($saveme));
+
     eval { append_file ($qfile, "$addme\n") };
     my $out = 'quote added' if (not $@);
     $out .= " and tweeted at $tweeturl" if (defined($tweeturl));

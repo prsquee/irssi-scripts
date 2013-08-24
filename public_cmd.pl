@@ -145,6 +145,7 @@ sub incoming_public {
       if ($cmd =~ /^q(?:uote|add|del|last|search)?/) {
         my $tweetme = $text;
         if ($cmd eq 'qadd' and $text ne '!qadd' and $chan =~ /sysarmy|ssqquuee/) {
+          $tweetme =~ s/^!qadd\s+//;
           #keys are irc $nicknames, values are @twitterhandle
           foreach (keys %{$twitterusers_ref}) {
             $tweetme =~ s/\b\Q$_\E\b/\@$twitterusers_ref->{$_}/g;
