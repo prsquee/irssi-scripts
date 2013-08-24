@@ -143,15 +143,16 @@ sub incoming_public {
       }#}}}
       #{{{ !quotes and stuff
       if ($cmd =~ /^q(?:uote|add|del|last|search)?/) {
-        if ($cmd eq 'qadd' and $chan =~ /sysarmy|moob/) {
-          my $tweetme = $text;
+        my $tweetme = $text;
+        if ($cmd eq 'qadd' and $text ne '!qadd' and $chan =~ /sysarmy|ssqquuee/) {
           #keys are irc $nicknames, values are @twitterhandle
           foreach (keys %{$twitterusers_ref}) {
             $tweetme =~ s/\b\Q$_\E\b/\@$twitterusers_ref->{$_}/g;
           }
+          #print (CRAP $tweetme);
           $tweetme .= " \n".'#sysarmy';
-          #my $tweeturl = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($tweetme);
-          #if ($tweeturl) 
+          my $tweeturl = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($tweetme);
+          $text .= (defined($tweeturl) ? "======${tweeturl}" : '');
         }
         signal_emit('quotes',$server,$chan,$text) if (isLoaded('quotes'));
         return;
@@ -256,7 +257,7 @@ sub incoming_public {
         return;
       }#}}}
       #{{{ [TWITTER] !tt post tweet to sysarmy 
-      if ($cmd eq 'tt' and $chan =~ /sysarmy|moob/) {
+      if ($cmd eq 'tt' and $chan =~ /sysarmy|ssqquuee/) {
         if ($text eq '!tt') {
           sayit($server,$chan,'send a tweet to @sysARmIRC');
           return;
@@ -292,7 +293,7 @@ sub incoming_public {
   #{{{ GENERAL URL MATCH
   if ($text =~ m{(https?://[^ ]*)}) {
     my $url = $1;
-    if ($chan =~ /sysarmy|moob/ and isLoaded('savelink')) {
+    if ($chan =~ /sysarmy|ssqquuee/ and isLoaded('savelink')) {
       signal_emit('write to file',"<$nick> $text");
       return if ($url =~ /wikipedia|facebook|fbcdn/i);
     }
@@ -399,7 +400,7 @@ settings_add_str('twitter', 'sysarmy_access_token_secret',  '');
 settings_add_str('imgur'  , 'imgurkey',                     '');
 
 #}}}
-#{{{ #signal registration
+#{{{ # if you are signal, register here
 signal_register( { 'show uptime'      => [ 'iobject','string'                      ]}); #server,chan
 signal_register( { 'search imdb'      => [ 'iobject','string','string'             ]}); #server,chan,text
 signal_register( { 'calculate'        => [ 'iobject','string','string'             ]}); #server,chan,text

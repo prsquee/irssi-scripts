@@ -5,8 +5,8 @@ use warnings;
 use Data::Dump; #use this to store/retrieve quotes
 use File::Slurp qw( read_file write_file append_file);
 
-sub do_quotes {
-	my ($server, $chan, $text) = @_;
+sub do_quotes { #{{{ 
+  my ($server, $chan, $text) = @_;
   my $qfile = get_irssi_dir() . "/scripts/datafiles/$server->{tag}" . $chan . ".txt";
   $qfile =~ s/#/_/g;
 
@@ -14,14 +14,16 @@ sub do_quotes {
   if ( $text =~ /^!qadd(.*)$/ ) { 
     my $addme = strip_all($1) if ($1);
     unless ($addme) { sayit($server,$chan,"I only accept funny quotes!"); return; }
+    my ($saveme,$tweeturl) = split ('======', $addme);
+    $addme = $saveme if (defined($saveme));
     eval { append_file ($qfile, "$addme\n") };
     my $out = 'quote added' if (not $@);
-    #tweet this quote 
-    if ($chan =~ /sysarmy|moob/) {
-      my $tweetme = $addme . "  \n"  . '#sysarmy';
-      my $tweeturl = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($tweetme);
-      $out .= " and tweeted at $tweeturl" if ($tweeturl);
-    }
+    $out .= " and tweeted at $tweeturl" if (defined($tweeturl));
+    #if ($chan =~ /sysarmy|ssqquuee/) {
+    #  my $tweetme = $addme . "  \n"  . '#sysarmy';
+    #  my $tweeturl = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($tweetme);
+    #  $out .= " and tweeted at $tweeturl" if ($tweeturl);
+    #}
     sayit($server,$chan,$out);
   }
   #}}}
@@ -118,7 +120,8 @@ sub do_quotes {
       } else { sayit($server,$chan, "no quotes for $chan"); return; }
     } else { sayit($server,$chan,"I can find you a quote."); return;}
   }#}}}
-} #do quotes ends here
+} #do_quotes ends here
+#}}}
 #{{{ misc strip all; open file; print and say 
 sub strip_all {
   my $text = shift;
@@ -136,5 +139,6 @@ sub sayit {
 #}}}
 #{{{ signaal and stuff 
 signal_add("quotes", "do_quotes");
+#signal_add("add quotes", "add_quotes");
 settings_add_str("quotes", "qfile", '');
 #}}}
