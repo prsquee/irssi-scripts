@@ -20,18 +20,20 @@ my $bufferme = '7200';
 my $pesos_mugrosos = undef;
 my $sweet_dollars = undef;
 
-my $blueURL   = qw( http://www.eldolarblue.net/getDolarBlue.php?as=json );
-my $libreURL  = qw( http://www.eldolarblue.net/getDolarLibre.php?as=json );
+my $blueURL   = qw( http://www.eldolarblue.net/getDolarBlue.php?as=json   );
+my $libreURL  = qw( http://www.eldolarblue.net/getDolarLibre.php?as=json  );
 
 sub getPrice {
   #initial fetch and they'll stay in ram
-  ($blueC, $blueV) = gimmeMoney($blueURL);
-  ($libreC, $libreV) = gimmeMoney($libreURL);
+  ($blueC, $blueV)    = gimmeMoney($blueURL);
+  ($libreC, $libreV)  = gimmeMoney($libreURL);
   #print (CRAP "blues $blueC and $blueV");
   #print (CRAP "libres $libreC and $libreV");
 
-  #$dateFetched = strftime "%F", localtime if defined($libreC and $libreV and $blueC and $blueV);
   $last_fetch = time() if defined($libreC and $libreV and $blueC and $blueV);
+
+  #print (CRAP "$last_fetch");
+  #$dateFetched = strftime "%F", localtime if defined($libreC and $libreV and $blueC and $blueV);
 }
 #}}}
 
@@ -80,10 +82,9 @@ sub gimmeMoney {
 	my $req = $ua->get($url);
   my $result = $req->content;
   #print (CRAP $result);
-  my ($compra, $venta) = $result =~ m{buy:(\d\.\d{4}),sell:(\d\.\d{4})};
+  my ($compra, $venta) = $result =~ m{buy:(\d{1,}\.\d{4,}),sell:(\d{1,}\.\d{4,})};
   
   (defined($compra) or defined($venta)) ? return ($compra,$venta) : return (0,0);
-  #return ($compra, $venta);
 }#}}}
 #{{{ signal and stuff
 sub sayit {
