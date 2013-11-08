@@ -5,54 +5,47 @@ use strict;
 use Data::Dumper;
 use Encode qw(encode decode is_utf8);
 use Encode::Detect::Detector qw(detect);
+use Digest::MD5 qw(md5_hex);
 
-my $ua = new LWP::UserAgent;
-$ua->agent(settings_get_str('myUserAgent'));
-$ua->protocols_allowed( [ 'http', 'https'] );
-$ua->max_redirect( 3 );
-$ua->timeout( 15 );
+my $ua = LWP::UserAgent->new (
+  agent             => settings_get_str('myUserAgent'),
+  default_headers   =>  HTTP::Headers->new,
+  protocols_allowed => ['http', 'https'],
+  max_redirect      => 3,
+  timeout           => 15
+);
+
+our %links = ();
 
 sub go_fetch {
   my ($server,$chan,$url) = @_;
-  my $out = "\n";
-  my $response = $ua->head( $url ); #para ver q es 
-  if ($response->is_success) {
-    if ($response->content_is_html) {
-      #print (CRAP Dumper($response));
-      my $got = $ua->get( $url );
-      #print (CRAP Dumper($got->decoded_content));
-      my $t = $got->title if ($got->title);
-      #print (CRAP Dumper($got->content_type));
-      #my ($type,$charset) = $got->content_type;
-      #print (CRAP $charset);
-      #my $enc = undef;
-      my $title = $t;
-      #print (CRAP "$url || $title");
-      #if ($type =~ /text/ and defined($charset) and $charset !~ /utf-?8/i) {
-      #  $enc = detect($t);
-      #  eval { $title = decode($enc,$t) if (defined($enc)) };
-      #  $title = $t if ($@ or not defined($enc));
-      #} else {
-      #  $title = $t;
-      #}
-      #return if ($title =~ /the simple image sharer/i);       #we all know this already
-      if ($title) {
-        $title =~ s/9gag/9FAG/ig;
-        $out = "[link title] $title";
-        sayit($server, $chan, $out);
-        $out = $out . "\n";
-      }
-      if ($url =~ /imgur/) {
-        #check si hay un link a reddit and make a short link, fuck API
-        my ($shortRedditLink) = $got->decoded_content =~ m{"http://www\.reddit\.com/\w/\w+/comments/(\w+)/[^"]+"};
-        $shortRedditLink = "http://redd.it/$shortRedditLink" if ($shortRedditLink);
-        sayit($server,$chan,"[sauce] $shortRedditLink") if ($shortRedditLink);
-        $out .= "[sauce] $shortRedditLink\n" if ($shortRedditLink);
-      } 
-    } #else { print (CRAP "not html"); }
-  } #else { print (CRAP $response->statusline); }
+  my $out = '';
   
-  signal_emit('write to file',"$out") if ($chan =~ /sysarmy|moob/);
+  if (not exists($links{md5_hex($url)})) { 
+    my $response = $ua->get($url); 
+    if ($response->is_success) {
+      if ($response->title) {
+        my $title = $response->title;
+        if ($title) {
+          $title =~ s/9gag/9FAG/ig;
+          $out = "[link title] $title";
+          sayit($server, $chan, $out);
+          $links{md5_hex($url)} = $out;
+        }
+        if ($url =~ /imgur/i) {
+          #check si hay un link a reddit and make a short link. maybe use some API?
+          my ($shortRedditLink) = $response->decoded_content =~ m{"http://www\.reddit\.com/\w/\w+/comments/(\w+)/[^"]+"};
+          if (defined($shortRedditLink)) {
+            if (not exists($links{$shortRedditLink})) {
+              my $shortURL = "[sauce] http://redd.it/$shortRedditLink";
+              sayit($server,$chan,"$shortURL");
+              $links{$shortRedditLink} = $shortURL;
+            } else { sayit($server, $chan, $links{$shortRedditLink}); }
+          } #not on reddit
+        } #not imgur 
+      } else { print (CRAP "no title."); }
+    } else { print (CRAP "no success. $response->status_line"); } 
+  } else { sayit ($server, $chan, $links{md5_hex($url)}); }
   return;
 }
 sub sayit {
