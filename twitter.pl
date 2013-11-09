@@ -3,6 +3,7 @@
 
 use Irssi qw(signal_emit signal_add print settings_add_str settings_get_str settings_set_str ) ;
 use strict;
+use warnings;
 use Net::Twitter::Lite::WithAPIv1_1 0.12004;
 use HTML::Entities;
 use Data::Dumper;
@@ -28,15 +29,9 @@ sub update {
 sub do_last {
   my ($server,$chan,$user) = @_;
   if ($user) {
-    #my $twitter = newtwitter();
-    #my $a = Dumper($twitter);
-    #print_msg("$a");
     eval {
       my $r = $twitterObj->show_user({screen_name => $user});   #changed since v1.1 need to pass screen_name or user_id directly
-      #print(CRAP Dumper($r));
-      #my ($client) = $r->{status}{source} =~ m{<a\b[^>]+>(.*?)</a>};
-      #$client = $r->{status}{source} if (!$client);
-      my $delta = moment_ago($r->{status}{created_at},$r->{utc_offset});
+      my $delta = moment_ago($r->{status}{created_at});
       my $lasttweet = "\@$user tweeted: " . '"' . decode_entities($r->{status}{text}) . '" ';
       $lasttweet .= 'from ' . $delta . ' ago' if ($delta);
       sayit($server,$chan,$lasttweet) if ($r->{status}{text});
@@ -47,66 +42,46 @@ sub do_last {
 #}}}
 #{{{ time diff 
 sub moment_ago {
-  my ($time,$offset) = @_;
-  #print (CRAP "created at $time with $offset");
-  #offset is in secs. 
+  #my ($time,$offset) = @_;
+  my ($time) = @_;
+  #time is always in utc and in secs
   $time =~ s| \+\d{4}||g;
   my $t = str2time($time);
-  if (substr($offset,0,1) eq '-') {
-    $t -= abs($offset);
-  } else {
-    $t += $offset;
-  }
-  #print (CRAP str2time($time));
-  #print (CRAP $offset);
-  #print (CRAP $t);
+  $t -= 10800; #-0300 #server's tz
+
   my $diff  = time - $t;
-  #print (CRAP "$diff is" . time . " - $t");
-  return undef if (not $diff);
+  return undef unless $diff;
 
   if ($diff > 31536000) {
     my $y = sprintf("%d" ,$diff/31536000);
     $y > 1 ? return "$y years" : return "a year";
-  }
-  if ($diff > 2592000) {
-    my $m = sprintf("%d" ,$diff/2592000);
-    $m > 1 ? return "$m months" : return "a month";
-  }
-  if ($diff > 86400) {
-    my $d = sprintf("%d" ,$diff/86400);
-    $d > 1 ? return "$d days" : return "a day";
-  }
-  if ($diff > 3600) {
-    my $h = sprintf("%d" ,$diff/3600);
-    $h > 1 ? return "$h hours" : return "an hour";
-  }
-  if ($diff >= 60) {
-    my $m = sprintf("%d" ,$diff/60);
-    $m > 1 ? return "$m mins" : return "just a minute";
-  }
-  return "$diff secs" if ($diff < 60 and $diff > 0);
+  } elsif ($diff > 2592000) {
+      my $m = sprintf("%d", $diff/2592000);
+      $m > 1 ? return "$m months" : return "a month";
+    } elsif ($diff > 86400) {
+        my $d = sprintf("%d" ,$diff/86400);
+        $d > 1 ? return "$d days" : return "a day";
+      } elsif ($diff > 3600) {
+          my $h = sprintf("%d" ,$diff/3600);
+          $h > 1 ? return "$h hours" : return "an hour";
+        } elsif ($diff >= 60) {
+            my $m = sprintf("%d" ,$diff/60);
+            $m > 1 ? return "$m mins" : return "just a minute";
+          } return "$diff secs" if ($diff < 60 and $diff > 0);
   return undef if ($diff <= 0);  #fucked up time zones 
 }#}}}
 #{{{ user info
 sub userbio {
   my ($server,$chan,$who) = @_;
   if ($who) {
-    #no strict 'refs';
-    #print (CRAP Dumper( \%{ref ($twitterObj)."::" }));
-    #print (CRAP Dumper( $twitterObj ));
-    #print (CRAP $who);
-    #my $r = $twitterObj->show_user({screen_name => $who});
-    #print (CRAP Dumper($r));
     eval {
       my $r = $twitterObj->show_user({screen_name => $who});
-      #print (CRAP Dumper($r));
       my $user = "[\@$who] " . "Name: " . $r->{name};
       $user .= " - " . "Bio: " . $r->{description} if ($r->{description}); 
       $user .= " - " . "Location: " . $r->{location} if ($r->{location});
       my ($year) = $r->{created_at} =~ /(2\d{3})$/;
       $user .= " - " . "User since $year" if ($year);
       my $userstats = "Tweets: " . $r->{statuses_count} . " - ". "Followers: " . $r->{followers_count} . " - " . "Following: " . $r->{friends_count};
-      #my $since = $r->{created_at}; #convert this pl0x
       sayit($server,$chan,$user);
       sayit($server,$chan,$userstats);
     };
@@ -145,15 +120,11 @@ sub do_search {
 #{{{ do twitter
 sub do_twitter {
   my ($server,$chan,$text) = @_;
-  my ($user,$statusid) = $text =~ m{twitter\.com(?:/#!)?/([^/]+)/status(?:es)?/(\d+)}i; 
-
+  my ($user,$statusid) = $text =~ m{twitter\.com(?:/\#!)?/([^/]+)/status(?:es)?/(\d+)}i; 
   my $status = eval { $twitterObj->show_status($statusid) };
-  #print (CRAP Dumper($status));
   return if $@;
 
-  my $delta = moment_ago($status->{created_at},$status->{user}->{utc_offset});
-  my ($client) = $status->{source} =~ m{<a\b[^>]+>(.*?)</a>};
-  $client = $status->{source} if (!$client);
+  my $delta = moment_ago($status->{created_at});
   my $result = "\@${user} " . 'tweeted: '. '"'. decode_entities($status->{text}) . '" ';
   $result .= 'from ' . $delta . ' ago' if ($delta);
 
