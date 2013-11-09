@@ -1,12 +1,12 @@
 #public commands
-use Irssi qw (  print
-                signal_emit
-                signal_add
-                signal_register
-                settings_get_str
-                settings_add_str
-                settings_set_str
-                get_irssi_dir
+use Irssi qw ( print
+               signal_emit
+               signal_add
+               signal_register
+               settings_get_str
+               settings_add_str
+               settings_set_str
+               get_irssi_dir
 );
 use strict;
 use warnings;
@@ -44,7 +44,7 @@ sub incoming_public {
       #{{{ halps 
       if ($cmd =~ /^h[ea]lp$/) {
         my $defaultcmd = settings_get_str('halpcommands');
-        $defaultcmd .= ' !tt !ishere !mytwitteris' if ($chan eq '#sysarmy');
+        $defaultcmd   .= ' ' . settings_get_str('halp_sysarmy') if ($chan eq '#sysarmy');
         sayit($server,$chan,$defaultcmd);
         return;
       }#}}}
@@ -59,10 +59,9 @@ sub incoming_public {
       }#}}}
       #{{{ fortune cookies
       if ($cmd eq 'fortune') {
-          my $fortune = `/usr/bin/fortune -s`;
-          my @cookie = split(/\n/, $fortune);
-          sayit($server,$chan,"[fortune] $_") foreach @cookie;
-          return;
+        my @cookie = qx(/usr/bin/fortune -s);
+        sayit($server,$chan,"[fortune] $_") foreach @cookie;
+        return;
       }#}}}
       #{{{ do this and say that
       if (($cmd eq 'do' or $cmd eq 'say') and isMaster($nick,$mask)) {
@@ -169,7 +168,7 @@ sub incoming_public {
       #}}}
       #{{{ karma is a bitch
       if ($cmd eq 'karma') {
-        my ($name) = $text =~ /!karma\s+(.*)$/;
+        my ($name) = $text =~ /!karma\s+(\w+)/;
         $name = $nick if (not defined($name));
         if ($name eq $server->{nick}) {
           sayit($server,$chan,"my karma is over 9000 already!");
@@ -183,9 +182,14 @@ sub incoming_public {
       }
       # !setkarma
       if ($cmd eq 'setkarma' and isMaster($nick,$mask)) {
-        my ($key,$val) = $text =~ /^!setkarma\s(.+)=(.*)$/;
+        my ($key,$val) = $text =~ /^!setkarma\s+(.+)=(.*)$/;
         signal_emit("karma set",$server,$chan,$key.$server->{tag},$val) if (isLoaded('karma') and $key and $val);
         return;
+      }
+      #}}}
+      #{{{ !rank !top5 and !low5
+      if ($cmd eq 'rank' ) { 
+        signal_emit("karma rank",$server,$chan) if (isLoaded('karma'));
       }
       #}}}
       #{{{ [TWITTER] !mytwitteris 
@@ -270,7 +274,7 @@ sub incoming_public {
         signal_emit('post sysarmy',$server,$chan,$text) if (isLoaded('sysarmy'));
         return;
       } #}}}
-      #{{{ cuac cuac go
+      #{{{ !ddg cuac cuac go 
       if ($cmd eq 'ddg') {
         my ($query) = $text =~ /^!ddg\s+(.*)$/;
         unless ($query) {
@@ -280,24 +284,32 @@ sub incoming_public {
           signal_emit('cuac cuac go',$server,$chan,$query) if (isLoaded('duckduckgo'));
         }
       }#}}}
-     #{{{ bitcoins
+     #{{{ !btc bitcoins
       if ($cmd =~ m{^bi?tc(?:oin)?s?}) {
         signal_emit('gold digger',$server,$chan) if (isLoaded('bitcoins'));
       }#}}}
-      #{{{ the pirate bay
+      #{{{ !tpb the pirate bay
       if ($cmd eq 'tpb') {
         signal_emit('arrr',$server,$chan,$text) if (isLoaded('tpb'));
       }#}}}
+      #{{{ !clima 
+      if ($cmd eq 'clima') {
+        my ($city) = $text =~ /^!clima\s+(.*)$/;
+        if (isLoaded('clima') and defined($city)) { 
+          signal_emit('weather',$server,$chan,$city);
+        } else { sayit($server,$chan,"!clima <una ciudad de argentina>"); }
+      }
+      #}}}
     }
   } #cmd check ends here. begin general text match
 
   #{{{ GENERAL URL MATCH
-  if ($text =~ m{(https?://[^ ]*)}) {
+  if ($text =~ m{(https?://[^ ]+)}) {
     my $url = $1;
-    if ($chan =~ /sysarmy|ssqquuee/ and isLoaded('savelink')) {
-      signal_emit('write to file',"<$nick> $text");
-      return if ($url =~ /wikipedia|facebook|fbcdn/i);
-    }
+    return if ($url =~ /wikipedia|facebook|fbcdn/i);
+    #if ($chan =~ /sysarmy|ssqquuee/ and isLoaded('savelink')) {
+    #  signal_emit('write to file',"<$nick> $text");
+    #}
     #{{{ site specific stuff
     if ($url =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
         signal_emit('search imdb',$server,$chan,$1) if ($1 and isLoaded('imdb'));
@@ -388,6 +400,7 @@ sub sayit {
 signal_add("message public","incoming_public");
 
 settings_add_str('bot config', 'halpcommands',              '');
+settings_add_str('bot config', 'halp_sysarmy',              '');
 settings_add_str('bot config', 'active_networks',           '');
 settings_add_str('bot config', 'myUserAgent',               '');
 
@@ -399,6 +412,7 @@ settings_add_str('twitter', 'twitter_access_token_secret',  '');
 settings_add_str('twitter', 'sysarmy_access_token',         '');
 settings_add_str('twitter', 'sysarmy_access_token_secret',  '');
 settings_add_str('imgur'  , 'imgurkey',                     '');
+settings_add_str('weather', 'weatherkey',                   '');
 
 #}}}
 #{{{ # if you are signal, register here
@@ -421,6 +435,7 @@ signal_register( { 'last tweet'       => [ 'iobject','string','string'          
 signal_register( { 'karma check'      => [ 'iobject','string','string'             ]}); #server,chan,name
 signal_register( { 'karma set'        => [ 'iobject','string','string','string'    ]}); #server,chan,key,val
 signal_register( { 'karma bitch'      => [           'string','string'             ]}); #name,op
+signal_register( { 'karma rank'       => [ 'iobject','string'                      ]}); #server,chan
 signal_register( { 'post twitter'     => [ 'iobject','string','string'             ]}); #server,chan,text
 signal_register( { 'post sysarmy'     => [ 'iobject','string','string'             ]}); #server,chan,text
 signal_register( { 'tweet quote'      => [           'string'                      ]}); #addme
@@ -430,6 +445,7 @@ signal_register( { 'write to file'    => [           'string'                   
 signal_register( { 'cuac cuac go'     => [ 'iobject','string','string'             ]}); #server,chan,query
 signal_register( { 'gold digger'      => [ 'iobject','string'                      ]}); #server,chan
 signal_register( { 'arrr'             => [ 'iobject','string','string'             ]}); #server,chan,$text
+signal_register( { 'weather'          => [ 'iobject','string','string'             ]}); #server,chan,$city
 
 #}}} 
 #{{{ signal register halp
