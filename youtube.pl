@@ -7,7 +7,7 @@ use LWP::UserAgent;
 use JSON;
 
 #init 
-my %vids = ();
+our %vids = ();
 my $json = new JSON;
 my $ua = new LWP::UserAgent;
 $ua->timeout(10);

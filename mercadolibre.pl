@@ -7,12 +7,11 @@ use LWP::UserAgent;
 use Data::Dumper;
 use JSON;
 
-signal_add('mercadolibre','fml');
 my $json = new JSON;
 my $ua = new LWP::UserAgent;
 
 $ua->agent(settings_get_str('myUserAgent'));
-$ua->timeout(15);
+$ua->timeout(10);
 
 sub fml {
   my ($server,$chan,$mla) = @_;
@@ -40,3 +39,4 @@ sub sayit {
   my ($server, $target, $msg) = @_;
   $server->command("MSG $target $msg");
 }
+signal_add('mercadolibre','fml');

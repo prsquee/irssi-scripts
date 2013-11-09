@@ -3,8 +3,6 @@ use Irssi qw(signal_emit signal_add print settings_get_str) ;
 use LWP::UserAgent;
 use strict;
 use Data::Dumper;
-use Encode qw(encode decode is_utf8);
-use Encode::Detect::Detector qw(detect);
 use Digest::MD5 qw(md5_hex);
 
 my $ua = LWP::UserAgent->new (
