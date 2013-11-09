@@ -108,7 +108,8 @@ sub incoming_public {
       }#}}}
       #{{{ !temp
       if ($cmd eq 'temp') {
-        signal_emit('get temp',$server,$chan) if (isLoaded('smn'));
+        #signal_emit('get temp',$server,$chan) if (isLoaded('smn'));
+        sayit($server,$chan,"use !clima instead");
         return;
       }#}}}
       #{{{  googling
