@@ -42,7 +42,7 @@ sub go_fetch {
           } #not on reddit
         } #not imgur 
       } else { print (CRAP "no title."); }
-    } else { print (CRAP "no success. $response->status_line"); } 
+    } else { print (CRAP "no success."); } 
   } else { sayit ($server, $chan, $links{md5_hex($url)}); }
   return;
 }
