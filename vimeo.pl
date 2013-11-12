@@ -13,13 +13,15 @@ my $ua = new LWP::UserAgent;
 $ua->agent(settings_get_str('myUserAgent'));
 $ua->timeout( 10 );
 
-sub check_vimeo {
-	my ($server,$chan,$vid) = @_;
-	my $query = "http://vimeo.com/api/v2/video/${vid}.json";
+our %vimeos = ();
 
-	my $got = $ua->get( $query );
-	my $content = $got->decoded_content;
-	my $json_text = $json->allow_nonref->utf8->decode($content)->[0];
+sub check_vimeo {
+  my ($server,$chan,$vid) = @_;
+  my $query = "http://vimeo.com/api/v2/video/${vid}.json";
+
+  my $got = $ua->get( $query );
+  my $content = $got->decoded_content;
+  my $json_text = $json->allow_nonref->utf8->decode($content)->[0];
   #print (CRAP Dumper($json_text));
   my $time = $json_text->{'duration'};
   my $hours = sprintf ("%02d:", $time/3600) if ($time >= 3600);
@@ -36,9 +38,9 @@ sub check_vimeo {
   my $user = $json_text->{'user_name'};
   my $title = $json_text->{'title'};
   #my $desc = $json_text->{'description'};
-
-  sayit($server,$chan,"[title] $title - Runtime $time - Uploaded by $user");
-  signal_emit('write to file',"[$time] - $title\n") if ($chan =~ /sysarmy|moob/);
+  my $out = "$time \x02$title\x02 - Uploaded by $user";
+  sayit($server, $chan, $out);
+  $vimeos{$vid} = $out;
 }
 sub sayit {
   my ($server, $target, $msg) = @_;

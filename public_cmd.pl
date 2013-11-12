@@ -322,7 +322,7 @@ sub incoming_public {
       return;
     }
     #vimeo vid
-    if ($url =~ m{vimeo\.com/(\d+)$}) {
+    if ($url =~ m{vimeo\.com/(\d+)}) {
       signal_emit('check vimeo',$server,$chan,$1) if (isLoaded('vimeo'));
       return;
     }
