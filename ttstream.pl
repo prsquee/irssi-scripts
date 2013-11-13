@@ -6,22 +6,30 @@ use AnyEvent::Twitter::Stream;
 use Data::Dumper;
 use HTML::Entities;
 
-my $sqbot   = '324991882';
 my $sysarmy = '57440969';
+my $sqbot   = '324991882';
 #my $prsquee = '31968735';
-#my $chan = '#ssqquuee';
 my $chan = '#ssqquuee';
+my $out = undef;
 
 my $server = server_find_chatnet("fnode");
 sub show_tweet {
   my $tweet = shift;
-  #print (CRAP Dumper($tweet));
+  #not interested in @replies.
   unless (defined($tweet->{in_reply_to_screen_name})) {
-    my $text = decode_entities($tweet->{text}) || undef;
-    if (defined($text)) {
-      $text =~ s/\n/ /;
-      $server->command("MSG #ssqquuee [TEST] $text") if ($tweet->{user}{id} eq $sqbot);
-      $server->command("MSG #sysarmy [\x02\@$tweet->{user}{screen_name}\x02] $text") if ($tweet->{user}{id} eq $sysarmy);
+    #check if it's a RT, then get the untrunked text
+    if (defined($tweet->{retweeted_status})) {
+      $out = "[\x02\@$tweet->{user}{screen_name}\x02] ";
+      $out .= "RT \@$tweet->{retweeted_status}{user}{screen_name} ";
+      $out .= decode_entities($tweet->{retweeted_status}{text});
+    } 
+    else { 
+      $out = "[\x02\@$tweet->{user}{screen_name}\x02] " . decode_entities($tweet->{text});
+    }
+    if (defined($out)) {
+      $out =~ s/\n|\r/ /g;
+      $server->command("MSG #ssqquuee $out") if ($tweet->{user}{id_str} eq $sqbot);
+      $server->command("MSG #sysarmy  $out") if ($tweet->{user}{id_str} eq $sysarmy);
     }
   }
   #$server->command("MSG $chan [\x02\@$tweet->{user}{screen_name}\x02] $tweet->{text}") 
