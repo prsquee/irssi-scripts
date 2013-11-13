@@ -20,7 +20,7 @@ sub show_tweet {
     #check if it's a RT, then get the untrunked text
     if (defined($tweet->{retweeted_status})) {
       $out = "[\x02\@$tweet->{user}{screen_name}\x02] ";
-      $out .= "RT \@$tweet->{retweeted_status}{user}{screen_name} ";
+      $out .= "RT \@$tweet->{retweeted_status}{user}{screen_name}: ";
       $out .= decode_entities($tweet->{retweeted_status}{text});
     } 
     else { 
@@ -28,8 +28,8 @@ sub show_tweet {
     }
     if (defined($out)) {
       $out =~ s/\n|\r/ /g;
-      $server->command("MSG #ssqquuee $out") if ($tweet->{user}{id_str} eq $sqbot);
-      $server->command("MSG #sysarmy  $out") if ($tweet->{user}{id_str} eq $sysarmy);
+      $server->command("MSG #ssqquuee $out")  if ($tweet->{user}{id_str} eq $sqbot);
+      $server->command("MSG #sysarmy $out")   if ($tweet->{user}{id_str} eq $sysarmy);
     }
   }
   #$server->command("MSG $chan [\x02\@$tweet->{user}{screen_name}\x02] $tweet->{text}") 
