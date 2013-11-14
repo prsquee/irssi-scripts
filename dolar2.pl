@@ -77,7 +77,7 @@ sub gimmeMoney {
   my $req = $ua->get($url);
   my $result = $req->content;
   #print (CRAP $result);
-  my ($compra, $venta) = $result =~ m{buy:(\d{1,}\.\d{4,}),sell:(\d{1,}\.\d{4,})};
+  my ($compra, $venta) = $result =~ m{buy:(\d{1,}\.\d{2})\d+,sell:(\d{1,}\.\d{2})};
   
   (defined($compra) or defined($venta)) ? return ($compra,$venta) : return (0,0);
 }#}}}

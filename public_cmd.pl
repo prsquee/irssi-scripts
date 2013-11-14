@@ -169,7 +169,7 @@ sub incoming_public {
       #}}}
       #{{{ karma is a bitch
       if ($cmd eq 'karma') {
-        my ($name) = $text =~ /!karma\s+(\w+)/;
+        my ($name) = $text =~ /!karma\s+([a-zA-Z0-9_\[\]`-|]+)/;
         $name = $nick if (not defined($name));
         if ($name eq $server->{nick}) {
           sayit($server,$chan,"my karma is over 9000 already!");
@@ -373,7 +373,7 @@ sub incoming_public {
   #}}}
   #{{{ ## do stuff with anything that is not a cmd or a http link
   ## karma karma and karma
-  if ($text =~ /(\w+)(([-+])\3)/) {
+  if ($text =~ /([a-zA-Z0-9_\[\]`-|]+)(([-+])\3)/) {
     #no self karma
     return if ($nick =~ /^${1}$/i);
     my $name = $1 . $server->{tag} if $1;
