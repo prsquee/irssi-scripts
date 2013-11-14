@@ -414,6 +414,8 @@ settings_add_str('twitter', 'sysarmy_access_token',         '');
 settings_add_str('twitter', 'sysarmy_access_token_secret',  '');
 settings_add_str('imgur'  , 'imgurkey',                     '');
 settings_add_str('weather', 'weatherkey',                   '');
+settings_add_str('bitcoin', 'mtgox_api',                    '');
+settings_add_str('bitcoin', 'mtgox_secret',                 '');
 
 #}}}
 #{{{ # if you are signal, register here
