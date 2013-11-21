@@ -1,92 +1,76 @@
-#bitcoins ❤
+#bitcoins 
 #https://en.bitcoin.it/wiki/MtGox/API/HTTP/v2
+#https://www.bitstamp.net/api/ticker/
 
 use Irssi qw(signal_add print settings_get_str) ;
 use strict;
 use warnings;
-
 use JSON;
-use Time::HiRes   qw(gettimeofday);
-use MIME::Base64  qw(encode_base64 decode_base64);
-use Digest::SHA   qw(hmac_sha512);
 use LWP::UserAgent;
 use Data::Dumper;
  
+signal_add('gold digger','mtgox');
+signal_add('gold finger','bitstamp');
 
-signal_add('gold digger','bitcoins');
-
-#my $json = JSON->new->allow_nonref;
-#my $ua = LWP::UserAgent->new;
-#$ua->agent(settings_get_str('myUserAgent'));
-# 
-#my $apikey = settings_get_str('mtgox_api');
-#my $secret = settings_get_str('mtgox_secret');
-#
-#
-#sub getBTCPrice {
-#  my ($server,$chan) = @_;
-#  my $req = genReq('/2/BTCUSD/money/ticker');
-#  my $res = $ua->request($req);
-# 
-#  if ($res->is_success) {
-#    my $btc = $json->utf8->decode($res->decoded_content);
-#    print (CRAP Dumper($btc));
-#  }
-#  else { print (CRAP $res->status_line); }
-#  return;
-#}
-# 
-#sub genReq {
-#  my ($uri) = shift;
-#  my $req = HTTP::Request->new(POST => 'https://data.mtgox.com/api/'.$uri);
-#  $req->content_type('application/x-www-form-urlencoded');
-#  $req->content("nonce=".microtime());
-#  $req->header('Rest-Key'  => $apikey);
-#  $req->header('Rest-Sign' => signReq($req->content(),$secret));
-#  return $req;
-#}
-# 
-#sub signReq {
-#  my ($content,$secret) = @_;
-#  return encode_base64(hmac_sha512($content,decode_base64($secret)));
-#}
-# 
-#sub microtime { return sprintf "%d%06d", gettimeofday; }
-#
-#END
+my $buffer = 600;
+my %fetched = ();
 my $json = new JSON;
-my $ua = new LWP::UserAgent;
 
-$ua->agent(settings_get_str('myUserAgent'));
-$ua->timeout(15);
-my $out = undef;
-my $last_fetch = time();
-my $url = 'https://data.mtgox.com/api/2/BTCUSD/money/ticker';
-my $msg = getPrice();
+#mtgox
+my $mtgox       = '[mtgox] ';
+my $mtgoxURL    = 'https://data.mtgox.com/api/2/BTCUSD/money/ticker';
+my $ua_gox      = new LWP::UserAgent;
+$ua_gox->agent(settings_get_str('myUserAgent'));
+$ua_gox->timeout(15);
 
-sub bitcoins {
-  my ($server,$chan) = @_;
-  $msg = getPrice() if (time - $last_fetch > 60);
-  sayit ($server,$chan,$msg) if (defined($msg));
+#bitstamp
+my $bitstamp    = '[bitstamp] ';
+my $bitstampURL = 'https://www.bitstamp.net/api/ticker';
+my $ua_stamp    = new LWP::UserAgent;
+$ua_stamp->agent(settings_get_str('myUserAgent'));
+$ua_stamp->timeout(15);
+
+
+sub bitstamp {
+  my ($server, $chan) = @_;
+  #if (time - $fetched{$bitstamp} > 60 or not defined($bitstamp)) {
+  if (time - ($fetched{$bitstamp} || 0 ) > $buffer) {
+    my $req = $ua_stamp->get($bitstampURL);
+    my $r = $json->utf8->decode($req->decoded_content);
+    if ($r) {
+      $bitstamp .= 'high: $' . $r->{high} . ' | ';
+      $bitstamp .= 'low: $' .  $r->{low}  . ' | ';
+      $bitstamp .= 'average: $' . sprintf("%.2f", eval("($r->{bid} + $r->{ask}) / 2"));
+      $fetched{$bitstamp} = time();
+    } else { $bitstamp = 'failed to fetch prices from bitstamp'; }
+    #print (CRAP Dumper($r)) 
+  }
+  sayit ($server, $chan, $bitstamp) if (defined($bitstamp));
   return;
 }
 
-sub getPrice {
-  my $req = $ua->get($url);
-  my $r = $json->utf8->decode($req->decoded_content);
-  #print (CRAP Dumper($r));
-  if ($r->{result} eq 'success') {
-    $out  = '[sell] '     . $r->{data}{sell}{display_short} .'| ';
-    $out .= '[buy] '      . $r->{data}{buy}{display_short}  .'| ';
-    $out .= '[highest] '  . $r->{data}{high}{display_short} .'| ';
-    $out .= '[average] '  . $r->{data}{avg}{display_short};
-    $last_fetch = time();
-    return $out;
+#{{{ mtgox 
+sub mtgox {
+  my ($server, $chan) = @_;
+  if (time - ($fetched{$mtgox} || 0 ) > $buffer) {
+    my $req = $ua_gox->get($mtgoxURL);
+    my $r = $json->utf8->decode($req->decoded_content);
+    #print (CRAP Dumper($r));
+    if ($r->{result} eq 'success') {
+      #print (CRAP "MTGOX");
+      $mtgox .= 'sell: '     . $r->{data}{sell}{display_short} .' | ';
+      $mtgox .= 'buy: '      . $r->{data}{buy}{display_short}  .' | ';
+      $mtgox .= 'highest: '  . $r->{data}{high}{display_short} .' | ';
+      $mtgox .= 'average: '  . $r->{data}{avg}{display_short};
+      $fetched{$mtgox} = time();
+    } else { $mtgox = 'failed to fetch prices from mtgox'; }
   }
-}
+  sayit ($server, $chan, $mtgox) if (defined($mtgox));
+  return;
+}#}}}
 
-sub sayit {
+sub sayit { #{{{ 
   my ($server, $target, $msg) = @_;
   $server->command("MSG $target $msg");
-}
+}#}}}
 

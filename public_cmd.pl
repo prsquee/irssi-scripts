@@ -1,13 +1,5 @@
 #public commands
-use Irssi qw ( print
-               signal_emit
-               signal_add
-               signal_register
-               settings_get_str
-               settings_add_str
-               settings_set_str
-               get_irssi_dir
-);
+use Irssi qw ( print signal_emit signal_add signal_register settings_get_str settings_add_str settings_set_str get_irssi_dir);
 use strict;
 use warnings;
 use Storable qw (store retrieve);
@@ -16,8 +8,8 @@ use utf8;
 
 #{{{ init stuff
 #nick 2 twitter list
-my $twitterusersFile = get_irssi_dir() . '/scripts/datafiles/twitternames.storable';
-my $twitterusers_ref = eval { retrieve($twitterusersFile) } || [];
+our $twitterusersFile = get_irssi_dir() . '/scripts/datafiles/twitternames.storable';
+our $twitterusers_ref = eval { retrieve($twitterusersFile) } || [];
 #print (CRAP Dumper($twitterusers_ref));
 
 # static and complex regexes
@@ -82,10 +74,10 @@ sub incoming_public {
         return;
       }#}}}
       #{{{ test nick stuff
-      if ($cmd eq 'nickinfo') {
-        print (CRAP "fix me");
-        return;
-      }#}}}
+      #if ($cmd eq 'nickinfo') {
+      #  print (CRAP "fix me");
+      #  return;
+      #}#}}}
       #{{{ !calc(ulate)
       if ($cmd eq 'calc') {
         signal_emit('calculate',$server,$chan,$text) if (isLoaded('calc'));
@@ -137,8 +129,11 @@ sub incoming_public {
       #{{{ !lt last tweet from a user
       if ($cmd =~ /^l(?:ast)?t(?:weet)?$/) {
         my ($user) = $text =~ /^!l(?:ast)?t(?:weet)? @?(\w+)/;
-        signal_emit("last tweet",$server,$chan,$user) if ($user and isLoaded('twitter'));
-        sayit($server,$chan,"I need a twitter username") if (not $user);
+        if (not $user) {
+          #check if user has entered a twitter handle for himself
+          $user = $twitterusers_ref->{$nick} if (exists($twitterusers_ref->{$nick}))
+        } else { sayit($server, $chan, "you dont have a twitter handle, so I need a twitter username"); }
+        signal_emit("last tweet",$server,$chan,$user) if (defined($user) and isLoaded('twitter'));
         return;
       }#}}}
       #{{{ !quotes and stuff
@@ -169,7 +164,7 @@ sub incoming_public {
       #}}}
       #{{{ karma is a bitch
       if ($cmd eq 'karma') {
-        my ($name) = $text =~ /!karma\s+([a-zA-Z0-9_\[\]`-|]+)/;
+        my ($name) = $text =~ /!karma\s+([a-zA-Z0-9_\[\]`|-]+)/;
         $name = $nick if (not defined($name));
         if ($name eq $server->{nick}) {
           sayit($server,$chan,"my karma is over 9000 already!");
@@ -177,6 +172,7 @@ sub incoming_public {
         }
         if ($name eq 'sQuEE')   { sayit($server,$chan,"karma for $name: 🍺 "); return; }
         if ($name =~ /^osx$/i)  { sayit($server,$chan,"karma for $name: ");  return; }
+        if ($name =~ /^mac(intosh)?$/i)  { sayit($server,$chan,"karma for $name: ");  return; }
         $name .= $server->{tag};
         signal_emit("karma check",$server,$chan,$name) if (isLoaded('karma'));
         return;
@@ -288,6 +284,7 @@ sub incoming_public {
      #{{{ !btc bitcoins
       if ($cmd =~ m{^bi?tc(?:oin)?s?}) {
         signal_emit('gold digger',$server,$chan) if (isLoaded('bitcoins'));
+        signal_emit('gold finger',$server,$chan) if (isLoaded('bitcoins'));
       }#}}}
       #{{{ !tpb the pirate bay
       if ($cmd eq 'tpb') {
@@ -297,10 +294,19 @@ sub incoming_public {
       if ($cmd eq 'clima') {
         my ($city) = $text =~ /^!clima\s+(.*)$/;
         if (isLoaded('clima') and defined($city)) { 
-          signal_emit('weather',$server,$chan,$city);
-        } else { sayit($server,$chan,"!clima <una ciudad de argentina>"); }
+          signal_emit('weather', $server, $chan, $city);
+        } else { sayit($server, $chan, "!clima <una ciudad de argentina>"); }
       }
       #}}}
+      #{{{ wolfram alpha !wa 
+      if ($cmd eq 'wa') {
+        my ($query) = $text =~ /^!wa\s+(.*)$/;
+        if (isLoaded('wolfram') and defined($query)) { 
+          signal_emit('wolfram', $server, $chan, $query);
+        } else { sayit($server, $chan, "I can pass on any question to this dude I know, Wolfram Alpha."); }
+      }
+      ##}}}
+
     }
   } #cmd check ends here. begin general text match
 
@@ -333,7 +339,7 @@ sub incoming_public {
       return;
     }
     #twitter status fetch
-    if ($url =~ m{twitter\.com(?:/#!)?/[^/]+/status(?:es)?/\d+}) {
+    if ($url =~ m{twitter\.com(?:/\#!)?/[^/]+/status(?:es)?/\d+}) {
       signal_emit('fetch tweet',$server,$chan,$url) if (isLoaded('twitter'));
       return;
     }
@@ -373,23 +379,21 @@ sub incoming_public {
   #}}}
   #{{{ ## do stuff with anything that is not a cmd or a http link
   ## karma karma and karma
-  if ($text =~ /([a-zA-Z0-9_\[\]`-|]+)(([-+])\3)/) {
+  # this should be lookaround
+  if ($text =~ /([a-zA-Z0-9_\[\]`|-]+)(([-+])\3)/) {
     #no self karma
     return if ($nick =~ /^${1}$/i);
     my $name = $1 . $server->{tag} if $1;
     my $op = $2 if $2;
-    signal_emit('karma bitch',$name,$op) if (isLoaded('karma'));
+    signal_emit('karma bitch',$name,$op) if (isLoaded('karma') and defined($name) and defined($op));
   } #}}}
 } #incoming puiblic message ends here
 
 #{{{ signal and stuff
+#sub isMaster { return ((eval($_[0] . $_[1]) =~ m{^sQuEEunaffiliated/sq/x-\d+$}) ? 1 : undef); }
 sub isMaster {
   my ($nick,$mask) = @_;
-  if ($nick eq 'sQuEE' and $mask =~ m{unaffiliated/sq/x-\d+}) {
-    return 1;
-  } else {
-    return undef;
-  }
+  return (($nick eq 'sQuEE' and $mask =~ m{unaffiliated/sq/x-\d+}) ? 1 : undef);
 }
 sub isLoaded { return exists($Irssi::Script::{shift(@_).'::'}); }
 sub sayit {
@@ -400,55 +404,60 @@ sub sayit {
 
 signal_add("message public","incoming_public");
 
-settings_add_str('bot config', 'halpcommands',              '');
-settings_add_str('bot config', 'halp_sysarmy',              '');
-settings_add_str('bot config', 'active_networks',           '');
-settings_add_str('bot config', 'myUserAgent',               '');
 
-#apikeys
 settings_add_str('twitter', 'twitter_apikey',               '');
 settings_add_str('twitter', 'twitter_secret',               '');
 settings_add_str('twitter', 'twitter_access_token',         '');
 settings_add_str('twitter', 'twitter_access_token_secret',  '');
 settings_add_str('twitter', 'sysarmy_access_token',         '');
 settings_add_str('twitter', 'sysarmy_access_token_secret',  '');
-settings_add_str('imgur'  , 'imgurkey',                     '');
-settings_add_str('weather', 'weatherkey',                   '');
-settings_add_str('bitcoin', 'mtgox_api',                    '');
-settings_add_str('bitcoin', 'mtgox_secret',                 '');
+
+settings_add_str('bot config', 'halpcommands',    '');
+settings_add_str('bot config', 'halp_sysarmy',    '');
+settings_add_str('bot config', 'active_networks', '');
+settings_add_str('bot config', 'myUserAgent',     '');
+
+#apikeys
+settings_add_str('imgur'  , 'imgurkey',           '');
+settings_add_str('weather', 'weatherkey',         '');
+settings_add_str('bitcoin', 'mtgox_api',          '');
+settings_add_str('bitcoin', 'mtgox_secret',       '');
+settings_add_str('wolfram', 'wa_appid',           '');
 
 #}}}
 #{{{ # if you are signal, register here
-signal_register( { 'show uptime'      => [ 'iobject','string'                      ]}); #server,chan
-signal_register( { 'search imdb'      => [ 'iobject','string','string'             ]}); #server,chan,text
-signal_register( { 'calculate'        => [ 'iobject','string','string'             ]}); #server,chan,text
-signal_register( { 'search isohunt'   => [ 'iobject','string','string'             ]}); #server,chan,text
-signal_register( { 'get temp'         => [ 'iobject','string'                      ]}); #server,chan
-signal_register( { 'google me'        => [ 'iobject','string','string'             ]}); #server,chan,query
-signal_register( { 'check title'      => [ 'iobject','string','string'             ]}); #server,chan,url
-signal_register( { 'karmadecay'       => [ 'iobject','string','string'             ]}); #server,chan,url
-signal_register( { 'check tubes'      => [ 'iobject','string','string'             ]}); #server,chan,vid
-signal_register( { 'check vimeo'      => [ 'iobject','string','string'             ]}); #server,chan,vid
-signal_register( { 'quotes'           => [ 'iobject','string','string'             ]}); #server,chan,text
-signal_register( { 'add quotes'       => [ 'iobject','string','string'             ]}); #server,chan,text
-signal_register( { 'showme the money' => [ 'iobject','string','string'             ]}); #server,chan,text
-signal_register( { 'teh fuck is who'  => [ 'iobject','string','string'             ]}); #server,chan,who
-signal_register( { 'fetch tweet'      => [ 'iobject','string','string'             ]}); #server,chan,url
-signal_register( { 'last tweet'       => [ 'iobject','string','string'             ]}); #server,chan,user
-signal_register( { 'karma check'      => [ 'iobject','string','string'             ]}); #server,chan,name
-signal_register( { 'karma set'        => [ 'iobject','string','string','string'    ]}); #server,chan,key,val
-signal_register( { 'karma bitch'      => [           'string','string'             ]}); #name,op
-signal_register( { 'karma rank'       => [ 'iobject','string'                      ]}); #server,chan
-signal_register( { 'post twitter'     => [ 'iobject','string','string'             ]}); #server,chan,text
-signal_register( { 'post sysarmy'     => [ 'iobject','string','string'             ]}); #server,chan,text
-signal_register( { 'tweet quote'      => [           'string'                      ]}); #addme
-signal_register( { 'mercadolibre'     => [ 'iobject','string','string'             ]}); #server,chan,mla
-signal_register( { 'reimgur'          => [ 'iobject','string','string'             ]}); #server,chan,url
-signal_register( { 'write to file'    => [           'string'                      ]}); #text
-signal_register( { 'cuac cuac go'     => [ 'iobject','string','string'             ]}); #server,chan,query
-signal_register( { 'gold digger'      => [ 'iobject','string'                      ]}); #server,chan
-signal_register( { 'arrr'             => [ 'iobject','string','string'             ]}); #server,chan,$text
-signal_register( { 'weather'          => [ 'iobject','string','string'             ]}); #server,chan,$city
+signal_register( { 'show uptime'      => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'search imdb'      => [ 'iobject','string','string'          ]}); #server,chan,text
+signal_register( { 'calculate'        => [ 'iobject','string','string'          ]}); #server,chan,text
+signal_register( { 'search isohunt'   => [ 'iobject','string','string'          ]}); #server,chan,text
+signal_register( { 'get temp'         => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'google me'        => [ 'iobject','string','string'          ]}); #server,chan,query
+signal_register( { 'check title'      => [ 'iobject','string','string'          ]}); #server,chan,url
+signal_register( { 'karmadecay'       => [ 'iobject','string','string'          ]}); #server,chan,url
+signal_register( { 'check tubes'      => [ 'iobject','string','string'          ]}); #server,chan,vid
+signal_register( { 'check vimeo'      => [ 'iobject','string','string'          ]}); #server,chan,vid
+signal_register( { 'quotes'           => [ 'iobject','string','string'          ]}); #server,chan,text
+signal_register( { 'add quotes'       => [ 'iobject','string','string'          ]}); #server,chan,text
+signal_register( { 'showme the money' => [ 'iobject','string','string'          ]}); #server,chan,text
+signal_register( { 'teh fuck is who'  => [ 'iobject','string','string'          ]}); #server,chan,who
+signal_register( { 'fetch tweet'      => [ 'iobject','string','string'          ]}); #server,chan,url
+signal_register( { 'last tweet'       => [ 'iobject','string','string'          ]}); #server,chan,user
+signal_register( { 'karma check'      => [ 'iobject','string','string'          ]}); #server,chan,name
+signal_register( { 'karma set'        => [ 'iobject','string','string','string' ]}); #server,chan,key,val
+signal_register( { 'karma bitch'      => [           'string','string'          ]}); #name,op
+signal_register( { 'karma rank'       => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'post twitter'     => [ 'iobject','string','string'          ]}); #server,chan,text
+signal_register( { 'post sysarmy'     => [ 'iobject','string','string'          ]}); #server,chan,text
+signal_register( { 'tweet quote'      => [           'string'                   ]}); #addme
+signal_register( { 'mercadolibre'     => [ 'iobject','string','string'          ]}); #server,chan,mla
+signal_register( { 'reimgur'          => [ 'iobject','string','string'          ]}); #server,chan,url
+signal_register( { 'write to file'    => [           'string'                   ]}); #text
+signal_register( { 'cuac cuac go'     => [ 'iobject','string','string'          ]}); #server,chan,query
+signal_register( { 'gold digger'      => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'gold finger'      => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'arrr'             => [ 'iobject','string','string'          ]}); #server,chan,$text
+signal_register( { 'weather'          => [ 'iobject','string','string'          ]}); #server,chan,$city
+signal_register( { 'wolfram'          => [ 'iobject','string','string'          ]}); #server,chan,$query
 
 #}}} 
 #{{{ signal register halp
