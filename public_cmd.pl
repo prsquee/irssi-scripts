@@ -123,16 +123,19 @@ sub incoming_public {
       #{{{ !dolar and !pesos
       if ($cmd eq 'dolar' or $cmd eq 'pesos') {
         #sayit($server,$chan,"service down. but I can guess the price is still high :(");
-        signal_emit('showme the money',$server,$chan,$text) if (isLoaded('dolar2'));
+        signal_emit('showme the money', $server, $chan, $text) if (isLoaded('dolar2'));
         return;
       }#}}}
       #{{{ !lt last tweet from a user
       if ($cmd =~ /^l(?:ast)?t(?:weet)?$/) {
-        my ($user) = $text =~ /^!l(?:ast)?t(?:weet)? @?(\w+)/;
-        if (not $user) {
-          #check if user has entered a twitter handle for himself
-          $user = $twitterusers_ref->{$nick} if (exists($twitterusers_ref->{$nick}))
-        } else { sayit($server, $chan, "you dont have a twitter handle, so I need a twitter username"); }
+        my $user = undef;
+        ($user) = $text =~ /^!l(?:ast)?t(?:weet)? @?(\w+)/;
+        if (not defined($user)) {
+          if (not exists($twitterusers_ref->{$nick})) {
+            sayit($server, $chan, "you dont have a twitter handle, so I'll need a twitter username");
+            return;
+          } else { $user = $twitterusers_ref->{$nick} }
+        }  
         signal_emit("last tweet",$server,$chan,$user) if (defined($user) and isLoaded('twitter'));
         return;
       }#}}}
