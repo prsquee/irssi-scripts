@@ -309,10 +309,15 @@ sub incoming_public {
         } else { sayit($server, $chan, "I can pass on any question to this dude I know, Wolfram Alpha."); }
       }
       ##}}}
+      if ($cmd eq 'bofh') {
+        signal_emit('bofh', $server, $chan) if (isLoaded('bofh'));
+      }
 
     }
   } #cmd check ends here. begin general text match
-
+  
+#################################################################################################################################
+  
   #{{{ GENERAL URL MATCH
   if ($text =~ m{(https?://[^ ]+)}) {
     my $url = $1;
@@ -461,6 +466,7 @@ signal_register( { 'gold finger'      => [ 'iobject','string'                   
 signal_register( { 'arrr'             => [ 'iobject','string','string'          ]}); #server,chan,$text
 signal_register( { 'weather'          => [ 'iobject','string','string'          ]}); #server,chan,$city
 signal_register( { 'wolfram'          => [ 'iobject','string','string'          ]}); #server,chan,$query
+signal_register( { 'bofh'             => [ 'iobject','string'                   ]}); #server,chan,$query
 
 #}}} 
 #{{{ signal register halp
