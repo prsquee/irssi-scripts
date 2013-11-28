@@ -286,7 +286,11 @@ sub incoming_public {
       }#}}}
      #{{{ !btc bitcoins
       if ($cmd =~ m{^bi?tc(?:oin)?s?}) {
-        signal_emit('gold digger',$server,$chan); # if (isLoaded('bitcoins'));
+        signal_emit('gold digger',$server,$chan); 
+      }#}}}
+     #{{{ !ltc litecoins
+      if ($cmd =~ m{^li?te?c(?:oin)?s?}) {
+        signal_emit('silver digger',$server,$chan); 
       }#}}}
       #{{{ !tpb the pirate bay
       if ($cmd eq 'tpb') {
@@ -461,7 +465,7 @@ signal_register( { 'reimgur'          => [ 'iobject','string','string'          
 signal_register( { 'write to file'    => [           'string'                   ]}); #text
 signal_register( { 'cuac cuac go'     => [ 'iobject','string','string'          ]}); #server,chan,query
 signal_register( { 'gold digger'      => [ 'iobject','string'                   ]}); #server,chan
-signal_register( { 'gold finger'      => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'silver digger'    => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'arrr'             => [ 'iobject','string','string'          ]}); #server,chan,$text
 signal_register( { 'weather'          => [ 'iobject','string','string'          ]}); #server,chan,$city
 signal_register( { 'wolfram'          => [ 'iobject','string','string'          ]}); #server,chan,$query
