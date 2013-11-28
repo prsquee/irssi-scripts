@@ -286,8 +286,7 @@ sub incoming_public {
       }#}}}
      #{{{ !btc bitcoins
       if ($cmd =~ m{^bi?tc(?:oin)?s?}) {
-        signal_emit('gold digger',$server,$chan) if (isLoaded('bitcoins'));
-        signal_emit('gold finger',$server,$chan) if (isLoaded('bitcoins'));
+        signal_emit('gold digger',$server,$chan); # if (isLoaded('bitcoins'));
       }#}}}
       #{{{ !tpb the pirate bay
       if ($cmd eq 'tpb') {
