@@ -29,7 +29,7 @@ sub fetch_price {
   if (time - $t > $buffer) {
     my $url = "https://btc-e.com/api/2/${coin}_usd/ticker";
     my $req = $ua->get($url);
-    my $r = $json->utf8->decode($req->decoded_content);
+    my $r = eval { $json->utf8->decode($req->decoded_content) };
     #print (CRAP Dumper($r));
     if ($r and not $@) {
       #print (CRAP Dumper($r));
@@ -44,21 +44,9 @@ sub fetch_price {
   sayit ($server, $chan, $btce{$coin}) if (defined($btce{$coin}));
   return;
 }#}}}
-#{{{ btc
-sub bitcoin {
-  my ($server, $chan) = @_;
-  fetch_price($server, $chan, 'btc');
-  return;
-}#}}}
-#{{{ ltc
-sub litecoin {
-  my ($server, $chan) = @_;
-  fetch_price($server, $chan, 'ltc');
-  return;
-}#}}}
 
-sub sayit { #{{{ 
-  my ($server, $target, $msg) = @_;
-  $server->command("MSG $target $msg");
-}#}}}
+sub bitcoin   { fetch_price(@_, 'btc'); }
+sub litecoin  { fetch_price(@_, 'ltc'); }
+
+sub sayit { my $s = shift; $s->command("MSG @_"); }
 

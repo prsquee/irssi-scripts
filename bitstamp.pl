@@ -27,8 +27,8 @@ sub bitstamp {
   my $t = defined($bitstamp) ? $fetched : 0;
   if (time - $t > $buffer) {
     my $req = $ua->get($url);
-    my $r = $json->utf8->decode($req->decoded_content);
-    if ($r) {
+    my $r = eval { $json->utf8->decode($req->decoded_content) };
+    if ($r and not $@) {
       $bitstamp  = '[Bitstamp] ';
       $bitstamp .= 'high: $' . $r->{high} . ' | ';
       $bitstamp .= 'low: $' .  $r->{low}  . ' | ';
@@ -40,8 +40,6 @@ sub bitstamp {
   sayit ($server, $chan, $bitstamp) if (defined($bitstamp));
   return;
 }
-sub sayit { #{{{ 
-  my ($server, $target, $msg) = @_;
-  $server->command("MSG $target $msg");
-}#}}}
+
+sub sayit { my $s = shift; $s->command("MSG @_"); }
 

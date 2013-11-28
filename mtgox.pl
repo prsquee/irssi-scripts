@@ -27,9 +27,9 @@ sub mtgox {
   my $t = defined($mtgox) ? $fetched : 0;
   if (time - $t > $buffer) {
     my $req = $ua->get($url);
-    my $r = $json->utf8->decode($req->decoded_content);
+    my $r = eval { $json->utf8->decode($req->decoded_content) };
     #print (CRAP Dumper($r));
-    if ($r->{result} eq 'success') {
+    if ($r->{result} eq 'success' and not $@) {
       #print (CRAP "MTGOX");
       $mtgox  = '[MtGox] ';
       $mtgox .= 'sell: '     . $r->{data}{sell}{display_short} .' | ';
@@ -42,9 +42,4 @@ sub mtgox {
   sayit ($server, $chan, $mtgox) if (defined($mtgox));
   return;
 }#}}}
-
-sub sayit { #{{{ 
-  my ($server, $target, $msg) = @_;
-  $server->command("MSG $target $msg");
-}#}}}
-
+sub sayit { my $s = shift; $s->command("MSG @_"); }
