@@ -18,14 +18,12 @@ my $ua   = new LWP::UserAgent;
 $ua->agent(settings_get_str('myUserAgent'));
 $ua->timeout(10);
 
-my $country = 'argentina';
-
 sub check_weather {
   my ($server,$chan,$city) = @_;
   $city =~ s/\s+/_/g;
-  my $url = "http://api.wunderground.com/api/${apikey}/conditions/q/${city}_${country}.json";
-  my $got = $ua->get($url);
-  my $result = $json->utf8->decode($got->decoded_content);
+  my $url = "http://api.wunderground.com/api/${apikey}/conditions/q/${city}_argentina.json";
+  my $req = $ua->get($url);
+  my $result = $json->utf8->decode($req->decoded_content);
   if (defined($result->{current_observation})) {
     my $temp        = $result->{current_observation}->{temp_c};
     my $lowest      = $result->{current_observation}->{dewpoint_c};
@@ -36,11 +34,8 @@ sub check_weather {
 
     my $out = "${found_city}: ${weather}, Temp: ${temp}˚, Min: ${lowest}˚, Humedad: ${humidity}";
     sayit($server,$chan,$out);
-  } else { sayit($server,$chan,"can't locate that city on planet Earth."); }
+  } else { sayit($server,$chan,"I really don't care about that city."); }
 }
 
-sub sayit {
-  my ($server, $target, $msg) = @_;
-  $server->command("MSG $target $msg");
-}
+sub sayit { my $s = shift; $s->command("MSG @_"); }
 
