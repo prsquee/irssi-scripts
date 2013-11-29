@@ -15,6 +15,14 @@ signal_add("last tweet",      "do_last");
 signal_add("teh fuck is who", "userbio");
 signal_add("post twitter",    "update");
 
+#settings_add_str('twitter', 'twitter_apikey',               '');
+#settings_add_str('twitter', 'twitter_secret',               '');
+#settings_add_str('twitter', 'twitter_access_token',         '');
+#settings_add_str('twitter', 'twitter_access_token_secret',  '');
+#settings_add_str('twitter', 'sysarmy_access_token',         '');
+#settings_add_str('twitter', 'sysarmy_access_token_secret',  '');
+
+
 my $twitterObj  = newtwitter();
 
 #do a polling of new tweets or stream?

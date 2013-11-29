@@ -15,9 +15,9 @@ my $fetched = undef;
 my $json = new JSON;
 
 #mtgox
-my $mtgox       = undef;
-my $url    = 'https://data.mtgox.com/api/2/BTCUSD/money/ticker';
-my $ua      = new LWP::UserAgent;
+my $mtgox = undef;
+my $url   = 'https://data.mtgox.com/api/2/BTCUSD/money/ticker';
+my $ua    = new LWP::UserAgent;
 $ua->agent(settings_get_str('myUserAgent'));
 $ua->timeout(15);
 

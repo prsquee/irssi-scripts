@@ -31,19 +31,16 @@ sub go_fetch {
           $links{md5_hex($url)} = $out;
         }
         if ($url =~ /imgur/i) {
-          #check si hay un link a reddit and make a short link. maybe use some API?
           my ($shortRedditLink) = $response->decoded_content =~ m{"http://www\.reddit\.com/\w/\w+/comments/(\w+)/[^"]+"};
           if (defined($shortRedditLink)) {
-            if (not exists($links{$shortRedditLink})) {
-              my $shortURL = "[sauce] http://redd.it/$shortRedditLink";
-              sayit($server,$chan,"$shortURL");
-              $links{$shortRedditLink} = $shortURL;
-            } else { sayit($server, $chan, $links{$shortRedditLink}); }
-          } #not on reddit
+            my $shortReddit = "[sauce] http://redd.it/${shortRedditLink}";
+            sayit($server,$chan,"$shortReddit");
+            $links{md5_hex($url)} .= ' :: ' . $shortReddit;
+          } # dont have a reddit thread
         } #not imgur 
       } else { print (CRAP "no title."); }
     } else { print (CRAP "no success."); } 
-  } else { sayit ($server, $chan, $links{md5_hex($url)}); }
+  } else { sayit($server, $chan, $links{md5_hex($url)}); }
   return;
 }
 sub sayit {
