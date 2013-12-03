@@ -11,7 +11,7 @@ our $karma = eval { retrieve($karmaStorable) } || [];
 #{{{ calc
 sub calc_karma {
 	my ($name,$op) = @_;
-  $karma->{$name} = 0 if (!exists($karma->{$name}) or !defined($karma->{$name}));
+  $karma->{$name} = 0 if (not exists($karma->{$name}) or not defined($karma->{$name}));
   my $evalme = '$karma->{$name}' . $op;
   eval "$evalme";
   store $karma, $karmaStorable;
@@ -41,14 +41,12 @@ sub set_karma {
 #{{{ # show rank with !rank
 sub show_rank {
   my ($server,$chan) = @_;
-  ##extract all the legit karma
   my %sortme = (); 
   foreach (keys %$karma) {
     delete $karma->{$_} unless (defined($karma->{$_}));
     $sortme{$_} = $karma->{$_} if ($karma->{$_} =~ /^-?\d+$/)
   }
   my @sorted = sort { $sortme{$a} <=> $sortme{$b} } keys %sortme;
-  #get the first 5 = lowest karma, and last 5 = highest karma
   my $lowest = '';
   my $highest = '';
   for my $i (0..5) {
