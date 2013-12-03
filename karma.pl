@@ -52,14 +52,9 @@ sub show_rank {
   my $lowest = '';
   my $highest = '';
   for my $i (0..5) {
-    my $low = $sorted[$i];
-    $low =~ s/$server->{tag}$//;
-    $lowest .= "[${low}: \x02$karma->{$sorted[$i]}\x02] ";
-
+    $lowest   .= '[' . scalar($sorted[$i] =~ s/$server->{tag}$//r) . ': '."\x02".$karma->{$sorted[$i]}."\x02".'] ';
     my $j = '-' . ++$i;
-    my $high = $sorted[$j];
-    $high =~ s/$server->{tag}$//;
-    $highest .= "[${high}: \x02$karma->{$sorted[$j]}\x02] ";
+    $highest  .= '[' . scalar($sorted[$j] =~ s/$server->{tag}$//r) . ': '."\x02".$karma->{$sorted[$j]}."\x02".'] ';
   }
   sayit($server, $chan, $highest);
   sayit($server, $chan, $lowest);
