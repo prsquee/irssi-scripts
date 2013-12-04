@@ -51,7 +51,7 @@ sub do_dolar {
   if ($ask eq 'dolar' and $how_much > 0) {
     #print_msg("calcular el dolar en pesos");
     $pesos_mugrosos = "[Oficial] " . eval("$how_much * $libreC")                         . " pesos | ";
-    $pesos_mugrosos.= "[Tarjeta] " . sprintf("%.2f", eval("$how_much * $libreC * 1.20")) . " pesos | ";
+    $pesos_mugrosos.= "[Tarjeta] " . sprintf("%.2f", eval("$how_much * $libreC * 1.35")) . " pesos | ";
     $pesos_mugrosos.= "[Blue] "    . eval($how_much * $blueC)                            . " pesos";
     sayit($server, $chan, $pesos_mugrosos) if ($pesos_mugrosos and !$@);
     return;
