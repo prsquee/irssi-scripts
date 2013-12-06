@@ -35,7 +35,7 @@ sub getPrice {
 #{{{ do_dolar
 sub do_dolar {
   my ($server,$chan,$text) = @_;
-  my ($ask, $how_much) = $text =~ /^!(\w+)\s*(\d*)$/;
+  my ($ask, $how_much) = $text =~ /^!(\w+)\s?(\d+(?:\.\d{1,2})?)?/; 
   if ($ask eq 'pesos' and not $how_much) {
     sayit($server, $chan, "!pesos <CANTIDAD>");
     return;
@@ -82,10 +82,7 @@ sub gimmeMoney {
   (defined($compra) or defined($venta)) ? return ($compra,$venta) : return (0,0);
 }#}}}
 #{{{ signal and stuff
-sub sayit {
-  my ($server, $target, $msg) = @_;
-  $server->command("MSG $target $msg");
-}
+sub sayit { my $s = shift; $s->command("MSG @_"); }
 signal_add("showme the money","do_dolar");
 #}}}
 
