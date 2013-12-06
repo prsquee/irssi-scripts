@@ -2,14 +2,15 @@
 #documentation http://www.wunderground.com/weather/api/d/docs?d=data/index&MR=1
 use strict;
 use warnings;
-use Irssi qw(signal_emit signal_add print settings_get_str);
+use Irssi qw(signal_emit signal_add print settings_get_str settings_add_str);
 use LWP::UserAgent;
 use Data::Dumper;
 use JSON;
 use utf8;
-#
+
+settings_add_str('weather', 'weatherkey', '');
 signal_add('weather','check_weather');
-#
+
 my $apikey = settings_get_str('weatherkey');
 print (CRAP "no weather apikey") unless (defined($apikey));
 

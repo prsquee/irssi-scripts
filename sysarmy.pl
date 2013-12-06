@@ -8,6 +8,8 @@ use Data::Dumper;
 use Encode qw (encode decode);
 
 #{{{ #init 
+settings_add_str('twitter', 'sysarmy_access_token',        '');
+settings_add_str('twitter', 'sysarmy_access_token_secret', '');
 signal_add("post sysarmy",  "post_twitter");
 
 
@@ -58,11 +60,11 @@ sub tweetquote {
 #}}}
 #{{{ do twitter
 sub post_twitter {
-	my ($server,$chan,$text) = @_;
+  my ($server,$chan,$text) = @_;
   #print (CRAP $text));
   my $status;
   eval { $status = $twitter->update(decode("utf8", $text)) }; #no idea why this works, and who am i to argue with the encodeing gods.
-	if ($@) {
+  if ($@) {
     #contar 140 chars? bitch please.
     sayit($server,$chan,"error: $@");
   } else {
@@ -75,8 +77,5 @@ sub post_twitter {
 }
 #}}}
 #{{{ sayit
-sub sayit {
-	my ($server, $target, $msg) = @_;
-	$server->command("MSG $target $msg");
-}
+sub sayit { my $s = shift; $s->command("MSG @_"); }
 #}}}

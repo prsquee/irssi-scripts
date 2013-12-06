@@ -2,12 +2,13 @@
 #this is gonna live until imgur deprecates this old api
 #
 #
-use Irssi qw(signal_add print settings_get_str);
+use Irssi qw(signal_add print settings_get_str settings_add_str);
 use strict;
 use WWW::Imgur;
 use JSON;
 use Data::Dumper;
 
+settings_add_str('imgur', 'imgurkey', '');
 signal_add('reimgur','reupload');
 my $imgur = WWW::Imgur->new ();
 $imgur->key(settings_get_str('imgurkey'));

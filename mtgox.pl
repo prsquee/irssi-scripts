@@ -1,13 +1,15 @@
 #bitcoins 
 #https://en.bitcoin.it/wiki/MtGox/API/HTTP/v2
 
-use Irssi qw(signal_add print settings_get_str) ;
+use Irssi qw(signal_add print settings_add_str settings_get_str) ;
 use strict;
 use warnings;
 use JSON;
 use LWP::UserAgent;
 use Data::Dumper;
  
+settings_add_str('bitcoin', 'mtgox_api',    '');
+settings_add_str('bitcoin', 'mtgox_secret', '');
 signal_add('gold digger','mtgox');
 
 my $buffer = 1800;

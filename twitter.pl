@@ -10,18 +10,17 @@ use Data::Dumper;
 use Date::Parse qw(str2time); #thank godess for this black magic
 
 #init 
+settings_add_str('twitter', 'twitter_apikey',               '');
+settings_add_str('twitter', 'twitter_secret',               '');
+settings_add_str('twitter', 'twitter_access_token',         '');
+settings_add_str('twitter', 'twitter_access_token_secret',  '');
+settings_add_str('twitter', 'sysarmy_access_token',         '');
+settings_add_str('twitter', 'sysarmy_access_token_secret',  '');
+
 signal_add("fetch tweet",     "do_twitter");
 signal_add("last tweet",      "do_last");
 signal_add("teh fuck is who", "userbio");
 signal_add("post twitter",    "update");
-
-#settings_add_str('twitter', 'twitter_apikey',               '');
-#settings_add_str('twitter', 'twitter_secret',               '');
-#settings_add_str('twitter', 'twitter_access_token',         '');
-#settings_add_str('twitter', 'twitter_access_token_secret',  '');
-#settings_add_str('twitter', 'sysarmy_access_token',         '');
-#settings_add_str('twitter', 'sysarmy_access_token_secret',  '');
-
 
 my $twitterObj  = newtwitter();
 
@@ -175,8 +174,5 @@ sub newtwitter {
 }
 #}}}
 #{{{ signals and stuff
-sub sayit {
-  my ($server, $target, $msg) = @_;
-  $server->command("MSG $target $msg");
-}
+sub sayit { my $s = shift; $s->command("MSG @_"); }
 #}}}

@@ -7,6 +7,12 @@ use Data::Dumper;
 use utf8;
 
 #{{{ init stuff
+
+settings_add_str('bot config', 'halpcommands',    '');
+settings_add_str('bot config', 'halp_sysarmy',    '');
+settings_add_str('bot config', 'active_networks', '');
+settings_add_str('bot config', 'myUserAgent',     '');
+
 #nick 2 twitter list
 our $twitterusersFile = get_irssi_dir() . '/scripts/datafiles/twitternames.storable';
 our $twitterusers_ref = eval { retrieve($twitterusersFile) } || [];
@@ -407,32 +413,15 @@ sub isMaster {
   return (($nick eq 'sQuEE' and $mask =~ m{unaffiliated/sq/x-\d+}) ? 1 : undef);
 }
 sub isLoaded { return exists($Irssi::Script::{shift(@_).'::'}); }
-sub sayit {
-  my ($server, $target, $msg) = @_;
-  $server->command("MSG $target $msg");
-}
+
+sub sayit { my $s = shift; $s->command("MSG @_"); }
+
 #signal_add("message private","msg_priv");
 
 signal_add("message public","incoming_public");
 
 
-settings_add_str('twitter', 'twitter_apikey',               '');
-settings_add_str('twitter', 'twitter_secret',               '');
-settings_add_str('twitter', 'twitter_access_token',         '');
-settings_add_str('twitter', 'twitter_access_token_secret',  '');
-settings_add_str('twitter', 'sysarmy_access_token',         '');
-settings_add_str('twitter', 'sysarmy_access_token_secret',  '');
-
-settings_add_str('bot config', 'halpcommands',    '');
-settings_add_str('bot config', 'halp_sysarmy',    '');
-settings_add_str('bot config', 'active_networks', '');
-settings_add_str('bot config', 'myUserAgent',     '');
-
 #apikeys
-settings_add_str('imgur'  , 'imgurkey',           '');
-settings_add_str('weather', 'weatherkey',         '');
-settings_add_str('bitcoin', 'mtgox_api',          '');
-settings_add_str('bitcoin', 'mtgox_secret',       '');
 settings_add_str('wolfram', 'wa_appid',           '');
 
 #}}}
