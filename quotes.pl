@@ -1,6 +1,6 @@
 #quotes.pl
 use Irssi qw( signal_add print signal_emit settings_add_str settings_get_str get_irssi_dir );
-#use strict;
+use strict;
 use warnings;
 use Data::Dump; #use this to store/retrieve quotes
 use File::Slurp qw( read_file write_file append_file);
@@ -68,10 +68,10 @@ sub do_quotes { #{{{
     }
   }#}}}
   #{{{ #delete
-  if ( $text =~ /^!qdel(.*)/) { 
+  if ($text =~ /^!qdel(.*)/) { 
     my $deleteme = strip_all($1) if ($1);
     if ($deleteme) { 
-      $deleteme =~ s/\W/\\W/g; #escape all the non \w
+      #$deleteme =~ s/\./\\W/g;
       $deleteme = qr/$deleteme/i;
       my @toBeDeleted;
       my $buf = eval { read_file ($qfile, array_ref => 1) };
@@ -88,7 +88,7 @@ sub do_quotes { #{{{
     } else { sayit($server,$chan,"delete a quote with a few words.");       return; }
   }#}}}
   #{{{ search
-  if ( $text =~ /^!qs(?:earch)?(.*)/) {
+  if ($text =~ /^!qs(?:earch)?(.*)/) {
     my $searchme = strip_all($1) if ($1);
     if ($searchme) {
       my @words2find = split(/\s+/, $searchme);
@@ -112,7 +112,7 @@ sub do_quotes { #{{{
                 for (0..3) {
                   my $n = int(rand(@found));
                   $randq[$_] = $found[$n];
-                  splice (@found, $n, 1);
+                  splice(@found, $n, 1);
                 }
                 my $totalFound = scalar(@found) + scalar(@randq);
                 sayit($server,$chan,"found $totalFound quotes, here are 4 random quotes");

@@ -180,7 +180,12 @@ sub incoming_public {
           return;
         }
         if ($name eq 'sQuEE')   { sayit($server,$chan,"karma for $name: 🍺 "); return; }
-        if ($name =~ /^mac(intosh)?|osx$/i)  { sayit($server,$chan,"karma for $name: ⌘");  return; }
+
+        if ($name =~ /^osx|mac(?:intosh)?$/i)  { sayit($server,$chan,"karma for $name: ⌘");  return; }
+
+        if ($name =~ /^iphone$/i)  { sayit($server,$chan,"karma for ${name}: 📱 ");  return; }
+
+
         $name .= $server->{tag};
         signal_emit("karma check",$server,$chan,$name) if (isLoaded('karma'));
         return;

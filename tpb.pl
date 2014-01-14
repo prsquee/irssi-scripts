@@ -1,5 +1,5 @@
 #the pirate bay search
-#http://apify.heroku.com/resources/509769d37e208b0002000003
+# ifc0nfig e3b2d6aacbf74745a6c7c3f853f6981c
 
 use Irssi qw (signal_add print settings_get_str signal_emit);
 use strict;
