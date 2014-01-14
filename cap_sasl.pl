@@ -5,13 +5,13 @@ use vars qw($VERSION %IRSSI);
 
 use MIME::Base64;
 
-$VERSION = "1.3";
+$VERSION = "1.5";
 
 %IRSSI = (
     authors     => 'Michael Tharp and Jilles Tjoelker',
     contact     => 'gxti@partiallystapled.com',
     name        => 'cap_sasl.pl',
-    description => 'Implements PLAIN SASL authentication mechanism for use with charybdis ircds, and enables CAP MULTI-PREFIX',
+    description => 'Implements PLAIN or DH-BLOWFISH SASL authentication mechanism for use with charybdis ircds, and enables CAP MULTI-PREFIX',
     license     => 'GNU General Public License',
     url         => 'http://ircv3.atheme.org/extensions/sasl-3.1',
 );
@@ -54,7 +54,7 @@ sub event_cap {
 				$sasl_auth{$server->{tag}}{buffer} = '';
 				if($mech{$sasl_auth{$server->{tag}}{mech}}) {
 					$server->send_raw_now("AUTHENTICATE " . $sasl_auth{$server->{tag}}{mech});
-					Irssi::timeout_add_once(5000, \&timeout, $server->{tag});
+					Irssi::timeout_add_once(7500, \&timeout, $server->{tag});
 				}else{
 					$server->print('', 'SASL: attempted to start unknown mechanism "' . $sasl_auth{$server->{tag}}{mech} . '"');
 				}
@@ -175,6 +175,7 @@ sub cmd_sasl_save {
 	#my ($data, $server, $item) = @_;
 	my $file = Irssi::get_irssi_dir()."/sasl.auth";
 	open FILE, "> $file" or return;
+	chmod(0600, $file);
 	foreach my $net (keys %sasl_auth) {
 		printf FILE ("%s\t%s\t%s\t%s\n", $net, $sasl_auth{$net}{user}, $sasl_auth{$net}{password}, $sasl_auth{$net}{mech});
 	}
@@ -234,7 +235,18 @@ $mech{PLAIN} = sub {
 
 eval {
 	require Crypt::OpenSSL::Bignum;
-	require Crypt::DH;
+	my $compute_secret;
+	eval {
+		require Crypt::DH;
+		$compute_secret = sub { (shift)->compute_secret(@_); };
+	};
+	if ($@) {
+		# Crypt::DH probably not found. Try Crypt::DH::GMP instead
+		# Reportedly Ubuntu has dropped Crypt::DH
+		require Crypt::DH::GMP;
+		require Crypt::DH::GMP::Compat;
+		$compute_secret = sub { Math::BigInt->new((shift)->compute_secret(@_)) };
+	}
 	require Crypt::Blowfish;
 	require Math::BigInt;
 	sub bin2bi { return Crypt::OpenSSL::Bignum->new_from_bin(shift)->to_decimal } # binary to BigInt
@@ -249,7 +261,7 @@ eval {
 		my $dh = Crypt::DH->new(p => bin2bi($p), g => bin2bi($g));
 		$dh->generate_keys;
 
-		my $secret = bi2bin($dh->compute_secret(bin2bi($y)));
+		my $secret = bi2bin($compute_secret->($dh, bin2bi($y)));
 		my $pubkey = bi2bin($dh->pub_key);
 
 		# Pad the password to the nearest multiple of blocksize and encrypt
@@ -266,6 +278,8 @@ eval {
 		pack("n/a*Z*a*", $pubkey, $u, $crypted);
 	};
 };
+# If DH-BLOWFISH is not available and you want to see why, uncomment this line:
+# Irssi::print($@) if ($@);
 
 cmd_sasl_load();
 
