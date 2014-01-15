@@ -22,6 +22,7 @@ if (%consumer_tokens) {
   $twitter = Net::Twitter::Lite::WithAPIv1_1->new(
     %consumer_tokens,
     legacy_lists_api      =>  0,
+    ssl                   =>  1,
   );
 } else {
   print (CRAP "no keys!");
