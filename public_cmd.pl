@@ -12,6 +12,8 @@ settings_add_str('bot config', 'halpcommands',    '');
 settings_add_str('bot config', 'halp_sysarmy',    '');
 settings_add_str('bot config', 'active_networks', '');
 settings_add_str('bot config', 'myUserAgent',     '');
+settings_add_str('gsearch', 'search_apikey', '');
+settings_add_str('gsearch', 'engine_id', '' );
 
 #nick 2 twitter list
 our $twitterusersFile = get_irssi_dir() . '/scripts/datafiles/twitternames.storable';

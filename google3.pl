@@ -24,18 +24,18 @@ sub do_google {
   my $res = $engine->search($query);
   #print (CRAP Dumper($res->{request}->{page}->{totalResults}));
 
-	if ($res->{request}->{page}->{totalResults} > 0) {
-		foreach my $items (@{$res->items}) {
+  if ($res->{request}->{page}->{totalResults} > 0) {
+    foreach my $items (@{$res->items}) {
       my $title = decode("utf8", $items->{title});
-			sayit($server,$chan,"[gugl] $items->{link} - $title");
-		}
-	} else {
-		sayit($server,$chan,"found nothin'");
-		return;
-	}
+      sayit($server,$chan,"[gugl] $items->{link} - $title");
+    }
+  } else {
+    sayit($server,$chan,"found nothin'");
+    return;
+  }
 }
 sub sayit {
   my ($server, $target, $msg) = @_;
-	$server->command("MSG $target $msg");
+  $server->command("MSG $target $msg");
 }
 signal_add("google me","do_google");
