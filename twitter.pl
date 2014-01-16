@@ -5,6 +5,7 @@ use Irssi qw(signal_emit signal_add print settings_add_str settings_get_str sett
 use strict;
 use warnings;
 use Net::Twitter::Lite::WithAPIv1_1 0.12004;
+use Net::OAuth;
 use HTML::Entities;
 use Data::Dumper;
 use Date::Parse qw(str2time); #thank godess for this black magic

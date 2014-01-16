@@ -3,11 +3,14 @@
 
 use Irssi qw(signal_add print settings_add_str settings_get_str settings_set_str ) ;
 use strict;
-use Net::Twitter::Lite::WithAPIv1_1;
+use Net::Twitter::Lite::WithAPIv1_1 0.12004;
+use Net::OAuth;
 use Data::Dumper;
 use Encode qw (encode decode);
 
 #{{{ #init 
+settings_add_str('twitter', 'twitter_apikey',               '');
+settings_add_str('twitter', 'twitter_secret',               '');
 settings_add_str('twitter', 'sysarmy_access_token',        '');
 settings_add_str('twitter', 'sysarmy_access_token_secret', '');
 signal_add("post sysarmy",  "post_twitter");
