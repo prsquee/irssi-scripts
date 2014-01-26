@@ -30,7 +30,8 @@ sub do_imdb {
   my $url = "http://www.omdbapi.com/?${param}=${query}" if ($param and $query);
   my $got = $ua->get($url);
   my $content = $got->decoded_content;
-  my $imdb = $json->allow_nonref->decode($content);
+  my $imdb = eval { $json->allow_nonref->decode($content) };
+  return if $@;
   #print (CRAP Dumper($imdb));
 
   if ($imdb->{Response} !~ /True/ ) {

@@ -21,31 +21,31 @@ my $regex = qr{(?x-sm:
 
 
 sub pub_msg {
-	my ($server,$text,$nick,$mask,$chan) = @_ ;
-	return if ($server->{tag} !~ /3dg|fnode/);
-	sayit($server, $chan,"regex tester, usage: !re \"string to match\" /regex/") if ($text eq "!re");
+  my ($server,$text,$nick,$mask,$chan) = @_ ;
+  return if ($server->{tag} !~ /3dg|fnode/);
+  sayit($server, $chan,"regex tester, usage: !re \"string to match\" /regex/") if ($text eq "!re");
 
   #if ($text =~ m{!re "([^"]+)" /([^/]+)/$}) {
-	if ($text =~ $regex) {
-		my $string2match = $1;
-		my $regex = $3;
+  if ($text =~ $regex) {
+    my $string2match = $1;
+    my $regex = $3;
     my $mods = $4 || 'gi';        #TODO fix this uselessness
-		
-		if ($string2match and $regex) {
-			use re 'eval';
-			eval { my $test = qr/$regex/};
+    
+    if ($string2match and $regex) {
+      use re 'eval';
+      eval { my $test = qr/$regex/};
       sayit($server,$chan,"your regex skill is bad, and you should feel bad") if ($@);
-		}
+    }
     my @matches;
-		eval { @matches = $string2match =~ /$regex/ig ; };
+    eval { @matches = $string2match =~ /$regex/ig ; };
     #print(CRAP Dumper(@matches));
-		if (! $@ and scalar(@matches) > 0) {
+    if (! $@ and scalar(@matches) > 0) {
       my $matched = join(":", @matches);
-			sayit($server,$chan, "MATCH: [$matched]");
-		} else {
-			sayit($server,$chan, "no match");
-		}
-	}
+      sayit($server,$chan, "MATCH: [$matched]");
+    } else {
+      sayit($server,$chan, "no match");
+    }
+  }
 }
 
 sub sayit { 

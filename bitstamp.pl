@@ -17,7 +17,6 @@ my $json = new JSON;
 my $bitstamp    = undef;
 my $url = 'https://www.bitstamp.net/api/ticker';
 my $ua    = new LWP::UserAgent;
-$ua->agent(settings_get_str('myUserAgent'));
 $ua->timeout(15);
 
 
@@ -26,8 +25,10 @@ sub bitstamp {
   #if (time - $fetched{$bitstamp} > 60 or not defined($bitstamp)) {
   my $t = defined($bitstamp) ? $fetched : 0;
   if (time - $t > $buffer) {
+    $ua->agent(settings_get_str('myUserAgent'));
     my $req = $ua->get($url);
     my $r = eval { $json->utf8->decode($req->decoded_content) };
+    return if $@;
     if ($r and not $@) {
       $bitstamp  = '[Bitstamp] ';
       $bitstamp .= 'high: $' . $r->{high} . ' | ';

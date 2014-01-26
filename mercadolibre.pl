@@ -9,16 +9,17 @@ use JSON;
 
 my $json = new JSON;
 my $ua = new LWP::UserAgent;
+my $url = 'https://api.mercadolibre.com/items/';
 
-$ua->agent(settings_get_str('myUserAgent'));
 $ua->timeout(10);
 
 sub fml {
   my ($server,$chan,$mla) = @_;
-  my $url = "https://api.mercadolibre.com/items/$mla";
+  $ua->agent(settings_get_str('myUserAgent'));
+  $url = $url . $mla;
   my $req = $ua->get($url);
-  my $result = $json->utf8->decode($req->decoded_content);
-  #print (CRAP Dumper($result));
+  my $result = eval { $json->utf8->decode($req->decoded_content) };
+  return if $@;
 
   my $title = $result->{title};
   my $condition = uc $result->{condition};

@@ -11,17 +11,16 @@ our %vids = ();
 my $json = new JSON;
 my $ua = new LWP::UserAgent;
 $ua->timeout(10);
-$ua->agent(settings_get_str('myUserAgent'));
 
 sub fetch_tubes {
   my($server,$chan,$vid) = @_;
 
   if (not exists($vids{$vid})) {
-    my $url = "http://gdata.youtube.com/feeds/api/videos/$vid?&v=2&alt=json";
+    $ua->agent(settings_get_str('myUserAgent'));
+    my $url = "http://gdata.youtube.com/feeds/api/videos/${vid}?&v=2&alt=json";
     my $req = $ua->get($url);
-    my $result;
-    eval { $result = $json->utf8->decode($req->decoded_content)->{entry} };
-    print (CRAP $@) if $@;
+    my $result = eval { $json->utf8->decode($req->decoded_content)->{entry} };
+    return if $@;
     my $title  = $result->{title}->{'$t'};
     my $desc   = $result->{'media$group'}->{'media$description'}->{'$t'};
     my $time   = $result->{'media$group'}->{'yt$duration'}->{seconds};

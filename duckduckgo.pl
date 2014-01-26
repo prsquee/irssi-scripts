@@ -18,11 +18,12 @@ sub cuac_cuac {
 
 	my $got = $ua->get( $query );
 	my $content = $got->decoded_content;
-  my $json_text = $json->allow_nonref->utf8->decode($content);
-  #print (CRAP Dumper($json_text));
-  sayit($server,$chan,"[Answer] $json_text->{'Answer'}")      if ($json_text->{'Answer'});
-  sayit($server,$chan,"[def] $json_text->{'Definition'}")     if ($json_text->{'Definition'});
-  sayit($server,$chan,"[Abstract] $json_text->{'Abstract'}")  if ($json_text->{'Abstract'});
+  my $result = eval { $json->allow_nonref->utf8->decode($content) };
+  return if $@;
+  #print (CRAP Dumper($result));
+  sayit($server,$chan,"[Answer] $result->{'Answer'}")      if ($result->{'Answer'});
+  sayit($server,$chan,"[def] $result->{'Definition'}")     if ($result->{'Definition'});
+  sayit($server,$chan,"[Abstract] $result->{'Abstract'}")  if ($result->{'Abstract'});
   return;
   #sayit($server,$chan,"$time - $title - $desc - Uploaded by $user");
   #signal_emit('write to file',"<sQ`>[$time] - $title\n");

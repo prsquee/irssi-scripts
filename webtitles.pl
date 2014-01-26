@@ -19,7 +19,7 @@ sub go_fetch {
   my ($server,$chan,$url) = @_;
   my $out = '';
   
-  if (not exists($links{md5_hex($url)})) { 
+  if (not exists ($links{md5_hex($url)})) { 
     my $response = $ua->get($url); 
     if ($response->is_success) {
       if ($response->title) {

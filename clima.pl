@@ -24,7 +24,8 @@ sub check_weather {
   $city =~ s/\s+/_/g;
   my $url = "http://api.wunderground.com/api/${apikey}/conditions/q/${city}_argentina.json";
   my $req = $ua->get($url);
-  my $result = $json->utf8->decode($req->decoded_content);
+  my $result = eval { $json->utf8->decode($req->decoded_content) };
+  return if $@;
   if (defined($result->{current_observation})) {
     my $temp        = $result->{current_observation}->{temp_c};
     my $lowest      = $result->{current_observation}->{dewpoint_c};

@@ -19,7 +19,6 @@ my $json = new JSON;
 #btce
 my %btce  =  ();
 my $ua    = new LWP::UserAgent;
-$ua->agent(settings_get_str('myUserAgent'));
 $ua->timeout(15);
 
 #{{{ check bitcoin
@@ -27,12 +26,12 @@ sub fetch_price {
   my ($server, $chan, $coin) = @_;
   my $t = defined($btce{$coin}) ? $fetched{$coin} : 0;
   if (time - $t > $buffer) {
+    $ua->agent(settings_get_str('myUserAgent'));
     my $url = "https://btc-e.com/api/2/${coin}_usd/ticker";
     my $req = $ua->get($url);
     my $r = eval { $json->utf8->decode($req->decoded_content) };
-    #print (CRAP Dumper($r));
+    return if $@;
     if ($r and not $@) {
-      #print (CRAP Dumper($r));
       $btce{$coin}  = '[BTCe] ';
       $btce{$coin} .= 'sell: $'     . sprintf("%.2f", $r->{ticker}{sell}) .' | ';
       $btce{$coin} .= 'buy: $'      . sprintf("%.2f", $r->{ticker}{buy} ) .' | ';

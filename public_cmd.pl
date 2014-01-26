@@ -29,6 +29,11 @@ my $youtubex = qr{(?x-sm:
     (?:user/.*/)?               #username can be 
     ([^&]{11})                  #the vid id
 )};
+
+my $karmagex = qr{(?x-sm:
+                  ([a-zA-Z0-9_\[\]`|\\-]+)      #this is basically \w+ with []`|\-
+                  (([-+])\3)                    #capture a + or - then look for the same symbol with \3, \1 is the 1st word, \2 is the whole ++ or --
+               )};
 #}}}
 
 sub incoming_public {
@@ -314,33 +319,31 @@ sub incoming_public {
         if (isLoaded('clima') and defined($city)) { 
           signal_emit('weather', $server, $chan, $city);
         } else { sayit($server, $chan, "!clima <una ciudad de argentina>"); }
-      }
-      #}}}
+      } #}}}
       #{{{ wolfram alpha !wa 
       if ($cmd eq 'wa') {
         my ($query) = $text =~ /^!wa\s+(.*)$/;
         if (isLoaded('wolfram') and defined($query)) { 
           signal_emit('wolfram', $server, $chan, $query);
         } else { sayit($server, $chan, "I can pass on any question to this dude I know, Wolfram Alpha."); }
-      }
-      ##}}}
+      } #}}}
+      #{{{ BOFH 
       if ($cmd eq 'bofh') {
         signal_emit('bofh', $server, $chan) if (isLoaded('bofh'));
-      }
-
+      } #}}}
     }
   } #cmd check ends here. begin general text match
   
 #################################################################################################################################
   
-  #{{{ GENERAL URL MATCH
+  #GENERAL URL MATCH
   if ($text =~ m{(https?://[^ ]+)}) {
     my $url = $1;
     return if ($url =~ /wikipedia|facebook|fbcdn/i);
     #if ($chan =~ /sysarmy|ssqquuee/ and isLoaded('savelink')) {
     #  signal_emit('write to file',"<$nick> $text");
     #}
-    #{{{ site specific stuff
+    #site specific stuff
     if ($url =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
         signal_emit('search imdb',$server,$chan,$1) if ($1 and isLoaded('imdb'));
         return;
@@ -394,16 +397,14 @@ sub incoming_public {
           $url = "http://www.quickmeme.com/meme/$1" if ($1);
       }
     }
-    #}}}
-
     #any other http link fall here
     signal_emit('check title',$server,$chan,$url);
   } # URL match ends here. lo que sigue seria general text match, como el de replace and others stuff que no me acuerdo
-  #}}}
+  
   #{{{ ## do stuff with anything that is not a cmd or a http link
-  ## karma karma and karma
-  #precompile this?
-  if ($text =~ /([a-zA-Z0-9_\[\]`|\\-]+)(([-+])\3)/) {
+  #
+  ## KARMA KARMA AND KARMA++
+  if ($text =~ /$karmagex/) {
     #no self karma
     return if ($nick eq $1);
     #return if ($nick =~ /^${1}$/i);
