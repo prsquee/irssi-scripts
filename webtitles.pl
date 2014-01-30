@@ -6,7 +6,6 @@ use Data::Dumper;
 use Digest::MD5 qw(md5_hex);
 
 my $ua = LWP::UserAgent->new (
-  agent             => settings_get_str('myUserAgent'),
   default_headers   =>  HTTP::Headers->new,
   protocols_allowed => ['http', 'https'],
   max_redirect      => 3,
@@ -20,6 +19,7 @@ sub go_fetch {
   my $out = '';
   
   if (not exists ($links{md5_hex($url)})) { 
+    $ua->agent(settings_get_str('myUserAgent'));
     my $response = $ua->get($url); 
     if ($response->is_success) {
       if ($response->title) {
@@ -38,8 +38,8 @@ sub go_fetch {
             $links{md5_hex($url)} .= ' :: ' . $shortReddit;
           } # dont have a reddit thread
         } #not imgur 
-      } else { print (CRAP "no title."); }
-    } else { print (CRAP "no success."); } 
+      } #else { print (CRAP "no title."); }
+    } #else { print (CRAP "no success."); } 
   } else { sayit($server, $chan, $links{md5_hex($url)}); }
   return;
 }
