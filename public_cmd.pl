@@ -338,6 +338,12 @@ sub incoming_public {
           signal_emit('insert coins', $server, $chan, "${coin1}_${coin2}") if (isLoaded('coins'));
         } else { sayit ($server, $chan, "usage: !coins coin1/coin2 - Here is a list: http://www.cryptocoincharts.info/v2"); }
       } #}}} 
+      #{{{ #!doge WOW SUCH COMMAND 
+      if ($cmd =~ m{doge(?:coin)?s?}) {
+        #sayit($server, $chan, "wow. such command. much coins. very rich.");
+        signal_emit('such signal', $server, $chan) if (isLoaded('coins'));
+      }
+      #}}}
     }
   } #cmd check ends here. begin general text match
 #################################################################################################################################
@@ -468,11 +474,12 @@ signal_register( { 'write to file'    => [           'string'                   
 signal_register( { 'cuac cuac go'     => [ 'iobject','string','string'          ]}); #server,chan,query
 signal_register( { 'gold digger'      => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'silver digger'    => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'such signal'      => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'insert coins'     => [ 'iobject','string','string'          ]}); #server,chan,$pair
 signal_register( { 'arrr'             => [ 'iobject','string','string'          ]}); #server,chan,$text
 signal_register( { 'weather'          => [ 'iobject','string','string'          ]}); #server,chan,$city
 signal_register( { 'wolfram'          => [ 'iobject','string','string'          ]}); #server,chan,$query
 signal_register( { 'bofh'             => [ 'iobject','string'                   ]}); #server,chan,$query
-signal_register( { 'insert coins'     => [ 'iobject','string','string'          ]}); #server,chan,$pair
 
 #}}} 
 #{{{ signal register halp

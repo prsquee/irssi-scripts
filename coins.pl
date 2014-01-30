@@ -8,6 +8,7 @@ use LWP::UserAgent;
 use Data::Dumper;
  
 signal_add('insert coins', 'coins');
+#signal_add('such signal', 'doge');
 
 my $json = new JSON;
 
