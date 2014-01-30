@@ -8,7 +8,6 @@ use LWP::UserAgent;
 use Data::Dumper;
  
 signal_add('insert coins', 'coins');
-#signal_add('such signal', 'doge');
 
 my $json = new JSON;
 
@@ -28,7 +27,7 @@ sub coins {
   if (defined($r->{id})) {
     $msg = "[$r->{id}] ";
     $msg .= 'price: ' . $r->{price};
-  } else { sayut ($server, $chan, "not a pair. see this list: http://www.cryptocoincharts.info/v2"); return; }
+  } else { sayit ($server, $chan, "not a pair. see this list: http://www.cryptocoincharts.info/v2"); return; }
   sayit ($server, $chan, $msg) if (defined($msg));
 }#}}}
 sub sayit { my $s = shift; $s->command("MSG @_"); }

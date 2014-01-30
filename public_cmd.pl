@@ -204,7 +204,7 @@ sub incoming_public {
         return;
       }
       #}}}
-      #{{{ !rank !top5 and !low5
+      #{{{ !rank 
       if ($cmd eq 'rank' ) { 
         signal_emit("karma rank",$server,$chan) if (isLoaded('karma'));
       }
@@ -340,8 +340,7 @@ sub incoming_public {
       } #}}} 
       #{{{ #!doge WOW SUCH COMMAND 
       if ($cmd =~ m{doge(?:coin)?s?}) {
-        #sayit($server, $chan, "wow. such command. much coins. very rich.");
-        signal_emit('such signal', $server, $chan) if (isLoaded('coins'));
+        signal_emit('such signal', $server, $chan, $text) if (isLoaded('doge'));
       }
       #}}}
     }
@@ -474,8 +473,8 @@ signal_register( { 'write to file'    => [           'string'                   
 signal_register( { 'cuac cuac go'     => [ 'iobject','string','string'          ]}); #server,chan,query
 signal_register( { 'gold digger'      => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'silver digger'    => [ 'iobject','string'                   ]}); #server,chan
-signal_register( { 'such signal'      => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'insert coins'     => [ 'iobject','string','string'          ]}); #server,chan,$pair
+signal_register( { 'such signal'      => [ 'iobject','string','string'          ]}); #server,chan,$text
 signal_register( { 'arrr'             => [ 'iobject','string','string'          ]}); #server,chan,$text
 signal_register( { 'weather'          => [ 'iobject','string','string'          ]}); #server,chan,$city
 signal_register( { 'wolfram'          => [ 'iobject','string','string'          ]}); #server,chan,$query
