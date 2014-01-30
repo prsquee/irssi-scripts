@@ -30,10 +30,8 @@ my $youtubex = qr{(?x-sm:
     ([^&]{11})                  #the vid id
 )};
 
-my $karmagex = qr{(?x-sm:
-                  ([a-zA-Z0-9_\[\]`|\\-]+)      #this is basically \w+ with []`|\-
-                  (([-+])\3)                    #capture a + or - then look for the same symbol with \3, \1 is the 1st word, \2 is the whole ++ or --
-               )};
+my $karmagex = qr{([a-zA-Z0-9_\[\]`|\\-]+(?:--|\+\+))};
+
 #}}}
 
 sub incoming_public {
@@ -192,6 +190,8 @@ sub incoming_public {
 
         if ($name =~ /^iphone$/i)  { sayit($server,$chan,"karma for ${name}: 📱 ");  return; }
 
+        if ($name =~ /^perl$/i) { sayit($server, $chan, "karma for ${name}: 🐫 "); return; }
+
 
         $name .= $server->{tag};
         signal_emit("karma check",$server,$chan,$name) if (isLoaded('karma'));
@@ -333,10 +333,8 @@ sub incoming_public {
       } #}}}
     }
   } #cmd check ends here. begin general text match
-  
 #################################################################################################################################
-  
-  #GENERAL URL MATCH
+  #{{{ GENERAL URL MATCH
   if ($text =~ m{(https?://[^ ]+)}) {
     my $url = $1;
     return if ($url =~ /wikipedia|facebook|fbcdn/i);
@@ -399,20 +397,20 @@ sub incoming_public {
     }
     #any other http link fall here
     signal_emit('check title',$server,$chan,$url);
-  } # URL match ends here. lo que sigue seria general text match, como el de replace and others stuff que no me acuerdo
-  
-  #{{{ ## do stuff with anything that is not a cmd or a http link
+  } #}}} URL match ends here. lo que sigue seria general text match, como el de replace and others stuff que no me acuerdo
+  #{{{ do stuff with anything that is not a cmd or a http link
   #
-  ## KARMA KARMA AND KARMA++
-  if ($text =~ /$karmagex/) {
-    #no self karma
-    return if ($nick eq $1);
-    #return if ($nick =~ /^${1}$/i);
-    my $name = $1 . $server->{tag} if $1;
-    my $op = $2 if $2;
-    signal_emit('karma bitch',$name,$op) if (isLoaded('karma') and defined($name) and defined($op));
+  ## karma check against the text 
+  my @karmacheck = $text =~ /$karmagex/g;
+  if (scalar(@karmacheck) > 0) {
+    foreach (@karmacheck) {
+      my ($thingy, $op) = ( /^(.+)([+-]{2})$/ );
+      next if ($thingy eq $nick);
+      $thingy .= $server->{tag};
+      signal_emit('karma bitch', $thingy, $op) if (isLoaded('karma'));
+    }
   } #}}}
-} #incoming puiblic message ends here
+} #incoming puiblic message ends here #}}}
 
 #{{{ signal and stuff
 #sub isMaster { return ((eval($_[0] . $_[1]) =~ m{^sQuEEunaffiliated/sq/x-\d+$}) ? 1 : undef); }
