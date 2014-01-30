@@ -327,10 +327,17 @@ sub incoming_public {
           signal_emit('wolfram', $server, $chan, $query);
         } else { sayit($server, $chan, "I can pass on any question to this dude I know, Wolfram Alpha."); }
       } #}}}
-      #{{{ BOFH 
+      #{{{ !bofh 
       if ($cmd eq 'bofh') {
         signal_emit('bofh', $server, $chan) if (isLoaded('bofh'));
       } #}}}
+      #{{{ #!coins 
+      if ($cmd eq 'coins' ) {
+        my ($coin1, $coin2) = $text =~ m{^!coins ([a-zA-Z0-9]+)[-_\|/:!]([a-zA-Z0-9]+)$};
+        if ($coin1 and $coin2) {
+          signal_emit('insert coins', $server, $chan, "${coin1}_${coin2}") if (isLoaded('coins'));
+        } else { sayit ($server, $chan, "usage: !coins coin1/coin2 - Here is a list: http://www.cryptocoincharts.info/v2"); }
+      } #}}} 
     }
   } #cmd check ends here. begin general text match
 #################################################################################################################################
@@ -465,6 +472,7 @@ signal_register( { 'arrr'             => [ 'iobject','string','string'          
 signal_register( { 'weather'          => [ 'iobject','string','string'          ]}); #server,chan,$city
 signal_register( { 'wolfram'          => [ 'iobject','string','string'          ]}); #server,chan,$query
 signal_register( { 'bofh'             => [ 'iobject','string'                   ]}); #server,chan,$query
+signal_register( { 'insert coins'     => [ 'iobject','string','string'          ]}); #server,chan,$pair
 
 #}}} 
 #{{{ signal register halp
