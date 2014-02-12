@@ -20,7 +20,7 @@ sub fml {
   my $req = $ua->get($url);
   my $result = eval { $json->utf8->decode($req->decoded_content) };
   return if $@;
-
+  #print (CRAP Dumper($result));
   my $title = $result->{title};
   my $condition = uc $result->{condition};
   my $price = $result->{price};

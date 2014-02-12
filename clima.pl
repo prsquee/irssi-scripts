@@ -11,8 +11,6 @@ use utf8;
 settings_add_str('weather', 'weatherkey', '');
 signal_add('weather','check_weather');
 
-my $apikey = settings_get_str('weatherkey');
-print (CRAP "no weather apikey") unless (defined($apikey));
 
 my $json = new JSON;
 my $ua   = new LWP::UserAgent;
@@ -21,6 +19,8 @@ $ua->timeout(10);
 sub check_weather {
   my ($server,$chan,$city) = @_;
   $city =~ s/\s+/_/g;
+  my $apikey = settings_get_str('weatherkey');
+  print (CRAP "no weather apikey") unless (defined($apikey));
   my $url = "http://api.wunderground.com/api/${apikey}/conditions/q/${city}_argentina.json";
   $ua->agent(settings_get_str('myUserAgent'));
   my $req = $ua->get($url);

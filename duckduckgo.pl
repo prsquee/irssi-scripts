@@ -9,15 +9,15 @@ use JSON;
 my $json = new JSON;
 $json = $json->utf8([1]);
 my $ua = new LWP::UserAgent;
-$ua->agent(settings_get_str('myUserAgent'));
 $ua->timeout( 10 );
 
 sub cuac_cuac {
-	my ($server,$chan,$searchme) = @_;
-	my $query = "https://api.duckduckgo.com/?q=${searchme}&format=json";
+  my ($server,$chan,$searchme) = @_;
+  my $query = "https://api.duckduckgo.com/?q=${searchme}&format=json";
+  $ua->agent(settings_get_str('myUserAgent'));
 
-	my $got = $ua->get( $query );
-	my $content = $got->decoded_content;
+  my $got = $ua->get( $query );
+  my $content = $got->decoded_content;
   my $result = eval { $json->allow_nonref->utf8->decode($content) };
   return if $@;
   #print (CRAP Dumper($result));

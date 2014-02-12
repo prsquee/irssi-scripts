@@ -11,18 +11,18 @@ use Data::Dumper;
 settings_add_str('imgur', 'imgurkey', '');
 signal_add('reimgur','reupload');
 my $imgur = WWW::Imgur->new ();
-$imgur->key(settings_get_str('imgurkey'));
 my $json = new JSON;
 sub reupload {
-	my ($server,$chan,$url) = @_;
-	my $success = $imgur->upload($url) or (sayit($server,$chan,"Upload failed") and return);
-	if ($success) {
-		my $reply = $json->allow_nonref->utf8->decode($success);
-		my $link = $reply->{'upload'}->{'links'}->{'original'};
-		sayit($server,$chan,"[IMGUR] $link") if ($link);
-	}
+  my ($server,$chan,$url) = @_;
+  $imgur->key(settings_get_str('imgurkey'));
+  my $success = $imgur->upload($url) or (sayit($server,$chan,"Upload failed") and return);
+  if ($success) {
+    my $reply = $json->allow_nonref->utf8->decode($success);
+    my $link = $reply->{'upload'}->{'links'}->{'original'};
+    sayit($server,$chan,"[IMGUR] $link") if ($link);
+  }
 }
 sub sayit {
-	my ($server, $target, $msg) = @_;
-	$server->command("MSG $target $msg");
+  my ($server, $target, $msg) = @_;
+  $server->command("MSG $target $msg");
 }

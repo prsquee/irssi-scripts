@@ -16,8 +16,8 @@ sub fetch_tubes {
   my($server,$chan,$vid) = @_;
 
   if (not exists($vids{$vid})) {
-    $ua->agent(settings_get_str('myUserAgent'));
     my $url = "http://gdata.youtube.com/feeds/api/videos/${vid}?&v=2&alt=json";
+    $ua->agent(settings_get_str('myUserAgent'));
     my $req = $ua->get($url);
     my $result = eval { $json->utf8->decode($req->decoded_content)->{entry} };
     return if $@;

@@ -170,7 +170,7 @@ sub incoming_public {
       #}}}
       #{{{ !imgur reimgur 
       if ($cmd eq 'imgur') {
-        my ($url) = $text =~ m{^!imgur\s+(http://.*)$}i;
+        my ($url) = $text =~ m{^!imgur\s+(https?://.*)$}i;
         signal_emit('reimgur',$server,$chan,$url) if (isLoaded('reimgur') and $url);
         sayit($server,$chan,"Imguraffe is my best friend!") if (not $url);
         return;
@@ -343,6 +343,11 @@ sub incoming_public {
         signal_emit('such signal', $server, $chan, $text) if (isLoaded('doge'));
       }
       #}}}
+      ##{{{ !bash bash.org quotes
+      if ($cmd =~ m{^bash\b}) {
+        signal_emit('bash quotes', $server,$chan, $text) if (isLoaded('bash'));
+      }
+      ##}}}
     }
   } #cmd check ends here. begin general text match
 #################################################################################################################################
@@ -479,6 +484,7 @@ signal_register( { 'arrr'             => [ 'iobject','string','string'          
 signal_register( { 'weather'          => [ 'iobject','string','string'          ]}); #server,chan,$city
 signal_register( { 'wolfram'          => [ 'iobject','string','string'          ]}); #server,chan,$query
 signal_register( { 'bofh'             => [ 'iobject','string'                   ]}); #server,chan,$query
+signal_register( { 'bash quotes'      => [ 'iobject','string','string'          ]}); #server,chan,$text
 
 #}}} 
 #{{{ signal register halp
