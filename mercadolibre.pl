@@ -35,9 +35,5 @@ sub fml {
   signal_emit('write to file',"$out\n") if ($chan =~ /sysarmy|moob/);
   return;
 }
-
-sub sayit {
-  my ($server, $target, $msg) = @_;
-  $server->command("MSG $target $msg");
-}
+sub sayit { my $s = shift; $s->command("MSG @_"); }
 signal_add('mercadolibre','fml');

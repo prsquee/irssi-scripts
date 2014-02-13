@@ -8,7 +8,7 @@ use JSON;
 use LWP::UserAgent;
 use Data::Dumper;
  
-settings_add_str('bot', 'doge_api',    '');
+#settings_add_str('bot', 'doge_api',    '');
 signal_add('such signal','doge');
 
 my $buffer = 1800;
@@ -17,8 +17,8 @@ my $json = new JSON;
 
 my $doge      = undef;
 my $dogeprice = undef;
-my $url       = 'https://www.dogeapi.com/wow/?api_key=';
-my $getprice  = '&a=get_current_price';
+my $url       = 'https://www.dogeapi.com/wow/?';
+my $getprice  = 'a=get_current_price';
 my $ua        = new LWP::UserAgent;
 
 $ua->timeout(15);
