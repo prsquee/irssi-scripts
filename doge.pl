@@ -35,7 +35,7 @@ sub doge {
     $dogeprice = $req->decoded_content;
     $fetched = time();
   }
-  if (defined($dogeprice) and not defined($muchcoins)) {
+  if ($dogeprice != 0 and not defined($muchcoins)) {
     sayit($server, $chan, "wow. such price: 1 Ɖ = \$$dogeprice | \$1 = " . sprintf("%.5f", eval("1/$dogeprice")) . ' dogecoins');
   } elsif (defined($muchcoins) and $muchcoins > 0) {
       sayit($server, $chan, "wow. very rich: \$" . sprintf("%.2f", eval("$muchcoins * $dogeprice")));

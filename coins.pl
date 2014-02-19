@@ -27,7 +27,7 @@ sub coins {
   if (defined($r->{id})) {
     $msg = "[$r->{id}] ";
     $msg .= 'price: ' . $r->{price};
-  } else { sayit ($server, $chan, "not a pair. see this list: http://www.cryptocoincharts.info/v2"); return; }
+  } else { sayit ($server, $chan, "not a pair. see this list: http://www.cryptocoincharts.info/v2/main/priceBoxes"); return; }
   sayit ($server, $chan, $msg) if (defined($msg));
 }#}}}
 sub sayit { my $s = shift; $s->command("MSG @_"); }

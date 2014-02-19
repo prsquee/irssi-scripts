@@ -16,11 +16,9 @@ $ua->timeout(10);
 sub fml {
   my ($server,$chan,$mla) = @_;
   $ua->agent(settings_get_str('myUserAgent'));
-  $url = $url . $mla;
-  my $req = $ua->get($url);
+  my $req = $ua->get($url . $mla);
   my $result = eval { $json->utf8->decode($req->decoded_content) };
   return if $@;
-  #print (CRAP Dumper($result));
   my $title = $result->{title};
   my $condition = uc $result->{condition};
   my $price = $result->{price};
