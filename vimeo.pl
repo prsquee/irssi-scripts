@@ -19,9 +19,9 @@ sub check_vimeo {
   $ua->agent(settings_get_str('myUserAgent'));
   $query = $query . $vid . '.json';
   my $req = $ua->get( $query );
-  #my $content = $got->decoded_content;
-  my $result = shift(eval { $json->utf8->decode($req->decoded_content) } );
+  my $result = eval { $json->utf8->decode($req->decoded_content) };
   return if $@;
+  print (CRAP Dumper($result));
   my $time = $result->{'duration'};
   my $hour = ($time >= 3600) ? sprintf ("%02d:", $time/3600) : undef;
   $time = $time - 3600 * int($hour) if defined($hour);
