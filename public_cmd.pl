@@ -5,6 +5,8 @@ use warnings;
 use Storable qw (store retrieve);
 use Data::Dumper;
 use utf8;
+use Time::HiRes;
+
 
 #{{{ init stuff
 
@@ -12,8 +14,8 @@ settings_add_str('bot config', 'halpcommands',    '');
 settings_add_str('bot config', 'halp_sysarmy',    '');
 settings_add_str('bot config', 'active_networks', '');
 settings_add_str('bot config', 'myUserAgent',     '');
-settings_add_str('gsearch', 'search_apikey', '');
-settings_add_str('gsearch', 'engine_id', '' );
+settings_add_str('gsearch',    'search_apikey',   '');
+settings_add_str('gsearch',    'engine_id',       '');
 
 #nick 2 twitter list
 our $twitterusersFile = get_irssi_dir() . '/scripts/datafiles/twitternames.storable';
@@ -30,7 +32,11 @@ my $youtubex = qr{(?x-sm:
     ([^&]{11})                  #the vid id
 )};
 
-my $karmagex = qr{([a-zA-Z0-9_\[\]`|\\-]+(?:--|\+\+))};
+my $karmagex = qr{(?x-sm:
+                    ([\w\[\]`|\\-]+)      #\w+ with []`|\-
+                    (([-+])\3)            #capture a + or - then look for the same symbol with \3, \1 is the 1st word, \2 is the whole ++ or --
+                  )};
+#my $karmagex = qr{([a-zA-Z0-9_\[\]`|\\-]+(?:--|\+\+))}; #multiline karma check
 
 #}}}
 
@@ -342,6 +348,10 @@ sub incoming_public {
       if ($cmd =~ m{doge(?:coin)?s?}) {
         signal_emit('such signal', $server, $chan, $text) if (isLoaded('doge'));
       }
+
+      if ($cmd =~ m{^(?:such|many)difficult$}) {
+        signal_emit('such difficult', $server, $chan, $text) if (isLoaded('doge'));
+      }
       #}}}
       ##{{{ !bash bash.org quotes
       if ($cmd =~ m{^bash\b}) {
@@ -418,15 +428,28 @@ sub incoming_public {
   #{{{ do stuff with anything that is not a cmd or a http link
   #
   ## karma check against the text 
-  my @karmacheck = $text =~ /$karmagex/g;
-  if (scalar(@karmacheck) > 0) {
-    foreach (@karmacheck) {
-      my ($thingy, $op) = ( /^(.+)([+-]{2})$/ );
-      next if ($thingy eq $nick);
-      $thingy .= $server->{tag};
-      signal_emit('karma bitch', $thingy, $op) if (isLoaded('karma'));
-    }
-  } #}}}
+#  my @karmacheck = $text =~ /$karmagex/g;
+#  if (scalar(@karmacheck) > 0) {
+#    foreach (@karmacheck) {
+#      my ($thingy, $op) = ( /^(.+)([+-]{2})$/ );
+#      next if ($thingy eq $nick);
+#      $thingy .= $server->{tag};
+#      signal_emit('karma bitch', $thingy, $op) if (isLoaded('karma'));
+#    }
+ ## KARMA KARMA AND KARMA++
+  if ($text =~ /$karmagex/) {
+    #no self karma
+    return if ($nick eq $1);
+
+    #antiflood
+    #i should save the time
+    #
+    #
+    #
+    my $name = $1 . $server->{tag} if $1;
+    my $op = $2 if $2;
+    signal_emit('karma bitch',$name,$op) if (isLoaded('karma') and defined($name) and defined($op));
+  } 
 } #incoming puiblic message ends here #}}}
 
 #{{{ signal and stuff
@@ -480,6 +503,7 @@ signal_register( { 'gold digger'      => [ 'iobject','string'                   
 signal_register( { 'silver digger'    => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'insert coins'     => [ 'iobject','string','string'          ]}); #server,chan,$pair
 signal_register( { 'such signal'      => [ 'iobject','string','string'          ]}); #server,chan,$text
+signal_register( { 'such difficult'   => [ 'iobject','string','string'          ]}); #server,chan,$text
 signal_register( { 'arrr'             => [ 'iobject','string','string'          ]}); #server,chan,$text
 signal_register( { 'weather'          => [ 'iobject','string','string'          ]}); #server,chan,$city
 signal_register( { 'wolfram'          => [ 'iobject','string','string'          ]}); #server,chan,$query
