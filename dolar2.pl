@@ -16,7 +16,7 @@ my $libreV  = '0';
 my $blueC   = '0';
 my $blueV   = '0';
 my $last_fetch  = '0';
-my $bufferme    = '1800';  #secs
+my $bufferme    = '1800';  #30mins
 my $pesos_mugrosos = undef;
 my $sweet_dollars  = undef;
 

@@ -5,8 +5,9 @@ use strict;
 use warnings;
 
 sub do_shortme {
-	my $url = shift;
-	return if ($url !~ m{^https?://\w+.*$}i);
-	my $shorten = makeashorterlink($url);
-	return $shorten if ($shorten);
+  $ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
+  my $url = shift;
+  return undef if ($url !~ m{^https?://\w+.*$}i);
+  my $shorten = makeashorterlink($url);
+  return $shorten if ($shorten);
 }
