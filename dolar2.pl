@@ -13,7 +13,7 @@ my $oficial_venta   = '0';
 my $blue_compra     = '0';
 my $blue_venta      = '0';
 my $last_fetch      = '0';
-my $bufferme        = '4000';  #66mins
+my $bufferme        = '1800';  #66mins
 my $pesos   = undef;
 my $dollars = undef;
 my $lanacion_url    = 'http://contenidos.lanacion.com.ar/json/dolar';
@@ -29,11 +29,11 @@ sub get_price {
   #print (CRAP $raw_result);
 
   ($oficial_venta, $blue_venta, $oficial_compra, $blue_compra)
-    = $raw_result =~ m{ "CasaCambioVentaValue" :"(\d+\.\d+)"\.
+    = $raw_result =~ m{ "CasaCambioVentaValue" :"(\d+(?:\.\d+)?)"\.
                         .+\.
-                        "InformalVentaValue"   :"(\d+\.\d+)"\.
-                        "CasaCambioCompraValue":"(\d+\.\d+)"\.
-                        "InformalCompraValue"  :"(\d+\.\d+)" 
+                        "InformalVentaValue"   :"(\d+(?:\.\d+)?)"\.
+                        "CasaCambioCompraValue":"(\d+(?:\.\d+)?)"\.
+                        "InformalCompraValue"  :"(\d+(?:\.\d+)?)"
                       }x;
 
   $last_fetch = time() if ( $oficial_compra and 
@@ -54,8 +54,8 @@ sub do_dolar {
   }
   get_price($lanacion_url) if (time() - $last_fetch > $bufferme); 
 
-  my $output = "[Oficial] => $oficial_compra/$oficial_venta | "
-             . "[Blue] => $blue_compra/$blue_venta";
+  my $output = "[Oficial] $oficial_compra/$oficial_venta | "
+             . "[Blue] $blue_compra/$blue_venta";
 
   if ($ask eq 'dolar' and not $how_much) {
     sayit($server, $chan, $output);
