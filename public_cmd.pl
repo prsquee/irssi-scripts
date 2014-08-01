@@ -216,6 +216,10 @@ sub incoming_public {
       signal_emit("karma rank",$server,$chan) if (isLoaded('karma'));
     }
     #}}}
+    #{{{ !flip}}}
+    if ($cmd eq 'flip' && isMaster($nick, $mask)) {
+      signal_emit('karma flip', $server, $chan) if (isLoaded('karma'));
+    }
     #{{{ [TWITTER] !mytwitteris 
     if ($cmd eq 'mytwitteris') {
       #print (CRAP Dumper($twit_users_ref));
@@ -484,6 +488,7 @@ signal_register( { 'karma check'      => [ 'iobject','string','string'          
 signal_register( { 'karma set'        => [ 'iobject','string','string','string' ]}); #server,chan,key,val
 signal_register( { 'karma bitch'      => [           'string','string'          ]}); #name,op
 signal_register( { 'karma rank'       => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'karma flip'       => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'post twitter'     => [ 'iobject','string','string'          ]}); #server,chan,text
 signal_register( { 'post sysarmy'     => [ 'iobject','string','string'          ]}); #server,chan,text
 signal_register( { 'tweet quote'      => [           'string'                   ]}); #addme

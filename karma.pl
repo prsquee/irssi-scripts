@@ -5,20 +5,39 @@ use strict;
 use Data::Dumper;
 use Storable qw (store retrieve);
 
+#TODO make karma server independent.
 my $karma_storable = get_irssi_dir() . "/scripts/datafiles/karma.storable";
 our $karma = eval { retrieve($karma_storable) } || [];
 
-# calc
+
+#flip
+sub flip_karma {
+  my ($server, $chan) = @_;
+  foreach my $thing (keys %$karma) {
+    if ($karma->{$thing} =~ /^-\d+$/) {
+      $karma->{$thing} = abs($karma->{$thing});
+    }
+    elsif ($karma->{$thing} =~ /^\d+$/) {
+      $karma->{$thing} = '-' . $karma->{$thing};
+    }
+  }
+  store $karma, $karma_storable;
+  show_rank($server, $chan);
+}
+#{{{ calc
 sub calc_karma {
   my ($name,$op) = @_;
-  $karma->{$name} = 0 if (not exists($karma->{$name}) or not defined($karma->{$name}));
+  $karma->{$name} = 0 if (not exists($karma->{$name}) or
+                          not defined($karma->{$name}));
   my $evalme = '$karma->{$name}' . $op;
   eval "$evalme";
   store $karma, $karma_storable;
 }
 sub show_karma {
   my ($server, $chan, $name) = @_;
-  if (not exists ($karma->{$name}) or not defined($karma->{$name}) or $karma->{$name} eq '0') {
+  if (not exists($karma->{$name})   or
+      not defined($karma->{$name})  or
+      $karma->{$name} == 0) {
     $name =~ s/$server->{tag}$//;
     sayit($server,$chan,"$name has neutral karma");
   }
@@ -27,7 +46,7 @@ sub show_karma {
     $name =~ s/$server->{tag}$//;
     sayit($server,$chan,"karma for $name: $k");
   }
-}
+}#}}}
 
 #  set karma
 sub set_karma {
@@ -40,18 +59,38 @@ sub set_karma {
 # show rank with !rank
 sub show_rank {
   my ($server,$chan) = @_;
-  my %sortme = (); 
+  my %sortme = ();
+
+  #keys in karma are namesfnode.
   foreach (keys %$karma) {
+    #now make sure everything in sortme is numerical.
     delete $karma->{$_} unless (defined($karma->{$_}));
     $sortme{$_} = $karma->{$_} if ($karma->{$_} =~ /^-?\d+$/)
   }
+  #use the spaceship magic, lowest karma will be the first element.
   my @sorted = sort { $sortme{$a} <=> $sortme{$b} } keys %sortme;
-  my $lowest = '';
+
+  my $lowest  = '';
   my $highest = '';
-  for my $i (0..7) {
-    $lowest   .= '[' . scalar($sorted[$i] =~ s/$server->{tag}$//r) . ': '."\x02".$karma->{$sorted[$i]}."\x02".'] ';
+
+  for my $i (0..8) {
+    $lowest .= '['
+            .   scalar($sorted[$i] =~ s/$server->{tag}$//r)
+            .   ': '
+            .   "\x02"
+            .   $karma->{$sorted[$i]}
+            .   "\x02"
+            .   '] ';
+
     my $j = '-' . ++$i;
-    $highest  .= '[' . scalar($sorted[$j] =~ s/$server->{tag}$//r) . ': '."\x02".$karma->{$sorted[$j]}."\x02".'] ';
+
+    $highest .= '['
+             .   scalar($sorted[$j] =~ s/$server->{tag}$//r)
+             .   ': '
+             .   "\x02"
+             .   $karma->{$sorted[$j]}
+             .   "\x02"
+             .   '] ';
   }
   sayit($server, $chan, $highest);
   sayit($server, $chan, $lowest);
@@ -63,4 +102,5 @@ signal_add('karma check', 'show_karma');
 signal_add('karma bitch', 'calc_karma');
 signal_add('karma set',   'set_karma');
 signal_add('karma rank',  'show_rank');
+signal_add('karma flip',  'flip_karma');
 
