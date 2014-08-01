@@ -1,20 +1,27 @@
 #quotes.pl
-use Irssi qw( signal_add print signal_emit settings_add_str settings_get_str get_irssi_dir );
+use Irssi qw( signal_add print signal_emit settings_add_str
+              settings_get_str get_irssi_dir
+            );
 use strict;
 use warnings;
 use Data::Dump; #use this to store/retrieve quotes
 use File::Slurp qw( read_file write_file append_file);
 
-sub do_quotes { #{{{ 
+sub do_quotes { #{{{
   my ($server, $chan, $text) = @_;
-  my $qfile = get_irssi_dir() . "/scripts/datafiles/$server->{tag}" . $chan . ".txt";
+  my $qfile = get_irssi_dir()
+              . "/scripts/datafiles/$server->{tag}"
+              . $chan . ".txt";
   $qfile =~ s/#/_/g;
 
-  #{{{ add 
-  if ( $text =~ /^!qadd(.*)$/ ) { 
+  #{{{ add
+  if ( $text =~ /^!qadd(.*)$/ ) {
     my $addme = strip_all($1) if ($1);
     #print (CRAP $addme);
-    unless ($addme) { sayit($server,$chan,"I only accept funny quotes!"); return; }
+    unless ($addme) {
+      sayit($server, $chan, "I only accept funny quotes!");
+      return;
+    }
     my ($saveme,$tweeturl) = split ('======', $addme);
     $addme = $saveme if (defined($saveme));
 
@@ -40,37 +47,37 @@ sub do_quotes { #{{{
       }
       sayit($server, $chan, "[quote] $$buf[-${c}]");
       return;
-    } else { 
+    } else {
       sayit($server,$chan, "looks like no quotes for $chan");
       return;
     }
   } #}}}
-  #{{{ random 
-  if ( $text =~ /^!q(?:uote)?$/) { 
+  #{{{ random
+  if ( $text =~ /^!q(?:uote)?$/) {
     my $buf = eval { read_file ($qfile, array_ref => 1) };
     if ($buf) {
-      my $single = $$buf[int(rand(@$buf))];
-      sayit($server,$chan,"[random] $single");
+      #sayit($server,$chan,"[random] $single");
+      sayit($server,$chan,"[random] $$buf[rand scalar @$buf]");
     } else {
         sayit($server,$chan, "no quotes from $chan");
     }
   }#}}}
-  #{{{ count total 
+  #{{{ count total
   if ( $text =~ /^!qtotal\b/ ) {
     my $buf  = eval { read_file ($qfile, array_ref => 1) }; #total is a ref to an array of the slurped file
     if ($buf) {
-      my $t = scalar @$buf;
-      sayit($server,$chan,"total quotes: $t");
+      my $total = scalar @$buf;
+      sayit($server,$chan,"total quotes: $total");
       return;
-    } else { 
-      sayit($server,$chan, "looks like there isnt any quotes for $chan");
+    } else {
+      sayit($server,$chan, "I dont see any quotes for $chan");
       return;
     }
   }#}}}
   #{{{ #delete
-  if ($text =~ /^!qdel(.*)/) { 
+  if ($text =~ /^!qdel(.*)/) {
     my $deleteme = strip_all($1) if ($1);
-    if ($deleteme) { 
+    if ($deleteme) {
       #$deleteme =~ s/\./\\W/g;
       $deleteme = qr/$deleteme/i;
       my @toBeDeleted;
@@ -108,9 +115,9 @@ sub do_quotes { #{{{
               sayit($server,$chan, "[found] $_") for (@found);
             } else {
                 #si encontro mas de 4, tirar 4 random quotes de los encontrados
-                my @randq;
+                my @randq = [];
                 for (0..3) {
-                  my $n = int(rand(@found));
+                  my $n = rand scalar @found;
                   $randq[$_] = $found[$n];
                   splice(@found, $n, 1);
                 }
@@ -119,16 +126,16 @@ sub do_quotes { #{{{
                 sayit($server,$chan,"[found] $_") foreach (@randq);
               }
         }
-      } else { sayit($server,$chan, "no quotes for $chan"); return; }
-    } else { sayit($server,$chan,"I can find you a quote."); return;}
+      } else { sayit($server,$chan, "no quotes for $chan");   return; }
+    } else { sayit($server,$chan,"I can find you a quote.");  return;}
   }#}}}
 } #do_quotes ends here
 #}}}
-#{{{ misc strip all; open file; print and say 
+#{{{ misc strip all; open file; print and say
 sub strip_all {
   my $text = shift;
 	$text =~ s/\x03\d{0,2}(,\d{0,2})?//g;           #mirc colors
-	$text =~ s/\x1b\[\d+(?:,\d+)?m//g;              #ansi colors 
+	$text =~ s/\x1b\[\d+(?:,\d+)?m//g;              #ansi colors
 	$text =~ s/\x02|\x16|\x1F|\x0F//g;              #bold, inverse, underline and clear
 	$text =~ s/^\s+//g;				                      #espacios vacios al ppio
 	return $text;
@@ -139,7 +146,7 @@ sub sayit {
   $server->command("MSG $target $msg");
 }
 #}}}
-#{{{ signaal and stuff 
+#{{{ signaal and stuff
 signal_add("quotes", "do_quotes");
 #signal_add("add quotes", "add_quotes");
 settings_add_str("quotes", "qfile", '');
