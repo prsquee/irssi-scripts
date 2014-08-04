@@ -363,8 +363,17 @@ sub incoming_public {
       signal_emit('bash quotes', $server,$chan, $text) if (isLoaded('bash'));
     }
     ##}}}
+    ##{{{ !subte
+    if ($cmd eq 'subte') {
+      my ($linea) = $text =~ m{^!subte\s+([abcdehpABCDEHP])$};
+      sayit ($server, $chan, "que linea?") unless ($linea);
+      signal_emit('hay subte', $server, $chan, uc($linea)) if ($linea);
+    }
+    ##}}}
   } #cmd check ends here. begin general text match
+
 #################################################################################################################################
+  #
   #{{{ GENERAL URL MATCH
   if ($text =~ m{(https?://[^ ]+)}) {
     my $url = $1;
@@ -410,15 +419,8 @@ sub incoming_public {
     }
     #future reddit api here 
     #imgur api?
-    if ($url =~ /imgur/) {
-      if ($url =~ m{http://i\.imgur\.com/(\w{5,8})h?\.[pjgb]\w{2}$}) { #h is for hires
-          $url = "http://imgur.com/$1" if ($1);
-      }
-      #elsif ($url =~ m{http://imgur.com/a/\w+}) {
-      #  $url =~ s{^http://}{};
-      #  signal_emit('karmadecay',$server,$chan,$url);
-      #  return;
-      #}
+    if ($url =~ m{http://i\.imgur\.com/(\w{5,8})h?\.[pjgb]\w{2}$}) { #h is for hires
+        $url = "http://imgur.com/$1" if ($1);
     }
     #quickmeme
     if ($url =~ /qkme\.me/) {
@@ -427,7 +429,7 @@ sub incoming_public {
       }
     }
     #any other http link fall here
-    signal_emit('check title',$server,$chan,$url);
+    signal_emit('check title', $server, $chan, $url);
   } #}}} URL match ends here. lo que sigue seria general text match, como el de replace and others stuff que no me acuerdo
   #{{{ do stuff with anything that is not a cmd or a http link
   #
@@ -506,6 +508,7 @@ signal_register( { 'weather'          => [ 'iobject','string','string'          
 signal_register( { 'wolfram'          => [ 'iobject','string','string'          ]}); #server,chan,$query
 signal_register( { 'bofh'             => [ 'iobject','string'                   ]}); #server,chan,$query
 signal_register( { 'bash quotes'      => [ 'iobject','string','string'          ]}); #server,chan,$text
+signal_register( { 'hay subte'        => [ 'iobject','string','string'          ]}); #server,chan,$linea
 #}}} 
 #{{{ signal register halp
 #signal_register(hash)
