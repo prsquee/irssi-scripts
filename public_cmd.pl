@@ -125,13 +125,18 @@ sub incoming_public {
     #{{{  googling
     if ($cmd eq 'google') {
       my ($query) = $text =~ /^!google\s+(.*)$/;
-      if ($query =~ /google/) {
-        sayit ($server,$chan,"no! this will break the interwebz!");
+      if (!$query) {
+        sayit($server, $chan, 'too lazy to google it yourself?');
         return;
-      } elsif ($query) {
-        signal_emit('google me',$server,$chan,$query) if (isLoaded('google3'));
+      } 
+      elsif ($query =~ /\bgoogle\b/i) {
+        sayit($server, $chan, 'no! this will break the interwebz!');
         return;
-      }
+      } 
+      else {
+        signal_emit('google me', $server, $chan, $query) if (isLoaded('google3'));
+        return;
+      } 
     }#}}}
     #{{{ !ping !pong
     if ($cmd =~ /p([ioua])ng/) { 
@@ -322,7 +327,15 @@ sub incoming_public {
     }#}}}
     #{{{ !tpb the pirate bay
     if ($cmd eq 'tpb') {
-      signal_emit('arrr',$server,$chan,$text) if (isLoaded('tpb'));
+      my ($booty) = $text =~ /!tpb\s+(.*)$/;
+      if ($booty and isLoaded('tpb')) { 
+        signal_emit('arrr', $server, $chan, $booty);
+      } 
+      else {
+        sayit($server, $chan, 
+              qq(Ahoy, Matey! I've sailed the seven proxies!)
+             );
+      }
     }#}}}
     #{{{ !clima 
     if ($cmd eq 'clima') {
