@@ -7,68 +7,58 @@ use warnings;
 use JSON;
 use LWP::UserAgent;
 use Data::Dumper;
+use utf8;
  
-settings_add_str('bot config', 'doge_api',    '');
+settings_add_str('bot config', 'doge_api', '');
 signal_add('such signal','wow');
-signal_add('such difficult','many_hard');
 
-my $wait_for = 1800; #seconds. = 30mins
-my $time_fetched = undef;
 my $json = new JSON;
+my $decoded_json = undef;
+my $buffered_for = 1800; #seconds. = 30mins
 
-my $already_fetched   = undef;
-my $doge_price        = undef;
-my $api_key   = settings_get_str('doge_api');
-my $url       = "https://www.dogeapi.com/wow/v2/?api_key=${api_key}";
-my $get_price = '&a=get_current_price';
-my $get_difficulty = '&a=get_difficulty';
-my $ua        = LWP::UserAgent->new(timeout => '15');
+my $last_fetch = 0;
+my $api_key    = settings_get_str('doge_api');
+my $price_base = 'USD';
+my $ua         = LWP::UserAgent->new(timeout => '15');
+
+my $apiurl     = 'https://block.io/api/v1/get_current_price/?'
+               . "api_key=${api_key}&"
+               . "price_base=${price_base}";
+
 
 #{{{ WOW SUCH SUB
 sub wow {
   my ($server, $chan, $text) = @_;
-  my ($muchcoins) = $text =~ /!doge(?:\w+)? (\d+)$/;
-  my $last_fetch = $already_fetched ? $time_fetched : 0;
-  if (time - $last_fetch > $wait_for) {
-    $ua->agent(settings_get_str('myUserAgent'));
-    my $ua_got = eval { $ua->get($url . $get_price) };
-    return if $@;
-    my $decoded_json = eval { $json->utf8->decode($ua_got->decoded_content) };
-    return if $@;
-    $doge_price = $decoded_json->{data}->{amount};
-    $time_fetched = time;
-    $already_fetched = 1;
+  my ($much_coins) = $text =~ /!doge(?:\w+)? (\d+)$/;
+  $decoded_json = fetch_price() if (time - $last_fetch > $buffered_for);
+  #print (CRAP Dumper($decoded_json));
+  if ($decoded_json) {
+    foreach my $price (@{ $decoded_json->{'data'}->{'prices'} }) {
+      sayit ($server, $chan, "[$price->{'exchange'}] " 
+                             . '1Ɖ = '
+                             . $price->{'price'}
+                             . ' | '
+                             . '$1 = '
+                             . sprintf("%.5f", eval("1 / $price->{'price'}"))
+                             . ' dogecoins'
+            );
+    }
   }
-  if ($doge_price != 0 and not $muchcoins) {
-    sayit($server, $chan, "wow. such price: 1 Ɖ = \$$doge_price | \$1 = " . 
-                          sprintf("%.5f", eval("1/$doge_price")) . 
-                          ' dogecoins'
-         );
-  } 
-  elsif (defined($muchcoins) and $muchcoins > 0) {
-      sayit($server, $chan, "wow. very rich: \$" . 
-                            sprintf("%.2f", eval("$muchcoins * $doge_price"))
-           );
-  }
-  else { 
-    $already_fetched = undef; 
-  }
+
 
 }#}}}
 
-sub many_hard {
-  my ($server, $chan, $text) = @_;
+sub fetch_price {
   $ua->agent(settings_get_str('myUserAgent'));
-  my $ua_got = eval { $ua->get($url . $get_difficulty) };
-  return if $@;
-  my $decoded_json = eval { $json->utf8->decode($ua_got->decoded_content) };
-  return if $@;
-  my $difficulty = $decoded_json->{data}->{difficulty};
-  #print (CRAP Dumper($decoded_json));
-  if ($difficulty) {
-    sayit($server, $chan, "so much hard: $difficulty");
+  my $raw_results = $ua->get($apiurl)->content;
+  #my $decoded_json = $json->utf8->decode($raw_results);
+  my $decoded_json = $json->utf8->decode($raw_results);
+  if ($decoded_json->{'status'} eq 'success') { 
+    $last_fetch = time();
+    return $decoded_json;
+  } 
+  else {
+    return undef;
   }
 }
-
-
 sub sayit { my $s = shift; $s->command("MSG @_"); }
