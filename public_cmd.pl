@@ -327,11 +327,11 @@ sub incoming_public {
     }#}}}
    #{{{ !btc bitcoins
     if ($cmd =~ m{^bi?tc(?:oin)?s?}) {
-      signal_emit('gold digger',$server,$chan); 
+      signal_emit('gold digger', $server, $chan, 'btc') if (isLoaded('blockio'));
     }#}}}
    #{{{ !ltc litecoins
     if ($cmd =~ m{^li?te?c(?:oin)?s?}) {
-      signal_emit('silver digger',$server,$chan); 
+      signal_emit('silver digger', $server, $chan, 'ltc') if (isLoaded('blockio')); 
     }#}}}
     #{{{ !tpb the pirate bay
     if ($cmd eq 'tpb') {
@@ -519,8 +519,8 @@ signal_register( { 'mercadolibre'     => [ 'iobject','string','string'          
 signal_register( { 'reimgur'          => [ 'iobject','string','string'          ]}); #server,chan,url
 signal_register( { 'write to file'    => [           'string'                   ]}); #text
 signal_register( { 'cuac cuac go'     => [ 'iobject','string','string'          ]}); #server,chan,query
-signal_register( { 'gold digger'      => [ 'iobject','string'                   ]}); #server,chan
-signal_register( { 'silver digger'    => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'gold digger'      => [ 'iobject','string','string'          ]}); #server,chan,btc
+signal_register( { 'silver digger'    => [ 'iobject','string','string'          ]}); #server,chan,ltc
 signal_register( { 'insert coins'     => [ 'iobject','string','string'          ]}); #server,chan,$pair
 signal_register( { 'such signal'      => [ 'iobject','string','string'          ]}); #server,chan,$text
 signal_register( { 'such difficult'   => [ 'iobject','string','string'          ]}); #server,chan,$text
