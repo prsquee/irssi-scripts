@@ -12,9 +12,9 @@ use utf8;
 settings_add_str('bot config', 'doge_api', '');
 signal_add('such signal','wow');
 
-my $json = new JSON;
-my $decoded_json = undef;
-my $buffered_for = 1800; #seconds. = 30mins
+my $json          = new JSON;
+my $buffered_for  = 1800; #seconds. = 30mins
+my $prices_ref    = undef;
 
 my $last_fetch = 0;
 my $api_key    = settings_get_str('doge_api');
@@ -30,10 +30,10 @@ my $apiurl     = 'https://block.io/api/v1/get_current_price/?'
 sub wow {
   my ($server, $chan, $text) = @_;
   my ($much_coins) = $text =~ /!doge(?:\w+)? (\d+)$/;
-  $decoded_json = fetch_price() if (time - $last_fetch > $buffered_for);
+  $prices_ref = fetch_price() if (time - $last_fetch > $buffered_for);
   #print (CRAP Dumper($decoded_json));
-  if ($decoded_json) {
-    foreach my $price (@{ $decoded_json->{'data'}->{'prices'} }) {
+  if ($prices_ref) {
+    foreach my $price ( @{$prices_ref} ) {
       sayit ($server, $chan, "[$price->{'exchange'}] " 
                              . '1Ɖ = '
                              . $price->{'price'}
@@ -55,7 +55,7 @@ sub fetch_price {
   my $decoded_json = $json->utf8->decode($raw_results);
   if ($decoded_json->{'status'} eq 'success') { 
     $last_fetch = time();
-    return $decoded_json;
+    return $decoded_json->{'data'}->{'prices'};
   } 
   else {
     return undef;

@@ -1,5 +1,7 @@
 #public commands
-use Irssi qw ( print signal_emit signal_add signal_register settings_get_str settings_add_str settings_set_str get_irssi_dir);
+use Irssi qw (  print signal_emit signal_add signal_register settings_get_str 
+                settings_add_str settings_set_str get_irssi_dir
+             );
 use strict;
 use warnings;
 use Storable qw (store retrieve);
@@ -16,7 +18,9 @@ settings_add_str('bot config', 'active_networks', '');
 settings_add_str('bot config', 'myUserAgent',     '');
 
 #nick 2 twitter list
-our $twit_users_file = get_irssi_dir() . '/scripts/datafiles/twitternames.storable';
+our $twit_users_file 
+  = get_irssi_dir() . '/scripts/datafiles/twitternames.storable';
+
 our $twit_users_ref = eval { retrieve($twit_users_file) } || [];
 #print (CRAP Dumper($twit_users_ref));
 
@@ -31,21 +35,25 @@ my $youtubex = qr{(?x-sm:
 )};
 
 my $karmagex = qr{(?x-sm:
-                    ([\w\[\]`|\\-]+)      #thingy can be \w with []`|\-
-                    (([-+])\3)            #capture a + or - then look for the same symbol with \3, \1 is the 1st word, \2 is the whole ++ or --
+                    ([\w\[\]`|\\-]+)  #thingy can be \w with []`|\-
+                    (([-+])\3)        #capture a + or - 
+                                      #then look for the same symbol with \3
+                                      #\1 is the 1st word
+                                      #\2 is the opeartor ++ or --
                   )};
 
 my $karma_antiflood_time = 2;
 my $karma_lasttime = 0;
 my $ignore_karma_from = {};
 
-#my $karmagex = qr{([a-zA-Z0-9_\[\]`|\\-]+(?:--|\+\+))}; #multiline karma check
+##multiline karma check
+#my $karmagex = qr{([a-zA-Z0-9_\[\]`|\\-]+(?:--|\+\+))}; 
 #}}}
 
 sub incoming_public {
   my($server, $text, $nick, $mask, $chan) = @_;
   my $active_networks = settings_get_str('active_networks');
-  print (CRAP "im not being used on any network!") if (not defined($active_networks));
+  print (CRAP "im not being used on any network!") if (!$active_networks);
   return if $server->{tag} !~ /$active_networks/;
 
   #check if someone said a command
@@ -53,8 +61,8 @@ sub incoming_public {
     my $cmd = $1;
     #{{{ halps 
     if ($cmd =~ /^h[ea]lp$/) {
-      my $defaultcmd = settings_get_str('halpcommands');
-      $defaultcmd   .= ' ' . settings_get_str('halp_sysarmy') if ($chan eq '#sysarmy');
+      my $defaultcmd = settings_get_str('halpcommands') . ' ';
+      $defaultcmd   .= settings_get_str('halp_sysarmy') if ($chan eq '#sysarmy');
       sayit($server, $chan, $defaultcmd);
       return;
     }#}}}
@@ -405,10 +413,10 @@ sub incoming_public {
       return;
     }
     #vimeo vid
-    if ($url =~ m{vimeo\.com/(\d+)}) {
-      signal_emit('check vimeo',$server,$chan,$1) if (isLoaded('vimeo'));
-      return;
-    }
+    #if ($url =~ m{vimeo\.com/(\d+)}) {
+    #  signal_emit('check vimeo',$server,$chan,$1) if (isLoaded('vimeo'));
+    #  return;
+    #}
     #
     #show twitter user bio info from an url 
     if ($url =~ m{twitter\.com/(\w+)$}) {

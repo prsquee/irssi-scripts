@@ -28,7 +28,6 @@ sub pirate_search {
   my $count  = 0;
   
   # print (CRAP Dumper($decoded_json));
-  #print (CRAP scalar @{$decoded_json->{results}});
   if (scalar @{$decoded_json->{results}} > 0) {
     foreach my $found ( reverse sort { $a->{seeds} <=> $b->{seeds} } 
                                     @{$decoded_json->{results}}
