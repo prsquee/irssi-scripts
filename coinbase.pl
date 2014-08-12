@@ -23,11 +23,13 @@ sub coinbase {
   my $t = defined($coinbase) ? $fetched : 0;
   if (time - $t > $buffer) {
     $ua->agent(settings_get_str('myUserAgent'));
-    my $req = $ua->get($url);
-    my $r = eval { $json->utf8->decode($req->decoded_content) };
+    my $decoded_content = $ua->get($url)->decoded_content;
+    my $decoded_json = eval { $json->utf8->decode($decoded_content) };
     return if $@;
     #print (CRAP Dumper($r));
-    $coinbase = '[Coinbase] $' . $r->{btc_to_usd} if (defined($r->{btc_to_usd}));
+    (defined($decoded_json->{btc_to_usd}))
+      ? $coinbase = '[Coinbase] $' . sprintf("%.2f", $decoded_json->{btc_to_usd})
+      : undef;
     $fetched = time();
   }
   sayit ($server, $chan, $coinbase) if (defined($coinbase));
