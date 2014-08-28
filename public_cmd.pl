@@ -151,8 +151,8 @@ sub incoming_public {
       my $v = { 'i' => 'o', 'o' => 'i', 'u' => 'a', 'a' => 'u' };
       sayit($server,$chan,'p'.${$v}{$1}.'ng'); return; 
     }#}}}
-    #{{{ !dolar and !pesos
-    if ($cmd eq 'dolar' or $cmd eq 'pesos') {
+    #{{{ !dol[ao]r and !pesos
+    if ($cmd =~ /^dol[ao]r$/ or $cmd eq 'pesos') {
       #sayit($server,$chan,"service down. but I can guess the price is still high :(");
       signal_emit('showme the money', $server, $chan, $text) if (isLoaded('dolar2'));
       return;
@@ -451,7 +451,7 @@ sub incoming_public {
     }
     #any other http link fall here
     signal_emit('check title', $server, $chan, $url);
-  } #}}} URL match ends here. lo que sigue seria general text match, como el de replace and others stuff que no me acuerdo
+  } #}}} URL match ends here. lo que sigue seria general text match.
   #{{{ do stuff with anything that is not a cmd or a http link
   #
   ## karma check against the text 

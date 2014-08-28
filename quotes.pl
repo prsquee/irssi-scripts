@@ -1,4 +1,5 @@
 #quotes.pl
+#TODO refactor this
 use Irssi qw( signal_add print signal_emit settings_add_str
               settings_get_str get_irssi_dir
             );
@@ -15,14 +16,14 @@ sub do_quotes { #{{{
   $qfile =~ s/#/_/g;
 
   #{{{ add
-  if ( $text =~ /^!qadd(.*)$/ ) {
+  if ( $text =~ /^!qadd\s+(.*)$/ ) {
     my $addme = strip_all($1) if ($1);
     #print (CRAP $addme);
     unless ($addme) {
       sayit($server, $chan, "I only accept funny quotes!");
       return;
     }
-    my ($saveme,$tweeturl) = split ('======', $addme);
+    my ($saveme, $tweeturl) = split ('======', $addme);
     $addme = $saveme if (defined($saveme));
 
     eval { append_file ($qfile, "$addme\n") };
@@ -134,17 +135,15 @@ sub do_quotes { #{{{
 #{{{ misc strip all; open file; print and say
 sub strip_all {
   my $text = shift;
-	$text =~ s/\x03\d{0,2}(,\d{0,2})?//g;           #mirc colors
-	$text =~ s/\x1b\[\d+(?:,\d+)?m//g;              #ansi colors
-	$text =~ s/\x02|\x16|\x1F|\x0F//g;              #bold, inverse, underline and clear
-	$text =~ s/^\s+//g;				                      #espacios vacios al ppio
+	$text =~ s/\x03\d{0,2}(,\d{0,2})?//g; #mirc colors
+	$text =~ s/\x1b\[\d+(?:,\d+)?m//g;    #ansi colors
+	$text =~ s/\x02|\x16|\x1F|\x0F//g;    #bold, inverse, underline and clear
+	$text =~ s/^\s+//g;				            #espacios vacios al ppio
 	return $text;
 }
 
-sub sayit {
-  my ($server, $target, $msg) = @_;
-  $server->command("MSG $target $msg");
-}
+sub sayit { my $s = shift; $s->command("MSG @_"); }
+
 #}}}
 #{{{ signaal and stuff
 signal_add("quotes", "do_quotes");
