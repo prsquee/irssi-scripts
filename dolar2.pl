@@ -54,34 +54,34 @@ sub do_dolar {
   }
   get_price($lanacion_url) if (time() - $last_fetch > $bufferme); 
 
-  my $output = "[Oficial] $oficial_compra/$oficial_venta | "
+  my $output = "[Oficial] $oficial_compra/$oficial_venta :: "
              . "[Blue] $blue_compra/$blue_venta";
 
-  if ($ask eq 'dolar' and not $how_much) {
+  if ($ask =~ /^dol[oa]r$/ and not $how_much) {
     sayit($server, $chan, $output);
     return;
   }
-  if ($ask eq 'dolar' and $how_much > 0) {
+  if ($ask =~ /^dol[oa]r$/ and $how_much > 0) {
     #print_msg("calcular el dolar en pesos");
-    $pesos = "[Oficial] "
+    $pesos = '[Oficial] $'
            . eval("$how_much * $oficial_compra") 
-           . " pesos | "
-           . "[Tarjeta +35%] " 
-           . sprintf("%.2f", eval("$how_much * $oficial_compra * 1.35")) 
-           . " pesos | "
-           . "[Ahorro +20%] "
-           . sprintf("%.2f", eval("$how_much * $oficial_compra * 1.20"))
-           . " pesos | "
-           . "[Blue] "
-           . eval($how_much * $blue_compra) 
-           . " pesos";
+           . ' ARS :: '
+           . '[Blue] $'
+           . eval($how_much * $blue_compra)
+           . ' ARS :: '
+           . '[Tarjeta +35%] $' 
+           . sprintf("%.2f", eval("$how_much * $oficial_venta * 1.35")) 
+           . ' ARS :: '
+           . '[Ahorro +20%] $'
+           . sprintf("%.2f", eval("$how_much * $oficial_venta * 1.20"))
+           . ' ARS ::';
     sayit($server, $chan, $pesos) if (!$@);
     return;
   }
   if ($ask eq 'pesos' and $how_much) {
     $dollars = "[Oficial] " 
              . sprintf("%.2f", eval("$how_much / $oficial_venta" )) 
-             . " | "
+             . " :: "
              . "[Blue] "
              . sprintf("%.2f", eval("$how_much / $blue_venta"     ));
     sayit($server, $chan, $dollars) if (!$@);
