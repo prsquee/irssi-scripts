@@ -21,7 +21,8 @@ $ua->timeout(10);
 
 sub pirate_search {
   my ($server, $chan, $booty) = @_;
-  my $raw_content = $ua->get($url . $booty . '.json')->content;
+  my $raw_content = eval ($ua->get($url . $booty . '.json')->content);
+  return if $@;
   my $decoded_json = $json->utf8->decode($raw_content);
 
   my $needed = 5;
