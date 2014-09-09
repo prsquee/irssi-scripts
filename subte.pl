@@ -6,6 +6,7 @@ use warnings;
 use LWP::UserAgent;
 use Data::Dumper;
 use XML::Simple;
+use utf8;
  
 settings_add_str('bot config', 'subte_agent', '');
 settings_add_str('bot config', 'subte_url',   '');
@@ -24,9 +25,9 @@ my $ua  = LWP::UserAgent->new( timeout  => 10,
 sub check_subte {
   my ($server, $chan, $linea) = @_;
   fetch_status() if (time - $last_fetched > $buffered_for);
-  my $output = "status de la linea $linea: [$subtes{$linea}->{status}]";
+  my $output = "[Línea $linea] \x02$subtes{$linea}->{status}\x02";
   if ($subtes{$linea}->{freq} > 0) {
-    $output .= ' - frecuencia: ' . int($subtes{$linea}->{freq} / 60) . ' mins';
+    $output .= ' - cada ' . int($subtes{$linea}->{freq} / 60) . ' mins';
   }
   sayit ($server, $chan, $output);
   return;
@@ -46,4 +47,4 @@ sub fetch_status {
                 } @{ $parsedxml_ref->{'Linea'} };
   $last_fetched = time();
 }
-sub sayit { my $s = shift; $s->command("MSG @_"); }
+sub sayit { $_ = shift; $_->command("MSG @_"); }
