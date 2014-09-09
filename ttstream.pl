@@ -15,6 +15,8 @@ my $out = undef;
 my $bold = '\x02';
 
 my $server = server_find_chatnet("fnode");
+
+our $sysarmyStreamer = undef;
 sub show_tweet {
   my $tweet = shift;
   #not interested in @replies.
@@ -40,18 +42,30 @@ sub show_tweet {
   }
   #$server->command("MSG $chan [\x02\@$tweet->{user}{screen_name}\x02] $tweet->{text}") 
 }
-our $sysarmyStream = AnyEvent::Twitter::Stream->new(
-  consumer_key    => settings_get_str('twitter_apikey'),
-  consumer_secret => settings_get_str('twitter_secret'),
-  token           => settings_get_str('twitter_access_token'),
-  token_secret    => settings_get_str('twitter_access_token_secret'),
-  method          => "filter",
-  follow          => "$sysarmy, $sqbot, $nerdear",
-  on_connect      => sub { print (CRAP "connected to twitter stream.");},
-  on_tweet        => \&show_tweet,
-  on_eof          => sub { print (CRAP "EOF.") && return;},
-  on_error        => sub { print (CRAP "$_[0];") and return ;},
-  #on_keepalive    => sub { print (CRAP "still alive");},
-  on_delete       => sub { print (CRAP "a tweet was deleted. so sad");},
-  timeout         => 100,
-);
+
+sub restart_stream {
+  undef $sysarmyStreamer;
+  print (CRAP "sysarmy stream stopped. sleeping for 5");
+  sleep 5;
+  start_stream();
+}
+
+sub start_stream {
+  $sysarmyStreamer = AnyEvent::Twitter::Stream->new(
+    consumer_key    => settings_get_str('twitter_apikey'),
+    consumer_secret => settings_get_str('twitter_secret'),
+    token           => settings_get_str('twitter_access_token'),
+    token_secret    => settings_get_str('twitter_access_token_secret'),
+    method          => "filter",
+    follow          => "$sysarmy, $nerdear, $sqbot",
+    on_connect      => sub { print (CRAP "connected to sysarmy stream.");},
+    on_tweet        => \&show_tweet,
+    on_eof          => \&restart_stream,
+    on_error        => sub { print (CRAP "error: $_[0];") and return ;},
+    #on_keepalive   => sub { print (CRAP "still alive");},
+    on_delete       => sub { print (CRAP "a tweet was deleted. so sad");},
+    timeout         => 300,
+  );
+}
+
+start_stream();
