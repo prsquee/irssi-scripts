@@ -2,15 +2,17 @@
 #http://search.cpan.org/~mmims/Net-Twitter-Lite-0.10004/lib/Net/Twitter/Lite.pm
 
 use Irssi qw(signal_add print settings_add_str settings_get_str settings_set_str ) ;
+use Scalar::Util 'blessed';
 use strict;
-use Net::Twitter::Lite::WithAPIv1_1 0.12004;
+use warnings;
+use Net::Twitter::Lite::WithAPIv1_1;
 use Net::OAuth;
 use Data::Dumper;
 use Encode qw (encode decode);
 
 #{{{ #init 
-settings_add_str('twitter', 'twitter_apikey',               '');
-settings_add_str('twitter', 'twitter_secret',               '');
+settings_add_str('twitter', 'twitter_apikey',              '');
+settings_add_str('twitter', 'twitter_secret',              '');
 settings_add_str('twitter', 'sysarmy_access_token',        '');
 settings_add_str('twitter', 'sysarmy_access_token_secret', '');
 signal_add("post sysarmy",  "post_twitter");
@@ -24,7 +26,6 @@ my $twitter;
 if (%consumer_tokens) {
   $twitter = Net::Twitter::Lite::WithAPIv1_1->new(
     %consumer_tokens,
-    legacy_lists_api      =>  0,
     ssl                   =>  1,
   );
 } else {
@@ -45,11 +46,13 @@ if ($at && $ats) {
 #print (CRAP Dumper($army));
 #}}} 
 #{{{ quote 2 tweet
+#TODO refacor this.
 sub tweetquote {
   my $text = shift;
   my $status;
 
   eval { $status = $twitter->update(decode("utf8", $text)) };
+ 
   if (!$@) {
     #get the link to the tweet we just sent.
     #shorten that
@@ -57,7 +60,8 @@ sub tweetquote {
     #return that short url
     return $shorten;
   } else {
-    print (CRAP $@);
+    #my $err = $@;
+    print (CRAP $@); # unless blessed $err && $err->isa('Net::Twitter::Lite::Error');
     return undef;
   }
 }
@@ -69,8 +73,11 @@ sub post_twitter {
   my $status;
   eval { $status = $twitter->update(decode("utf8", $text)) }; #no idea why this works, and who am i to argue with the encodeing gods.
   if ($@) {
-    #contar 140 chars? bitch please.
-    sayit($server,$chan,"error: $@");
+    my $err = $@;
+    sayit($server,$chan,"error: $@") unless blessed $err && $err->isa('Net::Twitter::Lite::Error');
+    print (CRAP "HTTP Response Code: ", $err->code);
+    print (CRAP "HTTP Message: ", $err->message);
+    print (CRAP "Twitter error: ", $err->error);
   } else {
     #sayit($server,$chan,"*chirp*");
     my $url = 'https://twitter.com/sysARmIRC/status/' . $status->{id};
