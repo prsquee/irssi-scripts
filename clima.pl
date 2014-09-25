@@ -11,7 +11,6 @@ use utf8;
 settings_add_str('weather', 'weatherkey', '');
 signal_add('weather','check_weather');
 
-
 my $json = new JSON;
 my $ua   = new LWP::UserAgent;
 $ua->timeout(10);
@@ -19,10 +18,13 @@ $ua->timeout(10);
 sub check_weather {
   my ($server,$chan,$city) = @_;
   $city =~ s/\s+/_/g;
+
   my $apikey = settings_get_str('weatherkey');
   print (CRAP "no weather apikey") unless (defined($apikey));
+
   my $url = "http://api.wunderground.com/api/${apikey}/conditions/q/${city}_argentina.json";
   $ua->agent(settings_get_str('myUserAgent'));
+
   my $req = $ua->get($url);
   my $result = eval { $json->utf8->decode($req->decoded_content) };
   return if $@;
@@ -34,10 +36,9 @@ sub check_weather {
     my $feelslike   = $result->{current_observation}->{feelslike_c};
     my $found_city  = $result->{current_observation}->{display_location}->{full};
 
-    my $out = "${found_city}: ${weather}, Temp: ${temp}˚, Min: ${lowest}˚, Humedad: ${humidity}";
-    sayit($server,$chan,$out);
+    my $out = "${found_city}: ${weather}, feels like: ${temp}˚, min: ${lowest}˚, humidity: ${humidity}";
+    sayit($server, $chan, $out);
   } else { sayit($server,$chan,"I really don't care about that city."); }
 }
-
 sub sayit { my $s = shift; $s->command("MSG @_"); }
 
