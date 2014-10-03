@@ -1,6 +1,8 @@
 #public commands
-use Irssi qw (  print signal_emit signal_add signal_register settings_get_str 
-                settings_add_str settings_set_str get_irssi_dir
+use Irssi qw (  print signal_emit 
+                signal_add signal_register 
+                settings_get_str settings_add_str settings_set_str 
+                get_irssi_dir
              );
 use strict;
 use warnings;
@@ -16,6 +18,7 @@ settings_add_str('bot config', 'halpcommands',    '');
 settings_add_str('bot config', 'halp_sysarmy',    '');
 settings_add_str('bot config', 'active_networks', '');
 settings_add_str('bot config', 'myUserAgent',     '');
+settings_add_str('bot config', 'bot_masters',     '');
 
 #nick 2 twitter list
 our $twit_users_file 
@@ -67,7 +70,7 @@ sub incoming_public {
       return;
     }#}}}
     #{{{ add help
-    if ($cmd eq 'addhalp' and isMaster($nick, $mask)) {
+    if ($cmd eq 'addhalp' and is_master($mask)) {
         my ($newhalp) = $text =~ /^!addhalp\s+(.*)$/;
         #my $halps = settings_get_str('halpcommands');
         #O$halps .= " $newhalp" if ($newhalp);
@@ -82,7 +85,7 @@ sub incoming_public {
       return;
     }#}}}
     #{{{ do this and say that
-    if (($cmd eq 'do' or $cmd eq 'say') and isMaster($nick,$mask)) {
+    if (($cmd eq 'do' or $cmd eq 'say') and is_master($mask)) {
       $text =~ s/^!\w+\s//;
       my $serverCmd = ($cmd eq 'say') ? "MSG" : "ACTION";
       $server->command("$serverCmd $chan $text");
@@ -121,7 +124,7 @@ sub incoming_public {
         my $shorten = scalar('Irssi::Script::ggl')->can('do_shortme')->($url);
         sayit($server,$chan,"[shorten] $shorten");
       }
-      sayit($server,$chan,"I need a http://yourmom.com") if (not defined($url));
+      sayit($server, $chan, "I cant shorten  http://domain.com ") if (not defined($url));
       return;
     }#}}}
     #{{{ !temp
@@ -147,9 +150,14 @@ sub incoming_public {
       } 
     }#}}}
     #{{{ !ping !pong
-    if ($cmd =~ /p([ioua])ng/) { 
-      my $v = { 'i' => 'o', 'o' => 'i', 'u' => 'a', 'a' => 'u' };
-      sayit($server,$chan,'p'.${$v}{$1}.'ng'); return; 
+    if ($cmd =~ /p([ioua])ng/) {
+      my $v = { 'i' => 'o',
+                'o' => 'i',
+                'u' => 'a',
+                'a' => 'u'
+              };
+      sayit($server, $chan, 'p'.${$v}{$1}.'ng');
+      return;
     }#}}}
     #{{{ !dol[ao]r and !pesos
     if ($cmd =~ /^dol[ao]r$/ or $cmd eq 'pesos') {
@@ -218,7 +226,7 @@ sub incoming_public {
       return;
     }
     # !setkarma
-    if ($cmd eq 'setkarma' and isMaster($nick,$mask)) {
+    if ($cmd eq 'setkarma' and is_master($mask)) {
       my ($key,$val) = $text =~ /^!setkarma\s+(.+)=(.*)$/;
       signal_emit("karma set",$server,$chan,$key.$server->{tag},$val) if (isLoaded('karma') and $key and $val);
       return;
@@ -230,7 +238,7 @@ sub incoming_public {
     }
     #}}}
     #{{{ !flip}}}
-    if ($cmd eq 'flip' && isMaster($nick, $mask)) {
+    if ($cmd eq 'flip' && is_master($mask)) {
       signal_emit('karma flip', $server, $chan) if (isLoaded('karma'));
     }
     #{{{ [TWITTER] !mytwitteris 
@@ -283,7 +291,7 @@ sub incoming_public {
      }
     #}}} 
     #{{{ [TWITTER] !isnolongerhere 
-    if ($cmd eq 'isnolongerhere' and isMaster($nick,$mask)) {
+    if ($cmd eq 'isnolongerhere' and is_master($mask)) {
       my ($givenName) = $text =~ /^!isnolongerhere\s+(.+)$/;
       if ($givenName) {
         $givenName =~ s/^\@//;
@@ -473,15 +481,25 @@ sub incoming_public {
 
     #fancy anti-karmabot mechanism.
     return if (time - $karma_lasttime < $karma_antiflood_time);
-    signal_emit('karma bitch',$thingy,$op) if (isLoaded('karma') and defined($thingy) and defined($op));
+    signal_emit('karma bitch', $thingy, $op) if (     isLoaded('karma') 
+                                                and defined($thingy) 
+                                                and defined($op));
     $karma_lasttime = time;
   } 
 } #incoming puiblic message ends here #}}}
 #{{{ signal and stuff
-#sub isMaster { return ((eval($_[0] . $_[1]) =~ m{^sQuEEunaffiliated/sq/x-\d+$}) ? 1 : undef); }
-sub isMaster {
-  my ($nick,$mask) = @_;
-  return (($nick eq 'sQuEE' and $mask =~ m{unaffiliated/sq/x-\d+}) ? 1 : undef);
+sub is_master {
+  my $mask = shift;
+  my @masters = split ',', settings_get_str('bot_masters');
+  my $is_master = undef;
+
+  foreach my $master (@masters) {
+    if ($mask eq $master) {
+      $is_master = 'true';
+      last;
+    }
+  }
+  return $is_master;
 }
 sub isLoaded { return exists($Irssi::Script::{shift(@_).'::'}); }
 sub sayit { my $s = shift; $s->command("MSG @_"); }
