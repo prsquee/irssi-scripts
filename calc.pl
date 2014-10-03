@@ -18,7 +18,7 @@ sub do_calculate {
   $text =~ s/^\W+//;                  #leading useless stuff
 
   my $answer = eval("($text) || '0'");
-  $answer = "calculating... might take a while." if ($answer eq 'inf');
+  $answer = 'fourty-two' if ($answer eq 'inf');
   my $out = $@ ? $error : $answer;
   sayit($server,$chan,$out);
 }
