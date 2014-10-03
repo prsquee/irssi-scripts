@@ -4,15 +4,16 @@
 use strict;
 use warnings;
 use Irssi qw( signal_add print settings_add_str settings_get_str) ;
-use utf8;
 use Encode qw(decode);
+use URI::Encode qw(uri_encode uri_decode);
 use Data::Dumper;
 use WWW::Google::CustomSearch;
 
 settings_add_str('gsearch', 'search_apikey', '');
 settings_add_str('gsearch', 'engine_id', '' );
+signal_add("google me","do_google");
 
-my $engine  = WWW::Google::CustomSearch->new(
+my $engine = WWW::Google::CustomSearch->new(
   api_key => settings_get_str('search_apikey'),
   cx      => settings_get_str('engine_id'),
   alt     => 'json',
@@ -20,12 +21,11 @@ my $engine  = WWW::Google::CustomSearch->new(
 );
 
 sub do_google {
-  my ($server,$chan,$query) = @_;
-  my $res = $engine->search($query);
-  #print (CRAP Dumper($res->{request}->{page}->{totalResults}));
+  my ($server, $chan, $query) = @_;
+  my $json = $engine->search( uri_encode($query) );
 
-  if ($res->{request}->{page}->{totalResults} > 0) {
-    foreach my $items (@{$res->items}) {
+  if ($json->{request}->{page}->{totalResults} > 0) {
+    foreach my $items (@{$json->items}) {
       my $title = decode("utf8", $items->{title});
       sayit($server,$chan,"[gugl] $items->{link} - $title");
     }
@@ -34,8 +34,4 @@ sub do_google {
     return;
   }
 }
-sub sayit {
-  my ($server, $target, $msg) = @_;
-  $server->command("MSG $target $msg");
-}
-signal_add("google me","do_google");
+sub sayit { my $s = shift; $s->command("MSG @_"); }
