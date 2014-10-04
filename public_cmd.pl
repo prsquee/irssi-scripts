@@ -112,11 +112,6 @@ sub incoming_public {
       signal_emit('calculate',$server,$chan,$text) if (isLoaded('calc'));
       return;
     }#}}}
-    #{{{ !ihq isohunt
-    if ($cmd eq 'ihq') {
-      signal_emit('search isohunt',$server,$chan,$text) if (isLoaded('isohunt'));
-      return;
-    }#}}}
     #{{{ !short
     if ($cmd eq 'short') {
       my ($url) = $text =~ m{(https?://[^ ]+)}i;
