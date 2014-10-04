@@ -2,6 +2,7 @@
 
 use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
 use LWP::UserAgent;
+use utf8;
 use strict;
 use warnings;
 use Data::Dumper;
@@ -12,8 +13,6 @@ my $oficial_compra  = undef;
 my $oficial_venta   = undef;
 my $blue_compra     = undef;
 my $blue_venta      = undef;
-my $pesos           = undef;
-my $dollars         = undef;
 my $last_fetch      = 0;
 my $bufferme        = '1800';  #66mins
 my $lanacion_url    = 'http://contenidos.lanacion.com.ar/json/dolar';
@@ -72,42 +71,46 @@ sub do_dolar {
     return;
   }
   if ($ask =~ /^dol[oa]r$/ and $how_much > 0) {
-    $pesos  = '[Oficial] ';
-    $pesos .= ($oficial_compra) ? 'AR$' . eval($how_much * $oficial_compra) 
-                                : 'no idea';
+    my $pesos = undef;
+    $pesos .= ($oficial_compra) 
+                ? 'Oficialmente el banco te cambia AR$' 
+                  . sprintf("%.2f", eval($how_much * $oficial_compra))
+                  . '. En la tarjeta te va a venir AR$'
+                  . sprintf("%.2f", eval($how_much * $oficial_venta * 1.35))
+                  . '. Si no sos pobre, te sale AR$'
+                  . sprintf("%.2f", eval($how_much * $oficial_venta * 1.20))
+                  . ' para comprar dólar ahorro. '
+                : undef;
 
-    $pesos .= ' :: [Blue] ';
-    $pesos .= ($blue_compra) ? 'AR$' . eval($how_much * $blue_compra)
-                             : 'no idea';
+    $pesos .= ($blue_compra) 
+                ? 'En una cueva podés cambiar por AR$' 
+                  . sprintf("%.2f", eval($how_much * $blue_compra)) . '.'
+                : undef;
 
-    $pesos .= ' :: [Tarjeta +35%] ';
-    $pesos .= ($oficial_venta) 
-                ? 'AR$' . sprintf("%.2f", eval(   $how_much 
-                                                * $oficial_venta 
-                                                * 1.35
-                                              )) 
-                : 'no idea';
-
-    $pesos .= ' :: [Ahorro +20%] ';
-    $pesos .= ($oficial_venta) 
-                ? 'AR$' . sprintf("%.2f", eval(   $how_much 
-                                                * $oficial_venta  
-                                                * 1.20
-                                              ))
-                : 'no idea';
-
+    $pesos = $pesos || 'I have no info available right now. try later';
     sayit($server, $chan, $pesos) if (!$@);
     return;
   }
-  if ($ask eq 'pesos' and $how_much) {
-    $dollars = "[Oficial] ";
+  if ($ask eq 'pesos' and $how_much > 0) {
+    my $dollars = undef;
     $dollars .= ($oficial_venta) 
-                  ? 'u$' . sprintf("%.2f", eval($how_much / $oficial_venta)) 
-                  : 'no idea';
-    $dollars .=  ' :: [Blue] ';
+                  ? 'Oficialmente son u$' 
+                      . sprintf("%.2f", eval($how_much / $oficial_venta)) 
+                      . '. Podés pagar u$'
+                      . sprintf("%.2f", eval($how_much  / ($oficial_venta * 1.35)))
+                      . ' en tu tarjeta. '
+                      . 'Si AFIP te deja, podés comprar u$'
+                      . sprintf("%.2f", eval($how_much / ($oficial_venta* 1.20))) 
+                      . ' de ahorro. '
+                  : undef;
+
     $dollars .= ($blue_venta) 
-                  ? 'u$' . sprintf("%.2f", eval("$how_much / $blue_venta"))
-                  : 'no idea';
+                  ? 'O En una cueva podés comprar u$' 
+                      . sprintf("%.2f", eval("$how_much / $blue_venta"))
+                      . '. '
+                  : undef;
+
+    $dollars = $dollars || 'I have no info available right now. try later';
 
     sayit($server, $chan, $dollars) if (!$@);
     return;
