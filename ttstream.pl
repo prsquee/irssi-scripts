@@ -1,4 +1,4 @@
-#send @sysarmy to #sysarmy
+#stream @sysarmy to #sysarmy
 use Irssi qw(server_find_chatnet signal_emit signal_add print settings_add_str settings_get_str settings_set_str ) ;
 use strict;
 use warnings;
@@ -10,9 +10,10 @@ my $sysarmy = '57440969';
 my $nerdear = '2179429297';
 my $sqbot   = '324991882';
 #my $prsquee = '31968735';
-my $chan = '#ssqquuee';
-my $out = undef;
-my $bold = '\x02';
+#
+my $chan  = '#ssqquuee';
+my $out   = undef;
+my $bold  = '\x02';
 
 my $server = server_find_chatnet("fnode");
 
@@ -45,8 +46,8 @@ sub show_tweet {
 
 sub restart_stream {
   undef $sysarmyStreamer;
-  print (CRAP "sysarmy stream stopped. sleeping for 5");
-  sleep 5;
+  print (CRAP "sysarmy stream stopped. sleeping for a while");
+  sleep 60;
   start_stream();
 }
 
@@ -61,11 +62,10 @@ sub start_stream {
     on_connect      => sub { print (CRAP "connected to sysarmy stream.");},
     on_tweet        => \&show_tweet,
     on_eof          => \&restart_stream,
-    on_error        => \&restart_stream,
-    #on_error        => sub { print (CRAP "error: $_[0];") and \&restart_stream ;},
+    on_error        => sub { print (CRAP "error: $_[0];") and \&restart_stream ;},
     #on_keepalive   => sub { print (CRAP "still alive");},
     on_delete       => sub { print (CRAP "a tweet was deleted. so sad");},
-    timeout         => 180,
+    timeout         => 300,
   );
 }
 
