@@ -55,40 +55,51 @@ sub do_last {
   }
 }
 #}}}
-#{{{ time diff 
+#{{{ fuzzy time diff 
 sub moment_ago {
   #time is always in utc and in secs
   my $created_at = shift;
   $created_at =~ s| \+\d{4}||g;
 
   my $converted_time = str2time($created_at);
-  $converted_time -= 10800;       # -0300 #my server's timezone
+  # -0300 #my server's timezone
+  $converted_time -= 10800;
 
-  my $delta  = time - $converted_time;
+  my $delta = time - $converted_time;
   return undef unless $delta;
 
-  if ($delta > 31536000) {
-    my $y = sprintf("%d" ,$delta/31536000);
-    $y > 1 ? return "$y years" : return "a year";
+  my $ago = undef;
+
+  if ($delta > 2628000) {
+    my $mon = sprintf("%d", $delta/2592000);
+    $ago = $mon <= 1  ? 'about a month ago'
+         : $mon <= 3  ? 'a couple of months ago'
+         : $mon <= 7  ? 'half a year ago'
+         : $mon <= 13 ? 'almost a year ago'
+         : $mon <= 18 ? 'more than a year ago'
+         : $mon <= 25 ? 'almost 2 years ago'
+         : $mon > 26  ? 'more than 2 years ago'
+         : undef;
   }
-  elsif ($delta > 2592000) {
-      my $m = sprintf("%d", $delta/2592000);
-      $m > 1 ? return "$m months" : return "a month";
-    }
-    elsif ($delta > 86400) {
-        my $d = sprintf("%d" ,$delta/86400);
-        $d > 1 ? return "$d days" : return "a day";
-      }
-      elsif ($delta > 3600) {
-          my $h = sprintf("%d" ,$delta/3600);
-          $h > 1 ? return "$h hours" : return "an hour";
-        }
-        elsif ($delta >= 60) {
-            my $m = sprintf("%d" ,$delta/60);
-            $m > 1 ? return "$m mins" : return "just a minute";
-        }
-  return "$delta secs" if ($delta < 60 and $delta > 0);
-  return undef if ($delta <= 0);  #some fucked up time zones 
+  elsif ($delta > 86400) {
+    my $day = sprintf("%d", $delta/86400);
+    $ago = $day <= 1  ? 'today'
+         : $day <= 7  ? 'this week'
+         : $day <= 21 ? 'a couple of weeks ago'
+         : $day <= 32 ? 'about a month ago'
+         : undef;
+  }
+  elsif ($delta > 3600) {
+    my $hour = sprintf("%d", $delta/3600);
+    $ago = $hour <= 1  ? 'just now'
+         : $hour <= 5  ? 'a couple of hours ago'
+         : $hour <= 24 ? 'less than a day ago'
+         : undef;
+  }
+  elsif ($delta >= 60) {
+    $ago = 'just now';
+  }
+  return defined($ago) ? $ago : undef;
 }#}}}
 #{{{ user info
 sub userbio {
@@ -139,21 +150,21 @@ sub do_search {
 #}}}
 #{{{ do twitter
 sub do_twitter {
-  my ($server,$chan,$text) = @_;
-  my ($user,$statusid) = $text =~ m{twitter\.com(?:/\#!)?/([^/]+)/status(?:es)?/(\d+)}i; 
-  my $status = eval { $twitter_ref->show_status($statusid) };
+  my ($server, $chan, $text) = @_;
+  my ($user, $status_id) = $text =~ m{twitter\.com(?:/\#!)?/([^/]+)/status(?:es)?/(\d+)}i; 
+  my $status = eval { $twitter_ref->show_status($status_id) };
   return if $@;
 
   my $delta = moment_ago($status->{created_at});
   my $result = "\@${user} " . 'tweeted: '. '"'. decode_entities($status->{text}) . '" ';
-  $result .= 'from ' . $delta . ' ago' if ($delta);
+  $result .= 'from ' . $delta if ($delta);
 
-  my $replyurl = "http://twitter.com/" . $user . "/status/" . $status->{in_reply_to_status_id} if ($status->{in_reply_to_status_id});
-  my $shorturl = scalar('Irssi::Script::ggl')->can('do_shortme')->($replyurl) if ($replyurl);
+  my $shorturl = ($status->{in_reply_to_status_id}) 
+               ? scalar('Irssi::Script::ggl')->can('do_shortme')->("http://twitter.com/" . $user . "/status/" . $status->{in_reply_to_status_id})
+               : undef;
 
   $result .= ". in reply to " . $shorturl if ($shorturl);
-  sayit($server,$chan,$result) if ($result);
-  #signal_emit('write to file', "$result\n") if ($result and $chan =~ /sysarmy|moob/);
+  sayit($server, $chan, $result) if ($result);
 }
 #}}}
 #{{{ new twtrr 
