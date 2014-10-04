@@ -10,7 +10,7 @@ use HTML::Entities qw(decode_entities);
 use Data::Dumper;
 use Date::Parse qw(str2time); #thank godess for this black magic
 
-#init 
+#init
 settings_add_str('twitter', 'twitter_apikey',               '');
 settings_add_str('twitter', 'twitter_secret',               '');
 settings_add_str('twitter', 'twitter_access_token',         '');
@@ -21,13 +21,26 @@ settings_add_str('twitter', 'sysarmy_access_token_secret',  '');
 signal_add("fetch tweet",     "do_twitter");
 signal_add("last tweet",      "do_last");
 signal_add("teh fuck is who", "userbio");
-signal_add("post twitter",    "update");
+signal_add("white rabbit",    "follow");
+signal_add("shit I say",      "tweet_myself");
 
 my $twitter_ref = new_twitter();
 
-#do a polling of new tweets or stream?
-#
-#{{{ update twitter 
+sub tweet_myself {
+  my ($server, $chan, $send_this) = @_;
+  my $return_status = $twitter_ref->update($send_this);
+  if ($return_status->{'id'} > 0) {
+    sayit($server, $chan, 'tweet sent.');
+  }
+}
+
+sub follow {
+  my ($server, $chan, $new_friend) = @_;
+  if ($twitter_ref->create_friend({ screen_name => $new_friend})->{'screen_name'} eq $new_friend) {
+      sayit ($server, $chan, 'followed.');
+  }
+}
+#{{{ update twitter
 sub update {
   my $text = shift;
   eval { $twitter_ref->update($text) };
@@ -55,7 +68,7 @@ sub do_last {
   }
 }
 #}}}
-#{{{ fuzzy time diff 
+#{{{ fuzzy time diff
 sub moment_ago {
   #time is always in utc and in secs
   my $created_at = shift;
@@ -97,7 +110,7 @@ sub moment_ago {
          : undef;
   }
   elsif ($delta >= 1) {
-    my $min = int($delta/3600); 
+    my $min = int($delta/3600);
     $ago = $min <= 29 ? 'just now'
          : $min <= 60 ? 'less than a hour ago'
          : undef;
@@ -111,7 +124,7 @@ sub userbio {
     eval {
       my $r = $twitter_ref->show_user({screen_name => $who});
       my $user = "[\@$who] " . "Name: " . $r->{name};
-      $user .= " - " . "Bio: " . $r->{description} if ($r->{description}); 
+      $user .= " - " . "Bio: " . $r->{description} if ($r->{description});
       $user .= " - " . "Location: " . $r->{location} if ($r->{location});
       my ($year) = $r->{created_at} =~ /(2\d{3})$/;
       $user .= " - " . "User since $year" if ($year);
@@ -139,7 +152,7 @@ sub do_search {
           for my $status ( ${$r->{results}}[$_]) {
             #my $a = Dumper($status);
             #print_msg("$a");
-            return if (!$status); 
+            return if (!$status);
             my $tweet = decode_entities($status->{text});
             my $msg = "\@" . $status->{from_user} . ": " . $tweet;
             sayit($server, $chan, $msg);
@@ -154,7 +167,7 @@ sub do_search {
 #{{{ do twitter
 sub do_twitter {
   my ($server, $chan, $text) = @_;
-  my ($user, $status_id) = $text =~ m{twitter\.com(?:/\#!)?/([^/]+)/status(?:es)?/(\d+)}i; 
+  my ($user, $status_id) = $text =~ m{twitter\.com(?:/\#!)?/([^/]+)/status(?:es)?/(\d+)}i;
   my $status = eval { $twitter_ref->show_status($status_id) };
   return if $@;
 
@@ -162,7 +175,7 @@ sub do_twitter {
   my $result = "\@${user} " . 'tweeted: '. '"'. decode_entities($status->{text}) . '" ';
   $result .= 'from ' . $delta if ($delta);
 
-  my $shorturl = ($status->{in_reply_to_status_id}) 
+  my $shorturl = ($status->{in_reply_to_status_id})
                ? scalar('Irssi::Script::ggl')->can('do_shortme')->("http://twitter.com/" . $user . "/status/" . $status->{in_reply_to_status_id})
                : undef;
 
@@ -170,7 +183,7 @@ sub do_twitter {
   sayit($server, $chan, $result) if ($result);
 }
 #}}}
-#{{{ new twtrr 
+#{{{ new twtrr
 sub new_twitter {
   my %consumer_tokens = (
   consumer_key    => settings_get_str('twitter_apikey'),

@@ -163,7 +163,7 @@ sub incoming_public {
           return;
         } else { $user = $twit_users_ref->{$nick} }
       }  
-      signal_emit("last tweet",$server,$chan,$user) if (defined($user) and isLoaded('twitter'));
+      signal_emit("last tweet", $server, $chan, $user) if (defined($user) and isLoaded('twitter'));
       return;
     }#}}}
     #{{{ !quotes and stuff
@@ -314,6 +314,18 @@ sub incoming_public {
       signal_emit('post sysarmy', $server, $chan, $text) if (isLoaded('sysarmy'));
       return;
     } #}}}
+    #{{{ [TWITTER] !follow
+    if ($cmd eq 'follow' and is_sQuEE($mask)) {
+      my ($new_friend) = $text =~ /^!follow\s+@?(\w+)$/;
+      signal_emit('white rabbit', $server, $chan, $new_friend) if (isLoaded('twitter'));
+    }
+    #}}}
+    #{{{ [TWITTER] !post tweet stuff to my own account
+    if ($cmd eq 'post' and is_sQuEE($mask)) {
+      my ($tweet_this) = $text =~ /^!post\s+(.*)$/;
+      signal_emit('shit I say', $server, $chan, $tweet_this) if (isLoaded('twitter'));
+    }
+    ##}}}
     #{{{ !ddg cuac cuac go 
     if ($cmd eq 'ddg') {
       my ($query) = $text =~ /^!ddg\s+(.*)$/;
@@ -519,6 +531,8 @@ signal_register( { 'karma flip'       => [ 'iobject','string'                   
 signal_register( { 'post twitter'     => [ 'iobject','string','string'          ]}); #server,chan,text
 signal_register( { 'post sysarmy'     => [ 'iobject','string','string'          ]}); #server,chan,text
 signal_register( { 'tweet quote'      => [           'string'                   ]}); #addme
+signal_register( { 'white rabbit'     => [ 'iobject','string','string'          ]}); #server,chan,new_friend
+signal_register( { 'shit I say'       => [ 'iobject','string','string'          ]}); #server,chan,tweet_this
 signal_register( { 'mercadolibre'     => [ 'iobject','string','string'          ]}); #server,chan,mla
 signal_register( { 'reimgur'          => [ 'iobject','string','string'          ]}); #server,chan,url
 signal_register( { 'write to file'    => [           'string'                   ]}); #text
