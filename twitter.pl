@@ -71,7 +71,7 @@ sub moment_ago {
   my $ago = undef;
 
   if ($delta > 2628000) {
-    my $mon = sprintf("%d", $delta/2592000);
+    my $mon = int($delta/2592000);
     $ago = $mon <= 1  ? 'about a month ago'
          : $mon <= 3  ? 'a couple of months ago'
          : $mon <= 7  ? 'half a year ago'
@@ -82,7 +82,7 @@ sub moment_ago {
          : undef;
   }
   elsif ($delta > 86400) {
-    my $day = sprintf("%d", $delta/86400);
+    my $day = int($delta/86400);
     $ago = $day <= 1  ? 'today'
          : $day <= 7  ? 'this week'
          : $day <= 21 ? 'a couple of weeks ago'
@@ -90,14 +90,17 @@ sub moment_ago {
          : undef;
   }
   elsif ($delta > 3600) {
-    my $hour = sprintf("%d", $delta/3600);
-    $ago = $hour <= 1  ? 'just now'
+    my $hour = int($delta/3600);
+    $ago = $hour <= 1  ? 'about an hour ago'
          : $hour <= 5  ? 'a couple of hours ago'
          : $hour <= 24 ? 'less than a day ago'
          : undef;
   }
-  elsif ($delta >= 60) {
-    $ago = 'just now';
+  elsif ($delta >= 1) {
+    my $min = int($delta/3600); 
+    $ago = $min <= 29 ? 'just now'
+         : $min <= 60 ? 'less than a hour ago'
+         : undef;
   }
   return defined($ago) ? $ago : undef;
 }#}}}
