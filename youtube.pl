@@ -32,7 +32,8 @@ sub fetch_tubes {
     if ($title) {
       if ($time == 0) {
         $time = '[LIVE]';
-      } else {
+      } 
+      else {
         $hour = sprintf ("%02d", $time/3600) if ($time >= 3600);
         $time = $time - 3600 * int($hour) if ($hour);
         if ($time >= 60) {
@@ -51,8 +52,10 @@ sub fetch_tubes {
 
       sayit($server, $chan, $msg);
       $vids{$vid} = $msg;
-    } else { return; }
-  } else { sayit ($server, $chan, $vids{$vid}); }
+    } 
+    else { return; }
+  } 
+  else { sayit ($server, $chan, $vids{$vid}); }
   #print (CRAP Dumper(\%vids));
 }
 

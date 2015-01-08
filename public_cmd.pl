@@ -6,9 +6,9 @@ use Irssi qw (  print signal_emit
              );
 use strict;
 use warnings;
+use utf8;
 use Storable qw (store retrieve);
 use Data::Dumper;
-use utf8;
 use Time::HiRes;
 
 
@@ -171,13 +171,15 @@ sub incoming_public {
       my $tweetme = $text;
       if ($cmd eq 'qadd' and $text ne '!qadd' and $chan =~ /sysarmy|ssqquuee/) {
         $tweetme =~ s/^!qadd\s+//;
+        $tweetme =~ s/@//g;
         #keys are irc $nicknames, values are @twitterhandle
-        foreach (keys %{$twit_users_ref}) {
-          $tweetme =~ s/\b\Q$_\E\b/\@$twit_users_ref->{$_}/g;
+        foreach my $nick (keys %{$twit_users_ref}) {
+          $tweetme =~ s/\b\Q$nick\E\b/\@$twit_users_ref->{$nick}/g;
         }
         #print (CRAP $tweetme);
-        $tweetme .= " \n".'#sysarmy';
-        my $tweeturl = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($tweetme);
+        $tweetme .= " \n\n".'#sysarmy';
+        my $tweeturl 
+          = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($tweetme);
         $text .= (defined($tweeturl) ? "======${tweeturl}" : '');
       }
       signal_emit('quotes', $server, $chan, $text) if (isLoaded('quotes'));
@@ -528,7 +530,6 @@ signal_register( { 'karma set'        => [ 'iobject','string','string','string' 
 signal_register( { 'karma bitch'      => [           'string','string'          ]}); #name,op
 signal_register( { 'karma rank'       => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'karma flip'       => [ 'iobject','string'                   ]}); #server,chan
-signal_register( { 'post twitter'     => [ 'iobject','string','string'          ]}); #server,chan,text
 signal_register( { 'post sysarmy'     => [ 'iobject','string','string'          ]}); #server,chan,text
 signal_register( { 'tweet quote'      => [           'string'                   ]}); #addme
 signal_register( { 'white rabbit'     => [ 'iobject','string','string'          ]}); #server,chan,new_friend

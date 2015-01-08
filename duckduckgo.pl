@@ -5,6 +5,7 @@ use strict;
 use Data::Dumper;
 use LWP::UserAgent;
 use JSON;
+use URI::Encode qw(uri_encode uri_decode);
 
 my $json = new JSON;
 $json = $json->utf8([1]);
@@ -12,25 +13,19 @@ my $ua = new LWP::UserAgent;
 $ua->timeout( 10 );
 
 sub cuac_cuac {
-  my ($server,$chan,$searchme) = @_;
-  my $query = "https://api.duckduckgo.com/?q=${searchme}&format=json";
+  my ($server, $chan, $searchme) = @_;
+  my $query = 'https://api.duckduckgo.com/?q=' . uri_encode($searchme) . '&format=json';
   $ua->agent(settings_get_str('myUserAgent'));
 
-  my $got = $ua->get( $query );
-  my $content = $got->decoded_content;
-  my $result = eval { $json->allow_nonref->utf8->decode($content) };
+  my $raw_results = $ua->get($query)->decoded_content;
+  my $parsed_json = eval { $json->allow_nonref->utf8->decode($raw_results) };
   return if $@;
-  #print (CRAP Dumper($result));
-  sayit($server,$chan,"[Answer] $result->{'Answer'}")      if ($result->{'Answer'});
-  sayit($server,$chan,"[def] $result->{'Definition'}")     if ($result->{'Definition'});
-  sayit($server,$chan,"[Abstract] $result->{'Abstract'}")  if ($result->{'Abstract'});
+  print (CRAP Dumper($parsed_json));
+  sayit($server, $chan, '[Answer] '  . $parsed_json->{'Answer'})      if ($parsed_json->{'Answer'});
+  sayit($server, $chan, '[def] '     . $parsed_json->{'Definition'})  if ($parsed_json->{'Definition'});
+  sayit($server, $chan, '[Abstract]' . $parsed_json->{'Abstract'})    if ($parsed_json->{'Abstract'});
   return;
-  #sayit($server,$chan,"$time - $title - $desc - Uploaded by $user");
-  #signal_emit('write to file',"<sQ`>[$time] - $title\n");
 }
 
-sub sayit {
-  my ($server, $target, $msg) = @_;
-  $server->command("MSG $target $msg");
-}
+sub sayit { my $s = shift; $s->command("MSG @_"); }
 signal_add("cuac cuac go","cuac_cuac");

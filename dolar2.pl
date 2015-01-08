@@ -38,7 +38,6 @@ sub get_price {
     = time() if ( $oficial_compra and $oficial_venta and
                   $blue_compra    and $blue_venta
                 );
-
 }
 #}}}
 
@@ -72,9 +71,9 @@ sub do_dolar {
       $pesos .= ($oficial_compra)
                   ? 'Oficialmente el banco te cambia AR$'
                     . sprintf("%.2f", eval($how_much * $oficial_compra))
-                    . '. En la tarjeta te va a venir AR$'
+                    . '. Comprando con la tarjeta te cobran AR$'
                     . sprintf("%.2f", eval($how_much * $oficial_venta * 1.35))
-                    . '. Si no sos pobre, te sale AR$'
+                    . ' final. Si no sos pobre, te sale AR$'
                     . sprintf("%.2f", eval($how_much * $oficial_venta * 1.20))
                     . ' para comprar dólar ahorro. '
                   : undef;
@@ -83,7 +82,7 @@ sub do_dolar {
                   ? 'En una cueva podés cambiar por AR$'
                     . sprintf("%.2f", eval($how_much * $blue_compra)) . '.'
                   : undef;
-      $pesos = $pesos || 'I have no info available right now. try later';
+      $pesos = $pesos || 'I am busy human, try later.';
 
       sayit($server, $chan, $pesos) if (!$@);
       return;
@@ -97,7 +96,7 @@ sub do_dolar {
                       . sprintf("%.2f", eval($how_much / $oficial_venta))
                       . '. Podés pagar u$'
                       . sprintf("%.2f", eval($how_much  / ($oficial_venta * 1.35)))
-                      . ' en tu tarjeta. '
+                      . ' de tu tarjeta. '
                       . 'Si AFIP te deja, podés comprar u$'
                       . sprintf("%.2f", eval($how_much / ($oficial_venta* 1.20)))
                       . ' de ahorro. '
@@ -109,7 +108,7 @@ sub do_dolar {
                       . '. '
                   : undef;
 
-    $dollars = $dollars || 'I have no info available right now. try later';
+    $dollars = $dollars || 'I am busy human, try later.';
 
     sayit($server, $chan, $dollars) if (!$@);
     return;

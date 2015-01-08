@@ -62,7 +62,7 @@ sub start_stream {
     on_connect      => sub { print (CRAP "connected to sysarmy stream.");},
     on_tweet        => \&show_tweet,
     on_eof          => \&restart_stream,
-    on_error        => sub { print (CRAP "error: $_[0];") and \&restart_stream ;},
+    on_error        => sub { print (CRAP "error: $_[0];"); \&restart_stream ;},
     #on_keepalive   => sub { print (CRAP "still alive");},
     on_delete       => sub { print (CRAP "a tweet was deleted. so sad");},
     timeout         => 300,
