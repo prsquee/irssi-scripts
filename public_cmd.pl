@@ -405,6 +405,13 @@ sub incoming_public {
       signal_emit('hay subte', $server, $chan, uc($linea)) if ($linea);
     }
     ##}}}
+    #{{{ 
+    if ($cmd eq 'shrug') {
+      my ($reason) = $text =~ m{^!shrug\s+(.+)$};
+      sayit ($server, $chan, $reason . ' ¯\_(ツ)_/¯') if defined $reason;
+      sayit ($server, $chan, '¯\_(ツ)_/¯') if not defined $reason;
+    }
+    #}}}
   } #cmd check ends here. begin general text match
 
 
