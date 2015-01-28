@@ -82,7 +82,7 @@ sub do_dolar {
                   ? 'En una cueva podés cambiar por AR$'
                     . sprintf("%.2f", eval($how_much * $blue_compra)) . '.'
                   : undef;
-      $pesos = $pesos || 'I am busy human, try later.';
+      $pesos = $pesos || 'not now hooman, try later.';
 
       sayit($server, $chan, $pesos) if (!$@);
       return;
@@ -108,7 +108,7 @@ sub do_dolar {
                       . '. '
                   : undef;
 
-    $dollars = $dollars || 'I am busy human, try later.';
+    $dollars = $dollars || 'not now hooman, try later.';
 
     sayit($server, $chan, $dollars) if (!$@);
     return;
