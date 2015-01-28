@@ -39,10 +39,12 @@ my $youtubex = qr{(?x-sm:
 
 my $karmagex = qr{(?x-sm:
                     ([\w\[\]`|\\-]+)  #thingy can be \w with []`|\-
-                    (([-+])\3)        #capture a + or - 
-                                      #then look for the same symbol with \3
+                    (
+                      ([-+])\3        #match a -/+ then match the same symbol
+                    )                 #save the double symbol into \2
                                       #\1 is the 1st word
-                                      #\2 is the opeartor ++ or --
+                                      #\2 is the matched ++ or --
+                                      #\3 is the single + or -
                   )};
 
 my $karma_antiflood_time = 2;
@@ -51,6 +53,13 @@ my $ignore_karma_from = {};
 
 ##multiline karma check
 #my $karmagex = qr{([a-zA-Z0-9_\[\]`|\\-]+(?:--|\+\+))}; 
+#
+#novelty faces
+my %faces = ( 
+              'shrug' => '¯\_(ツ)_/¯',
+              'wot'   => 'ಠ_ಠ',
+              'dunno' => '¯\(°_o)/¯',
+            );
 #}}}
 
 sub incoming_public {
@@ -65,23 +74,25 @@ sub incoming_public {
     #{{{ halps 
     if ($cmd =~ /^h[ea]lp$/) {
       my $defaultcmd = settings_get_str('halpcommands') . ' ';
-      $defaultcmd   .= settings_get_str('halp_sysarmy') if ($chan eq '#sysarmy');
+      $defaultcmd .= settings_get_str('halp_sysarmy') if $chan eq '#sysarmy';
       sayit($server, $chan, $defaultcmd);
       return;
     }#}}}
     #{{{ add help
     if ($cmd eq 'addhalp' and is_master($mask)) {
-        my ($newhalp) = $text =~ /^!addhalp\s+(.*)$/;
-        #my $halps = settings_get_str('halpcommands');
-        #O$halps .= " $newhalp" if ($newhalp);
-        settings_set_str('halpcommands', settings_get_str('halpcommands') . " $newhalp") if (defined($newhalp));
-        sayit($server,$chan,settings_get_str('halpcommands'));
-        return;
+      my ($newhalp) = $text =~ /^!addhalp\s+(.*)$/;
+      settings_set_str(
+                        'halpcommands', 
+                        settings_get_str('halpcommands') . " $newhalp"
+                      ) if (defined($newhalp));
+
+      sayit($server, $chan, settings_get_str('halpcommands'));
+      return;
     }#}}}
     #{{{ fortune cookies
     if ($cmd eq 'fortune') {
       my @cookie = qx(/usr/bin/fortune -s);
-      sayit($server,$chan,"[fortune] $_") foreach @cookie;
+      sayit($server, $chan, "[fortune] $_") foreach @cookie;
       return;
     }#}}}
     #{{{ do this and say that
@@ -94,7 +105,7 @@ sub incoming_public {
     #{{{ uptime
     if ($cmd eq 'uptime') {
       #get_uptime($chan,$server);
-      signal_emit('show uptime',$server,$chan) if (isLoaded('uptime'));
+      signal_emit('show uptime', $server, $chan) if (isLoaded('uptime'));
       return;
     }#}}}
     #{{{ imdb
@@ -405,11 +416,11 @@ sub incoming_public {
       signal_emit('hay subte', $server, $chan, uc($linea)) if ($linea);
     }
     ##}}}
-    #{{{ 
-    if ($cmd eq 'shrug') {
-      my ($reason) = $text =~ m{^!shrug\s+(.+)$};
-      sayit ($server, $chan, $reason . ' ¯\_(ツ)_/¯') if defined $reason;
-      sayit ($server, $chan, '¯\_(ツ)_/¯') if not defined $reason;
+    #{{{ novelty (?) !shrug !wot !dunno
+    if ($cmd =~ /^(?:shrug|dunno|wot)$/) {
+      my ($reason) = $text =~ m{^!\w+\s+(.+)$};
+      sayit ($server, $chan, $reason . ' ' . $faces{$cmd}) if defined $reason;
+      sayit ($server, $chan, $faces{$cmd}) if not defined $reason;
     }
     #}}}
   } #cmd check ends here. begin general text match
