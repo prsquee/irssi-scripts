@@ -56,7 +56,7 @@ sub do_last {
       if ($results->{status}{created_at}) {
         my $delta = moment_ago($results->{status}{created_at});
         my $lasttweet = "\@$user tweeted: " . '"' . decode_entities($results->{status}{text}) . '" ';
-        $lasttweet .= 'from ' . $delta . ' ago' if ($delta);
+        $lasttweet .= 'from ' . $delta if ($delta);
         sayit($server, $chan, $lasttweet) if ($results->{status}{text});
       }
       else {
@@ -85,34 +85,34 @@ sub moment_ago {
 
   if ($delta > 2628000) {
     my $mon = int($delta/2592000);
-    $ago = $mon <= 1  ? 'about a month ago'
-         : $mon <= 3  ? 'a couple of months ago'
-         : $mon <= 7  ? 'half a year ago'
-         : $mon <= 13 ? 'almost a year ago'
-         : $mon <= 18 ? 'more than a year ago'
-         : $mon <= 25 ? 'almost 2 years ago'
-         : $mon > 26  ? 'more than 2 years ago'
+    $ago = $mon <= 1  ? 'about a month ago.'
+         : $mon <= 3  ? 'a couple of months ago.'
+         : $mon <= 7  ? 'half a year ago.'
+         : $mon <= 13 ? 'almost a year ago.'
+         : $mon <= 18 ? 'more than a year ago.'
+         : $mon <= 25 ? 'almost 2 years ago.'
+         : $mon >  26 ? 'more than 2 years ago.'
          : undef;
   }
   elsif ($delta > 86400) {
     my $day = int($delta/86400);
     $ago = $day <= 1  ? 'today'
          : $day <= 7  ? 'this week'
-         : $day <= 21 ? 'a couple of weeks ago'
-         : $day <= 32 ? 'about a month ago'
+         : $day <= 21 ? 'a couple of weeks ago.'
+         : $day <= 32 ? 'about a month ago.'
          : undef;
   }
   elsif ($delta > 3600) {
     my $hour = int($delta/3600);
-    $ago = $hour <= 1  ? 'about an hour ago'
-         : $hour <= 5  ? 'a couple of hours ago'
-         : $hour <= 24 ? 'less than a day ago'
+    $ago = $hour <= 1  ? 'about an hour ago.'
+         : $hour <= 5  ? 'a couple of hours ago.'
+         : $hour <= 24 ? 'less than a day ago.'
          : undef;
   }
   elsif ($delta >= 1) {
     my $min = int($delta/3600);
-    $ago = $min <= 29 ? 'just now'
-         : $min <= 60 ? 'less than a hour ago'
+    $ago = $min <= 29 ? 'just now.'
+         : $min <= 60 ? 'less than a hour ago.'
          : undef;
   }
   return defined($ago) ? $ago : undef;
