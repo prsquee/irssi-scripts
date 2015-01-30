@@ -11,7 +11,6 @@ use Storable qw (store retrieve);
 use Data::Dumper;
 use Time::HiRes;
 
-
 #{{{ init stuff
 
 settings_add_str('bot config', 'halpcommands',    '');
@@ -19,6 +18,7 @@ settings_add_str('bot config', 'halp_sysarmy',    '');
 settings_add_str('bot config', 'active_networks', '');
 settings_add_str('bot config', 'myUserAgent',     '');
 settings_add_str('bot config', 'bot_masters',     '');
+settings_add_str('bot config', 'flip_table_status', '0');
 
 #nick 2 twitter list
 our $twit_users_file 
@@ -203,6 +203,11 @@ sub incoming_public {
         }
         #print (CRAP $tweetme);
         $tweetme .= " \n\n" . '#sysarmy';
+
+        # I NEED to attach the url here because I can't replace the nicks in
+        # sysarmy.pl
+        # we should test cross script %hash sharing.
+        
         my $tweeted_url 
           = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($tweetme);
         $text .= (defined($tweeted_url) ? "======${tweeted_url}" : '');
@@ -260,8 +265,8 @@ sub incoming_public {
       signal_emit("karma rank", $server, $chan) if (is_loaded('karma'));
     }
     #}}}
-    #{{{ !flip
-    if ($cmd eq 'flip' && is_master($mask)) {
+    #{{{ !flipkarma
+    if ($cmd eq 'flipkarma' && is_master($mask)) {
       signal_emit('karma flip', $server, $chan) if (is_loaded('karma'));
     }#}}}
     #{{{ [TWITTER] !mytwitteris 
@@ -270,10 +275,13 @@ sub incoming_public {
       my ($givenName) = $text =~ /^!mytwitteris\s+(.+)$/;
       unless ($givenName) {
         if (not exists ($twit_users_ref->{$nick})) {
-          sayit($server, $chan, "I dunno any twitter handle for $nick. Add yours with !mytwitteris \@yourtwitter.");
+          sayit($server, $chan, "I dunno any twitter handle for $nick. "
+                              . "Add yours with !mytwitteris \@yourtwitter."
+               );
         }
         else {
-          sayit($server,$chan,"I remember $nick is \@$twit_users_ref->{$nick} on twitter");
+          sayit($server, $chan, 'I remember $nick is '
+                              . "\@$twit_users_ref->{$nick} on twitter");
           return;
         }
       }
@@ -292,13 +300,15 @@ sub incoming_public {
         $givenName =~ s/^\@//;
         #check if given is a nick and has a twitter user 
         if (exists ($twit_users_ref->{$givenName})) {
-          sayit($server, $chan, "I know $givenName is \@$twit_users_ref->{$givenName} on twitter");
+          sayit($server, $chan, 'I know $givenName is '
+                              . "\@$twit_users_ref->{$givenName} on twitter");
           return;
         }
         #check if given is a twitter and has an ircname
         foreach my $ircname (keys %$twit_users_ref) {
           if ($givenName =~ /^$twit_users_ref->{$ircname}$/i) {
-            sayit($server, $chan, "I've been told \@$givenName is $ircname here on freenode");
+            sayit($server, $chan, "I've been told "
+                                . "\@$givenName is $ircname here on freenode");
             return;
           }
         }
@@ -432,7 +442,7 @@ sub incoming_public {
                     $server, $chan, "${coin1}_${coin2}") if is_loaded('coins');
       } 
       else { 
-        sayit ($server, $chan, 'usage: !coins coin1/coin2 - '
+        sayit($server, $chan, 'usage: !coins coin1/coin2 - '
                . 'Here is a list: http://www.cryptocoincharts.info/v2'); 
       }
     } #}}} 
@@ -450,21 +460,43 @@ sub incoming_public {
     ##{{{ !subte
     if ($cmd eq 'subte') {
       my ($linea) = $text =~ m{^!subte\s+([abcdehpABCDEHP])$};
-      sayit ($server, $chan, "que linea?") unless ($linea);
+      sayit($server, $chan, "que linea?") unless ($linea);
       signal_emit('hay subte', $server, $chan, uc($linea)) if ($linea);
     }
     ##}}}
     #{{{ novelty (?) !shrug !wot !dunno
     if ($cmd =~ /^(?:shrug|dunno|wot)$/) {
       my ($reason) = $text =~ m{^!\w+\s+(.+)$};
-      sayit ($server, $chan, $reason . ' ' . $faces{$cmd}) if defined $reason;
-      sayit ($server, $chan, $faces{$cmd}) if not defined $reason;
+      sayit($server, $chan, $reason . ' ' . $faces{$cmd}) if defined $reason;
+      sayit($server, $chan, $faces{$cmd}) if not defined $reason;
+    }
+    if ($cmd =~ /^flip$/i) {
+      my ($flipme) = $text =~ m{^!flip\s+(.*)$}i;
+      if ($flipme ne 'DEM TABLES' and $flipme) {
+
+        my $flipped 
+          = scalar('Irssi::Script::flipme')->can('flip_text')->($flipme) 
+            if is_loaded('flipme');
+
+        sayit($server, $chan, '(╯°□°）╯︵ ' . "$flipped") if $flipped;
+        return;
+      }
+      else {
+        if (settings_get_str('flip_table_status') == 0) {
+          sayit($server, $chan, '(╯°□°）╯︵ ┻━┻');
+          settings_set_str('flip_table_status', '1');
+        }
+        else {
+          sayit($server, $chan, '┬─┬ノ( º _ ºノ)');
+          settings_set_str('flip_table_status', '0');
+        }
+      }
     }
     #}}}
   } #cmd check ends here. begin general text match
 
 
-##############################################################################
+#############################################################################
   #
   #{{{ GENERAL URL MATCH
   if ($text =~ m{(https?://[^ ]+)}) {
@@ -563,11 +595,12 @@ sub is_sQuEE {
   return ($mask eq '~sQuEE@unaffiliated/sq/x-3560400') ? 'true' : undef; 
 }
 sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
-sub sayit { my $s = shift; $s->command("MSG @_"); }
-signal_add("message public","incoming_public");
+sub sayit     { my $s = shift; $s->command("MSG @_"); }
+
+signal_add("message public", "incoming_public");
 
 #apikeys
-settings_add_str('wolfram', 'wa_appid',           '');
+settings_add_str('wolfram', 'wa_appid', '');
 #}}}
 #{{{ # if you are signal, register here
 signal_register( { 'show uptime'      => [ 'iobject','string'                   ]}); #server,chan
@@ -611,46 +644,3 @@ signal_register( { 'bofh'             => [ 'iobject','string'                   
 signal_register( { 'bash quotes'      => [ 'iobject','string','string'          ]}); #server,chan,$text
 signal_register( { 'hay subte'        => [ 'iobject','string','string'          ]}); #server,chan,$linea
 #}}} 
-#{{{ signal register halp
-#signal_register(hash)
-#  Register parameter types for one or more signals.
-#  `hash' must map one or more signal names to references to arrays
-#  containing 0 to 6 type names. Some recognized type names include
-#  int for integers, intptr for references to integers and string for
-#  strings. For all standard signals see src/perl/perl-signals-list.h
-#  in the source code (this is generated by src/perl/get-signals.pl).
-
-#signal types:
-#  • GList* of ([^,]*)> glistptr_$1
-#  • GSList* of (\w+)s> gslist_$1
-#  • char* string
-#  • ulong* ulongptr
-#  • int* intptr
-#  • int int
-#  • CHATNET_REC iobject
-#  • SERVER_REC iobject
-#  • RECONNECT_REC iobject
-#  • CHANNEL_REC iobject
-#  • QUERY_REC iobject
-#  • COMMAND_REC iobject
-#  • NICK_REC iobject
-#  • LOG_REC Irssi::Log
-#  • RAWLOG_REC Irssi::Rawlog
-#  • IGNORE_REC Irssi::Ignore
-#  • MODULE_REC Irssi::Module
-#  • BAN_REC Irssi::Irc::Ban
-#  • NETSPLIT_REC Irssi::Irc::Netsplit
-#  • NETSPLIT_SERVER__REC Irssi::Irc::Netsplitserver
-#  • DCC_REC siobject
-#  • AUTOIGNORE_REC Irssi::Irc::Autoignore
-#  • AUTOIGNORE_REC Irssi::Irc::Autoignore
-#  • NOTIFYLIST_REC Irssi::Irc::Notifylist
-#  • CLIENT_REC Irssi::Irc::Client
-#  • THEME_REC Irssi::UI::Theme
-#  • KEYINFO_REC Irssi::UI::Keyinfo
-#  • PROCESS_REC Irssi::UI::Process
-#  • TEXT_DEST_REC Irssi::UI::TextDest
-#  • WINDOW_REC Irssi::UI::Window
-#  • WI_ITEM_REC iobject
-#  • PERL_SCRIPT_REC Irssi::Script
-##}}}
