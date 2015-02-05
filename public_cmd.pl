@@ -4,12 +4,14 @@ use Irssi qw (  print signal_emit
                 settings_get_str settings_add_str settings_set_str 
                 get_irssi_dir
              );
+use v5.20;
 use strict;
 use warnings;
 use utf8;
-use Storable qw (store retrieve);
+use Storable qw(store retrieve);
 use Data::Dumper;
 use Time::HiRes;
+use Encode qw (encode decode);
 
 #{{{ init stuff
 
@@ -467,13 +469,18 @@ sub incoming_public {
     #{{{ novelty (?) !shrug !wot !dunno
     if ($cmd =~ /^(?:shrug|dunno|wot)$/) {
       my ($reason) = $text =~ m{^!\w+\s+(.+)$};
-      sayit($server, $chan, $reason . ' ' . $faces{$cmd}) if defined $reason;
-      sayit($server, $chan, $faces{$cmd}) if not defined $reason;
+      
+      if (defined $reason) {
+        my $answer = decode('utf8', $reason) . ' ' . $faces{$cmd};
+        sayit($server, $chan, encode('utf8', $answer));
+      }
+      else {
+        sayit($server, $chan, $faces{$cmd});
+      }
     }
     if ($cmd =~ /^flip$/i) {
       my ($flipme) = $text =~ m{^!flip\s+(.*)$}i;
-      if ($flipme ne 'DEM TABLES' and $flipme) {
-
+      if ( defined $flipme and $flipme ne 'DEM TABLES') {
         my $flipped 
           = scalar('Irssi::Script::flipme')->can('flip_text')->($flipme) 
             if is_loaded('flipme');
