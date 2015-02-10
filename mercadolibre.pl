@@ -7,14 +7,16 @@ use LWP::UserAgent;
 use Data::Dumper;
 use JSON;
 
+signal_add('mercadolibre','fetch_ml');
+
 my $json = new JSON;
 my $ua = new LWP::UserAgent;
 my $url = 'https://api.mercadolibre.com/items/';
 
 $ua->timeout(10);
 
-sub fml {
-  my ($server,$chan,$mla) = @_;
+sub fetch_ml {
+  my ($server, $chan, $mla) = @_;
   $ua->agent(settings_get_str('myUserAgent'));
   my $raw_results = $ua->get($url . $mla)->decoded_content;
   my $parsed_json = eval { $json->utf8->decode($raw_results) };
@@ -35,4 +37,3 @@ sub fml {
   return;
 }
 sub sayit { my $s = shift; $s->command("MSG @_"); }
-signal_add('mercadolibre','fml');

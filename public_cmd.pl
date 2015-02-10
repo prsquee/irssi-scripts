@@ -40,14 +40,13 @@ my $youtubex = qr{(?x-sm:
 )};
 
 my $karmagex = qr{(?x-sm:
-                    ([\w\[\]`|\\-]+)  #thingy can be \w with []`|\-
-                    (
-                      ([-+])\3        #match a -/+ then match the same symbol
-                    )                 #save the double symbol into \2
+                   ([\w\[\]{}`|\\-^]+) #thingy can contain \w with ^{}[]`|\-^
+                    ( ([-+])\3 )      #match a -/+ then match the same symbol
+                                      #save the double symbol into \2
                                       #\1 is the 1st word
                                       #\2 is the matched ++ or --
                                       #\3 is the single + or -
-                  )};
+                 )};
 
 my $karma_antiflood_time = 2;
 my $karma_lasttime = 0;
@@ -231,10 +230,10 @@ sub incoming_public {
     #}}}
     #{{{ karma is a bitch
     if ($cmd eq 'karma') {
-      my ($name) = $text =~ /!karma\s+([a-zA-Z0-9_\[\]`|\\-]+)/;
+      my ($name) = $text =~ /!karma\s+([a-zA-Z0-9_\[\]{}`|\\-]+)/;
       $name = $nick if not defined($name);
       if ($name eq $server->{nick}) {
-        sayit($server,$chan,"my karma is over 9000 already!");
+        sayit($server, $chan, 'my karma is over 9000 already!');
         return;
       }
       #FIXME this needs a hash
@@ -532,8 +531,8 @@ sub incoming_public {
                   $server, $chan, $url) if (is_loaded('twitter'));
       return;
     }
-    if (my ($mla) = $url =~ m{mercadolibre\.com\.ar/(MLA-\d+)}) {
-      my $mla =~ s/-//;
+    if ($url =~ m{mercadolibre\.com\.ar/MLA-(\d+)}) {
+      my $mla = 'MLA' . $1;
       signal_emit('mercadolibre', $server, $chan, $mla);
       return;
     }

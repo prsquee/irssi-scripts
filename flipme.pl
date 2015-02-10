@@ -3,6 +3,7 @@ use utf8;
 use strict;
 use warnings;
 use Data::Dumper;
+use Encode qw (encode decode);
 
 #{{{ upside down map
 my %upside_down_map = ( 
@@ -77,15 +78,11 @@ my %upside_down_map = (
   '?' => '¿',
   '&' => '⅋',
   '(' => ')',
-  ')' => '(',
   '<' => '>',
-  '>' => '<',
   '[' => ']',
-  ']' => '[',
   '_' => '‾',
-  '‾' => '_',
   '{' => '}',
-  '}' => '{',
+  '‾' => '_',
   '┻' => '┬',
   '━' => '─',
 );
