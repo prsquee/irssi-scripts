@@ -7,67 +7,66 @@ use LWP::UserAgent;
 use JSON;
 
 #init 
-our %vids = ();
+signal_add("check tubes", "fetch_tubes"); 
+
+my %fetched_vids = ();
 my $json = new JSON;
 my $ua = new LWP::UserAgent;
-$ua->timeout(10);
+my $api_url = 'http://gdata.youtube.com/feeds/api/videos/'; 
 
 sub fetch_tubes {
-  my($server,$chan,$vid) = @_;
+  my($server, $chan, $vid) = @_;
 
-  if (not exists($vids{$vid})) {
-    my $url = "http://gdata.youtube.com/feeds/api/videos/${vid}?&v=2&alt=json";
+  if (not exists($fetched_vids{$vid})) {
+    my $url = $api_url . $vid . '?&v=2&alt=json';
     $ua->agent(settings_get_str('myUserAgent'));
+    $ua->timeout(10);
     my $req = $ua->get($url);
     my $result = eval { $json->utf8->decode($req->decoded_content)->{entry} };
     return if $@;
-    my $title  = $result->{title}->{'$t'};
-    my $desc   = $result->{'media$group'}->{'media$description'}->{'$t'};
-    my $time   = $result->{'media$group'}->{'yt$duration'}->{seconds};
-    my $views  = $result->{'yt$statistics'}->{'viewCount'};
-    my $hour = undef;
-    my $mins = '00';
-    my $secs = 0;
+
+    my $title = $result->{title}->{'$t'};
+    my $desc  = $result->{'media$group'}->{'media$description'}->{'$t'};
+    my $time  = $result->{'media$group'}->{'yt$duration'}->{seconds};
+    my $views = $result->{'yt$statistics'}->{'viewCount'};
 
     if ($title) {
-      if ($time == 0) {
-        $time = '[LIVE]';
-      } 
-      else {
-        $hour = sprintf ("%02d", $time/3600) if ($time >= 3600);
-        $time = $time - 3600 * int($hour) if ($hour);
-        if ($time >= 60) {
-          $mins = sprintf ("%02d", $time/60);
-          $secs = sprintf ("%02d", $time%60);
-        } elsif ($time < 60) {
-          $secs = sprintf("%02d", $time);
-        }
-        $time = "${mins}:${secs}";
-        $time = "${hour}:${time}" if ($hour);
-        $time = "[${time}]";
-      }
-      my $msg = "${time} ${title}";
-      #$msg .= " - $desc" if ($desc);
-      $msg .= " - [views $views]" if ($views);
+      #print (CRAP $time);
+      $time = format_time($time);
+      my $vid_info = "${time} ${title} - [views $views]";
+      sayit($server, $chan, $vid_info);
 
-      sayit($server, $chan, $msg);
-      $vids{$vid} = $msg;
+      $fetched_vids{$vid} = $vid_info;
     } 
     else { return; }
   } 
-  else { sayit ($server, $chan, $vids{$vid}); }
-  #print (CRAP Dumper(\%vids));
+  else { sayit ($server, $chan, $fetched_vids{$vid}); }
 }
 
-#sub search_tubes {
-#  #http://gdata.youtube.com/feeds/api/videos?q=funny+cats&alt=json&v=2&prettyprint=trueI#
-#  my ($server,$chan,$query) = @_;
-#  return;
-#}
+sub format_time {
+  my $time = shift;
+  my $hour = undef;
+  my $mins = '00';
+  my $secs = 0;
 
-sub sayit {
-	my ($server, $target, $msg) = @_;
-	$server->command("MSG $target $msg");
+  if ($time > 0) {
+    $hour = sprintf ("%02d", $time/3600) if $time >= 3600;
+    $time = $time - 3600 * int($hour) if $hour;
+    if ($time >= 60) {
+      $mins = sprintf ("%02d", $time/60);
+      $secs = sprintf ("%02d", $time%60);
+    } 
+    elsif ($time < 60) {
+      $secs = sprintf("%02d", $time);
+    }
+    $time = "${mins}:${secs}";
+    $time = "${hour}:${time}" if ($hour);
+    $time = "[${time}]";
+  } 
+  else {
+    $time = '[LIVE]';
+  }
+  return $time;
 }
-signal_add("check tubes", "fetch_tubes"); 
-#signal_add("search tubes", "search_tubes"); 
+sub sayit { my $s = shift; $s->command("MSG @_"); }
+

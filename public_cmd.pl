@@ -221,10 +221,10 @@ sub incoming_public {
     if ($cmd eq 'imgur') {
       my ($url) = $text =~ m{^!imgur\s+(https?://.*)$}i;
 
-      signal_emit('reimgur',$server,$chan,$url) 
-        if ( $url and is_loaded('reimgur'));
+      signal_emit( 'reimgur', $server, $chan, $url)
+        if $url and is_loaded('reimgur');
 
-      sayit($server, $chan, "Imguraffe is my best friend!") if not $url;
+      sayit($server, $chan, 'Imguraffe is my best friend!') unless $url;
       return;
     }
     #}}}
@@ -260,15 +260,14 @@ sub incoming_public {
                  ) if (is_loaded('karma') and $thingy and $newkarma);
       return;
     }#}}}
-    #}}}
     #{{{ !rank 
     if ($cmd eq 'rank' ) { 
-      signal_emit("karma rank", $server, $chan) if (is_loaded('karma'));
+      signal_emit("karma rank", $server, $chan) if is_loaded('karma');
     }
     #}}}
     #{{{ !flipkarma
     if ($cmd eq 'flipkarma' && is_master($mask)) {
-      signal_emit('karma flip', $server, $chan) if (is_loaded('karma'));
+      signal_emit('karma flip', $server, $chan) if is_loaded('karma');
     }#}}}
     #{{{ [TWITTER] !mytwitteris 
     if ($cmd eq 'mytwitteris') {
@@ -290,7 +289,7 @@ sub incoming_public {
         $givenName =~ s/^\@//;
         $twit_users_ref->{$nick} = $givenName;
         store $twit_users_ref, $twit_users_file;
-        sayit($server, $chan, "okay!") if (exists $twit_users_ref->{$nick});
+        sayit($server, $chan, 'okay!') if exists $twit_users_ref->{$nick};
       }
     }
     #}}}
@@ -309,7 +308,7 @@ sub incoming_public {
         foreach my $ircname (keys %$twit_users_ref) {
           if ($givenName =~ /^$twit_users_ref->{$ircname}$/i) {
             sayit($server, $chan, "I've been told "
-                                . "\@$givenName is $ircname here on freenode");
+                         . "\@$givenName is $ircname here on freenode");
             return;
           }
         }
@@ -331,7 +330,7 @@ sub incoming_public {
         delete $twit_users_ref->{$given_name}; 
         if (not exists $twit_users_ref->{$given_name}) {
           store $twit_users_ref, $twit_users_file;
-          sayit($server, $chan, "deleted!") 
+          sayit($server, $chan, 'deleted!');
         }
         return;
       }
