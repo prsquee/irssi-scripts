@@ -1,4 +1,5 @@
 use Irssi qw ( print signal_add );
+use Modern::Perl '2015';
 use utf8;
 use strict;
 use warnings;

@@ -280,7 +280,7 @@ sub incoming_public {
                );
         }
         else {
-          sayit($server, $chan, 'I remember $nick is '
+          sayit($server, $chan, "I remember $nick is "
                               . "\@$twit_users_ref->{$nick} on twitter");
           return;
         }
@@ -479,11 +479,12 @@ sub incoming_public {
     if ($cmd =~ /^flip$/i) {
       my ($flipme) = $text =~ m{^!flip\s+(.*)$}i;
       if ( defined $flipme and $flipme ne 'DEM TABLES') {
+        $flipme = decode('utf8', $flipme);
         my $flipped 
-          = scalar('Irssi::Script::flipme')->can('flip_text')->($flipme) 
+          = scalar('Irssi::Script::flipme')->can('flip_text')->($flipme)
             if is_loaded('flipme');
 
-        sayit($server, $chan, '(╯°□°）╯︵ ' . "$flipped") if $flipped;
+        sayit($server, $chan, encode('utf8', '(╯°□°）╯︵ ' . $flipped)) if $flipped;
         return;
       }
       else {
