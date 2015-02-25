@@ -14,13 +14,12 @@ signal_add('gold digger','mtgox');
 
 my $buffer = 1800;
 my $fetched = undef;
-my $json = new JSON;
+my $json = JSON->new();
 
 #mtgox
 my $mtgox = undef;
 my $url   = 'https://data.mtgox.com/api/2/BTCUSD/money/ticker';
-my $ua    = new LWP::UserAgent;
-$ua->timeout(15);
+my $ua    = LWP::UserAgent->new( timeout => '15' );
 
 #{{{ mtgox 
 sub mtgox {

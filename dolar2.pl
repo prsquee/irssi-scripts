@@ -19,9 +19,8 @@ my $lanacion_url    = 'http://contenidos.lanacion.com.ar/json/dolar';
 
 sub get_price {
   my $url = shift;
-  my $ua  = new LWP::UserAgent;
+  my $ua  = LWP::UserAgent->new( timeout => 13 );
   $ua->agent(Irssi::settings_get_str('myUserAgent'));
-  $ua->timeout(10);
 
   my $raw_result = $ua->get($url)->content();
   $raw_result =~ s/,/./g;

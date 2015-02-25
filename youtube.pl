@@ -10,8 +10,8 @@ use JSON;
 signal_add("check tubes", "fetch_tubes"); 
 
 my %fetched_vids = ();
-my $json = new JSON;
-my $ua = new LWP::UserAgent;
+my $json = JSON->new();
+my $ua   = LWP::UserAgent->new( timeout => '15' );
 my $api_url = 'http://gdata.youtube.com/feeds/api/videos/'; 
 
 sub fetch_tubes {
@@ -20,7 +20,6 @@ sub fetch_tubes {
   if (not exists($fetched_vids{$vid})) {
     my $url = $api_url . $vid . '?&v=2&alt=json';
     $ua->agent(settings_get_str('myUserAgent'));
-    $ua->timeout(10);
     my $req = $ua->get($url);
     my $result = eval { $json->utf8->decode($req->decoded_content)->{entry} };
     return if $@;

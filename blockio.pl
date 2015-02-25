@@ -13,8 +13,8 @@ signal_add('silver digger', 'check_coins');
 settings_add_str('bot config', 'ltc_apikey', '');
 settings_add_str('bot config', 'btc_apikey', '');
 
-my $json = new JSON;
-my $ua  = LWP::UserAgent->new(timeout => 15);
+my $json = JSON->new();
+my $ua  = LWP::UserAgent->new( timeout => 15 );
 
 my $prices_ref   = undef;
 my $buffered_for = 1800;  #30m
@@ -37,6 +37,7 @@ sub check_coins {
     send_out($server, $chan, $ltc_ref) if ($ltc_ref);
   }
 }
+
 sub send_out {
   my ($server, $chan, $prices_ref) = @_;
   my $output = undef;
@@ -59,9 +60,9 @@ sub fetch_prices {
   my $price_base  = 'USD';
 
   my $apiurl = 'https://block.io/api/v1/get_current_price/?'
-           . "api_key=$api_key"
-           . '&'
-           . "price_base=$price_base";
+             . "api_key=$api_key"
+             . '&'
+             . "price_base=$price_base";
 
   $ua->agent(settings_get_str('myUserAgent'));
 

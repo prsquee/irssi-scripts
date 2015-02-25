@@ -9,25 +9,27 @@ use Data::Dumper;
  
 signal_add('insert coins', 'coins');
 
-my $json = new JSON;
-
-my $url   = 'http://www.cryptocoincharts.info/v2/api/tradingPair/';
-my $ua    = new LWP::UserAgent;
-$ua->timeout(10);
+my $json = JSON->new();
+my $ua   = LWP::UserAgent->new( timeout => 10 );
+my $url  = 'http://www.cryptocoincharts.info/v2/api/tradingPair/';
 
 #{{{ coins
 sub coins {
   my ($server, $chan, $pair) = @_;
   $ua->agent(settings_get_str('myUserAgent'));
   my $req = $ua->get($url . $pair);
-  my $r = eval { $json->utf8->decode($req->decoded_content) };
+  my $decoded_json = eval { $json->utf8->decode($req->decoded_content) };
   return if $@;
-  #print (CRAP Dumper($r));
+
   my $msg = undef;
-  if (defined($r->{id})) {
-    $msg = "[$r->{id}] ";
-    $msg .= 'price: ' . $r->{price};
-  } else { sayit ($server, $chan, "not a pair. see this list: http://www.cryptocoincharts.info/v2/main/priceBoxes"); return; }
+
+  if (defined($decoded_json->{id})) {
+    $msg  = "[$decoded_json->{id}] ";
+    $msg .= 'price: ' . $decoded_json->{price};
+  } 
+  else { sayit ($server, $chan, "not a pair. see this list: http://www.cryptocoincharts.info/v2/main/priceBoxes"); return; }
+
   sayit ($server, $chan, $msg) if (defined($msg));
+
 }#}}}
 sub sayit { my $s = shift; $s->command("MSG @_"); }

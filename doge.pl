@@ -12,7 +12,7 @@ use utf8;
 settings_add_str('bot config', 'doge_api', '');
 signal_add('such signal','wow');
 
-my $json          = new JSON;
+my $json          = JSON->new();
 my $buffered_for  = 1800; #seconds. = 30mins
 my $prices_ref    = undef;
 
@@ -24,7 +24,6 @@ my $ua         = LWP::UserAgent->new(timeout => '15');
 my $apiurl     = 'https://block.io/api/v1/get_current_price/?'
                . "api_key=${api_key}&"
                . "price_base=${price_base}";
-
 
 #{{{ WOW SUCH SUB
 sub wow {
@@ -44,8 +43,6 @@ sub wow {
             );
     }
   }
-
-
 }#}}}
 
 sub fetch_price {

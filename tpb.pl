@@ -13,14 +13,13 @@ signal_add('arrr','pirate_search');
 my $mgnetme = 'http://mgnet.me/api/create?format=json&m=';
 my $url   = 'http://thorrents.com/search/';
 
-my $json  = new JSON;
-my $ua    = LWP::UserAgent->new(timeout => 10);
+my $json  = JSON->new();
+my $ua    = LWP::UserAgent->new(timeout => '10');
 
-$ua->agent(settings_get_str('myUserAgent'));
-$ua->timeout(10);
 
 sub pirate_search {
   my ($server, $chan, $booty) = @_;
+  $ua->agent(settings_get_str('myUserAgent'));
   my $raw_content = eval ($ua->get($url . $booty . '.json')->content);
   return if $@;
   my $decoded_json = $json->utf8->decode($raw_content);

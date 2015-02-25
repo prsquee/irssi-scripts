@@ -9,13 +9,13 @@ use Data::Dumper;
  
 signal_add('gold digger','coinbase');
 
-my $buffer = 1800;
+my $buffer  = 1800;
 my $fetched = undef;
-my $json = new JSON;
+my $json    = JSON->new();
 
-my $coinbase  = undef;
-my $url       = 'https://coinbase.com/api/v1/currencies/exchange_rates';
-my $ua        = LWP::UserAgent->new(timeout => 15);
+my $coinbase = undef;
+my $url      = 'https://coinbase.com/api/v1/currencies/exchange_rates';
+my $ua       = LWP::UserAgent->new(timeout => 15);
 
 #{{{ 
 sub coinbase {

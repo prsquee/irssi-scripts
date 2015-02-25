@@ -6,11 +6,10 @@ use URI::Escape qw( uri_escape );
 use Data::Dumper;
 use JSON;
 
-signal_add("search imdb","do_imdb");
+signal_add("search imdb", "do_imdb");
 
-my $json = new JSON;
-my $ua = new LWP::UserAgent;
-$ua->timeout(10);
+my $json = JSON->new();
+my $ua   = LWP::UserAgent->new(timeout => '15');
 
 sub do_imdb {
   my ($server, $chan, $text) = @_;
@@ -61,6 +60,5 @@ sub do_imdb {
   sayit($server, $chan, $plot);
   return;
 }
-
 sub sayit { my $s = shift; $s->command("MSG @_"); }
 

@@ -9,11 +9,9 @@ use JSON;
 
 signal_add('mercadolibre','fetch_ml');
 
-my $json = new JSON;
-my $ua = new LWP::UserAgent;
+my $json = JSON->new();
+my $ua   = LWP::UserAgent->new( timeout => '15' );
 my $url = 'https://api.mercadolibre.com/items/';
-
-$ua->timeout(10);
 
 sub fetch_ml {
   my ($server, $chan, $mla) = @_;

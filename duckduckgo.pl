@@ -7,10 +7,11 @@ use LWP::UserAgent;
 use JSON;
 use URI::Encode qw(uri_encode uri_decode);
 
-my $json = new JSON;
+signal_add("cuac cuac go","cuac_cuac");
+
+my $json = JSON->new();
 $json = $json->utf8([1]);
-my $ua = new LWP::UserAgent;
-$ua->timeout( 10 );
+my $ua = LWP::UserAgent->new(timeout => '15');
 
 sub cuac_cuac {
   my ($server, $chan, $searchme) = @_;
@@ -28,4 +29,3 @@ sub cuac_cuac {
 }
 
 sub sayit { my $s = shift; $s->command("MSG @_"); }
-signal_add("cuac cuac go","cuac_cuac");
