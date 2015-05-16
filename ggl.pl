@@ -1,13 +1,17 @@
 #ggl.pl
-use Irssi qw(signal_add print) ;
-use WWW::Shorten::Googl qw( makeshorterlink );
 use strict;
 use warnings;
+use Irssi qw(signal_add print settings_get_str) ;
+use WWW::Google::URLShortener;
+
+Irssi::settings_add_str('apikey', 'google_apikey', '');
+
+my $shortener = WWW::Google::URLShortener->new(
+    { api_key => settings_get_str('google_apikey') }
+);
 
 sub do_shortme {
-  $ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
   my $url = shift;
-  return undef if ($url !~ m{^https?://\w+.*$}i);
-  my $shorten = makeashorterlink($url);
+  my $shorten = $shortener->shorten_url($url);
   return $shorten if ($shorten);
 }

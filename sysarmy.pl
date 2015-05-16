@@ -82,7 +82,7 @@ sub post_twitter {
     #sayit($server,$chan,"*chirp*");
     my $url = 'https://twitter.com/sysARmIRC/status/' . $status->{id};
     my $short = scalar('Irssi::Script::ggl')->can('do_shortme')->($url);
-    sayit($server,$chan,"tweet sent at $short") if ($short);
+    sayit($server, $chan, "tweet sent at $short") if ($short);
   }
   #print (CRAP Dumper($twitter));
 }

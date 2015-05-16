@@ -34,7 +34,7 @@ sub do_quotes { #{{{
     #  my $tweeturl = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($tweetme);
     #  $out .= " and tweeted at $tweeturl" if ($tweeturl);
     #}
-    sayit($server,$chan,$out);
+    sayit($server, $chan, $out);
   }
   #}}}
   #{{{ last
