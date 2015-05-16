@@ -39,8 +39,10 @@ my $youtubex = qr{(?x-sm:
     ([^&]{11})                  #the vid id
 )};
 
+my $karma_thingy = qr{[\w\[\]`|\\-^`]+};
 my $karmagex = qr{(?x-sm:
-                   ([\w\[\]{}`|\\-^]+) #thingy can contain \w with ^{}[]`|\-^
+                    #([\w\[\]{}`|\\-^]+) #thingy can contain \w with ^{}[]`|\-^
+                    ($karma_thingy) 
                     ( ([-+])\3 )      #match a -/+ then match the same symbol
                                       #save the double symbol into \2
                                       #\1 is the 1st word
@@ -60,6 +62,7 @@ my %faces = (
               'shrug' => '¯\_(ツ)_/¯',
               'wot'   => 'ಠ_ಠ',
               'dunno' => '¯\(°_o)/¯',
+              'caca'  => '💩',
             );
 #}}}
 
@@ -116,7 +119,7 @@ sub incoming_public {
     }#}}}
     #{{{ !calc(ulate)
     if ($cmd eq 'calc') {
-      signal_emit('calculate',$server,$chan,$text) if is_loaded('calc');
+      signal_emit('calculate', $server, $chan, $text) if is_loaded('calc');
       return;
     }#}}}
     #{{{ !short
@@ -230,7 +233,8 @@ sub incoming_public {
     #}}}
     #{{{ karma is a bitch
     if ($cmd eq 'karma') {
-      my ($name) = $text =~ /!karma\s+([a-zA-Z0-9_\[\]{}`|\\-]+)/;
+      #my ($name) = $text =~ /!karma\s+([a-zA-Z0-9_\[\]{}`|\\-]+)/;
+      my ($name) = $text =~ /!karma\s+($karma_thingy)/;
       $name = $nick if not defined($name);
       if ($name eq $server->{nick}) {
         sayit($server, $chan, 'my karma is over 9000 already!');
@@ -465,7 +469,7 @@ sub incoming_public {
     }
     ##}}}
     #{{{ novelty (?) !shrug !wot !dunno
-    if ($cmd =~ /^(?:shrug|dunno|wot)$/) {
+    if ($cmd =~ /^(?:shrug|dunno|wot|caca)$/) {
       my ($reason) = $text =~ m{^!\w+\s+(.+)$};
       
       if (defined $reason) {
