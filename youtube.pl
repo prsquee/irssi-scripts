@@ -10,14 +10,14 @@ use JSON;
 
 #init 
 signal_add("check tubes", "fetch_tubes"); 
-Irssi::settings_add_str('apikey', 'youtube_apikey', '');
+Irssi::settings_add_str('apikey', 'google_apikey', '');
 
 my %fetched_vids = ();
 my $json    = JSON->new();
 my $ua      = LWP::UserAgent->new( timeout => '15' );
 
 my $api_url = 'https://www.googleapis.com/youtube/v3/videos?id=';
-my $api_key = '&key=' . settings_get_str('youtube_apikey');
+my $api_key = '&key=' . settings_get_str('google_apikey');
 my $part    = '&part=contentDetails,snippet,statistics';
 my $field   = '&fields=items('
                           . 'contentDetails(duration),'
