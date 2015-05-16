@@ -5,8 +5,8 @@ use strict;
 use WWW::Shorten::Bitly;
 
 sub msg_pub {
-  my($server, $text, $nick, $mask,$chan) = @_;
-  shortme($text, $chan, $server) if ($server->{tag} =~ /3dg|fnode|lia|gsg/ and $text =~ /^!bitly/);
+  my($server, $text, $nick, $mask, $chan) = @_;
+  shortme($text, $chan, $server) if ($server->{tag} =~ /fnode/ and $text =~ /^!bitly/);
 }
 
 sub shortme {

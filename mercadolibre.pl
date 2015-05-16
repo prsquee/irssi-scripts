@@ -10,7 +10,10 @@ use JSON;
 signal_add('mercadolibre','fetch_ml');
 
 my $json = JSON->new();
-my $ua   = LWP::UserAgent->new( timeout => '15' );
+my $ua   = LWP::UserAgent->new( timeout => '15',
+                                ssl_opts => { verify_hostname => 0 }
+                              );
+
 my $url = 'https://api.mercadolibre.com/items/';
 
 sub fetch_ml {
@@ -30,8 +33,7 @@ sub fetch_ml {
   my $sold      = $parsed_json->{sold_quantity};
 
   my $out = "[$condition] $title :: $howmuch :: Sold: $sold :: $city :: $country";
-  sayit($server,$chan,$out);
-  signal_emit('write to file',"$out\n") if ($chan =~ /sysarmy|moob/);
+  sayit($server, $chan, $out);
   return;
 }
 sub sayit { my $s = shift; $s->command("MSG @_"); }
