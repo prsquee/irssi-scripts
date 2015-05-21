@@ -504,7 +504,7 @@ sub incoming_public {
     #{{{ !excusas 
     if ($cmd eq 'excusa') {
       if (is_loaded('excusarmy')) {
-        my $excusa = scalar('Irssi::Script::excusarmy')->can('get_regret');
+        my $excusa = scalar('Irssi::Script::excusarmy')->can('get_regret')->();
         sayit($server, $chan, '[excusarmy] ' . $excusa);
       }
     }
