@@ -240,13 +240,13 @@ sub incoming_public {
         sayit($server, $chan, 'my karma is over 9000 already!');
         return;
       }
-      #FIXME this needs a hash
-
+      #FIXME this is ugly, needs a hash ASAP
       if ($name eq 'sQuEE')                   { sayit($server, $chan, "karma for ${name}: 🍺 "); return; }
       if ($name =~ /^osx|mac(?:intosh)?$/i)   { sayit($server, $chan, "karma for ${name}: ⌘" ); return; }
       if ($name =~ /^apple$/i)                { sayit($server, $chan, "karma for ${name}: " ); return; } 
       if ($name =~ /^ip(?:[oa]d|hone)|ios$/i) { sayit($server, $chan, "karma for ${name}: 📱 "); return; }
       if ($name =~ /^perl$/i)                 { sayit($server, $chan, "karma for ${name}: 🐫 "); return; }
+      if ($name =~ /^(spock|nimoy|llap)$/i)                { sayit($server, $chan, "karma for ${name}: 🖖" ); return; }
 
       #FIXME use server tag as a hash ref, so we'd have one table for server.
       $name .= $server->{tag};
@@ -391,13 +391,11 @@ sub incoming_public {
     }#}}}
    #{{{ !btc bitcoins
     if ($cmd =~ m{^bi?tc(?:oin)?s?}) {
-      signal_emit('gold digger', 
-                  $server, $chan, 'btc') if is_loaded('blockio');
+      signal_emit('gold digger', $server, $chan, 'btc') if is_loaded('blockio');
     }#}}}
    #{{{ !ltc litecoins
     if ($cmd =~ m{^li?te?c(?:oin)?s?}) {
-      signal_emit('silver digger', 
-                  $server, $chan, 'ltc') if is_loaded('blockio'); 
+      signal_emit('silver digger', $server, $chan, 'ltc') if is_loaded('blockio'); 
     }#}}}
     #{{{ !tpb the pirate bay FIXME GET MY OWN API SERVER
     #if ($cmd eq 'tpb') {
@@ -503,6 +501,14 @@ sub incoming_public {
       }
     }
     #}}}
+    #{{{ !excusas 
+    if ($cmd eq 'excusa') {
+      if (is_loaded('excusarmy')) {
+        my $excusa = scalar('Irssi::Script::excusarmy')->can('get_regret');
+        sayit($server, $chan, '[excusarmy] ' . $excusa);
+      }
+    }
+    ##}}}
   } #cmd check ends here. begin general text match
 
 
@@ -520,7 +526,7 @@ sub incoming_public {
     }
     #youtube here
     if ($url =~ /$youtubex/) {
-      signal_emit('check tubes',$server,$chan,$1) if (is_loaded('youtube'));
+      signal_emit('check tubes', $server, $chan, $1) if (is_loaded('youtube'));
       return;
     }
     #show twitter user bio info from an url 
