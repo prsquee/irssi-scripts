@@ -46,6 +46,7 @@ sub fetch_and_cache {
 }
 
 sub get_regret {
+  fetch_and_cache if time - $last_fetch > $cached_for; 
   return $regrets[rand scalar @regrets];
 }
 
