@@ -78,7 +78,7 @@ sub incoming_public {
     #{{{ halps 
     if ($cmd =~ /^h[ea]lp$/) {
       my $defaultcmd = settings_get_str('halpcommands') . ' ';
-      $defaultcmd .= settings_get_str('halp_sysarmy') if $chan eq '#sysarmy';
+      $defaultcmd .= settings_get_str('halp_sysarmy') if $chan =~ /##?sysarmy(?:-en)?/;
       sayit($server, $chan, $defaultcmd);
       return;
     }#}}}
@@ -246,7 +246,7 @@ sub incoming_public {
       if ($name =~ /^apple$/i)                { sayit($server, $chan, "karma for ${name}: " ); return; } 
       if ($name =~ /^ip(?:[oa]d|hone)|ios$/i) { sayit($server, $chan, "karma for ${name}: 📱 "); return; }
       if ($name =~ /^perl$/i)                 { sayit($server, $chan, "karma for ${name}: 🐫 "); return; }
-      if ($name =~ /^(spock|nimoy|llap)$/i)                { sayit($server, $chan, "karma for ${name}: 🖖" ); return; }
+      if ($name =~ /^(spock|nimoy|llap)$/i)   { sayit($server, $chan, "karma for ${name}: 🖖" ); return; }
 
       #FIXME use server tag as a hash ref, so we'd have one table for server.
       $name .= $server->{tag};
@@ -507,6 +507,13 @@ sub incoming_public {
         my $excusa = scalar('Irssi::Script::excusarmy')->can('get_regret')->();
         sayit($server, $chan, '[excusarmy] ' . $excusa);
       }
+    }
+    ##}}}
+    #{{{ !birras 
+    if ($cmd =~ /^(?:admin)?birras?$/ and is_loaded('adminbirras')) {
+      my $birras = scalar('Irssi::Script::adminbirras')->can('get_event')->();
+      #print (CRAP $birras);
+      sayit($server, $chan, $birras);
     }
     ##}}}
   } #cmd check ends here. begin general text match
