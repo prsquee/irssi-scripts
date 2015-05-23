@@ -1,4 +1,4 @@
-use Irssi qw (print settings_get_str);
+use Irssi qw (signal_add print settings_get_str settings_add_str);
 use warnings;
 use strict;
 use Data::Dumper;
@@ -6,9 +6,9 @@ use LWP::UserAgent;
 use JSON;
 
 #init 
-Irssi::settings_add_str('excusarmy', 'excusarmy_appid', '');
-Irssi::settings_add_str('excusarmy', 'excusarmy_restkey','');
-
+settings_add_str('excusarmy', 'excusarmy_appid', '');
+settings_add_str('excusarmy', 'excusarmy_restkey','');
+signal_add('excusa get','get_regret');
 
 my $api_url    = 'https://api.parse.com/1/classes/bohf_regrets';
 my $appid      = settings_get_str('excusarmy_appid');
@@ -46,9 +46,14 @@ sub fetch_and_cache {
 }
 
 sub get_regret {
+  my ($server, $chan) = @_;
   fetch_and_cache if time - $last_fetch > $cached_for; 
-  return $regrets[rand scalar @regrets];
+  #return $regrets[rand scalar @regrets];
+  sayit($server, $chan, '[excusarmy] ' . $regrets[rand scalar @regrets]);
 }
+
+sub sayit { my $s = shift; $s->command("MSG @_"); }
 
 #initial fetch
 fetch_and_cache;
+

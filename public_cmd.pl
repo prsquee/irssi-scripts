@@ -503,17 +503,13 @@ sub incoming_public {
     #}}}
     #{{{ !excusas 
     if ($cmd eq 'excusa') {
-      if (is_loaded('excusarmy')) {
-        my $excusa = scalar('Irssi::Script::excusarmy')->can('get_regret')->();
-        sayit($server, $chan, '[excusarmy] ' . $excusa);
-      }
+      signal_emit('excusa get', $server, $chan) if is_loaded('excusarmy')
     }
     ##}}}
     #{{{ !birras 
-    if ($cmd =~ /^(?:admin)?birras?$/ and is_loaded('adminbirras')) {
-      my $birras = scalar('Irssi::Script::adminbirras')->can('get_event')->();
-      #print (CRAP $birras);
-      sayit($server, $chan, $birras);
+    if ($cmd =~ /^(?:admin)?birras?$/ and $chan =~ /sysarmy(?:-en)?|ssqquuee/) {
+      #my $birras = scalar('Irssi::Script::adminbirras')->can('get_event')->();
+      signal_emit('birras get', $server, $chan) if is_loaded('adminbirras');
     }
     ##}}}
   } #cmd check ends here. begin general text match
@@ -666,4 +662,6 @@ signal_register( { 'wolfram'          => [ 'iobject','string','string'          
 signal_register( { 'bofh'             => [ 'iobject','string'                   ]}); #server,chan,$query
 signal_register( { 'bash quotes'      => [ 'iobject','string','string'          ]}); #server,chan,$text
 signal_register( { 'hay subte'        => [ 'iobject','string','string'          ]}); #server,chan,$linea
+signal_register( { 'excusa get'       => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'birras get'       => [ 'iobject','string'                   ]}); #server,chan
 #}}} 
