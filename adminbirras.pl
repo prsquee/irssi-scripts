@@ -1,14 +1,16 @@
 #adminbirras
 #'buying_mode' => 'buy_it_now' || acution
-use Irssi qw (signal_add print settings_get_str signal_emit);
+use Irssi qw (signal_add print settings_get_str settings_add_str);
 use strict;
 use warnings;
 use POSIX qw(strftime);
+use Date::Manip;
 use LWP::UserAgent;
 use Data::Dumper;
 use JSON;
 
-Irssi::settings_add_str('meetup', 'meetup_apikey', '');
+settings_add_str('meetup', 'meetup_apikey', '');
+signal_add('birras get','get_event');
 
 my $json = JSON->new();
 my $ua   = LWP::UserAgent->new( timeout => '15' );
@@ -19,13 +21,16 @@ my $url  = 'https://api.meetup.com/2/events?key='
          . '&group_urlname=' . $group . '&sign=true';
 
 sub get_event {
+  my ($server, $chan) = @_;
   my $response = $ua->get($url);
   if ($response->is_success) {
     my $parsed_json = eval { $json->utf8->decode($response->decoded_content) };
     
     if (scalar @{ $parsed_json->{'results'} } == 0) {
-      return 'No confirmed dates for upcoming adminbirras.';
-      #add a prolly next thursday based on week number.
+      my $nope = 'Event not created at meetup.com yet, but the next one should be ';
+      my $next_date = next_birra();
+
+      sayit($server, $chan, $nope . $next_date);
     }
     else {
       #we just need the 1st result.
@@ -43,7 +48,7 @@ sub get_event {
                    . ' :: '
                    . scalar('Irssi::Script::ggl')->can('do_shortme')->($event->{'event_url'})
                    ;
-        return $output;
+        sayit($server, $chan, $output);
       }
     }
   }
@@ -51,3 +56,39 @@ sub get_event {
     print (CRAP "meetup.com error code: $response->code - $response->message");
   }
 }
+
+sub next_birra {
+  #today's weekday number.
+  my $today = strftime('%u', localtime);
+
+  #$odd_week = yes birra ; even_week = no birra
+  # is this week a birra week?
+  if (strftime('%V', localtime) % 2) {
+    #this IS a birraweek.
+    #is it past thusday? if so get 
+    return 'today.' if $today == 4;
+    if ($today < 4) {
+      return 'this Thursday.';
+    }
+    else {
+      #past thursday on a birraweek.
+      #jump to next thursday, which will be nonbirraweek, then plus one week.
+      return strftime('%A, %B %d.', localtime(UnixDate('next Thursday', '%s') + 604800));
+    }
+  }
+  else {
+    #this is NOT a birraweek. even week number 
+    return UnixDate('next Thursday', '%A, %B %d.') if $today == 4;
+    if ($today < 4) {
+      #we are between Mon and Wed.
+      #jump to next thursday on a non birraweek then + 1 week.
+      return strftime('%A, %B %d.', localtime(UnixDate('next Thursday', '%s') + 604800));
+    }
+    else {
+      return strftime('%A, %B %d.', localtime(UnixDate('next Thursday', '%s')));
+    }
+  }
+}
+
+
+sub sayit { my $s = shift; $s->command("MSG @_"); }
