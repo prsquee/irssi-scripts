@@ -1,5 +1,4 @@
 #adminbirras
-#'buying_mode' => 'buy_it_now' || acution
 use Irssi qw (signal_add print settings_get_str settings_add_str);
 use strict;
 use warnings;
@@ -65,7 +64,7 @@ sub next_birra {
   # is this week a birra week?
   if (strftime('%V', localtime) % 2) {
     #this IS a birraweek.
-    #is it past thusday? if so get 
+    #is it past thusday?
     return 'today.' if $today == 4;
     if ($today < 4) {
       return 'this Thursday.';
@@ -89,6 +88,5 @@ sub next_birra {
     }
   }
 }
-
 
 sub sayit { my $s = shift; $s->command("MSG @_"); }

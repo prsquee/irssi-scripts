@@ -49,7 +49,7 @@ sub get_regret {
   my ($server, $chan) = @_;
   fetch_and_cache if time - $last_fetch > $cached_for; 
   #return $regrets[rand scalar @regrets];
-  sayit($server, $chan, '[excusarmy] ' . $regrets[rand scalar @regrets]);
+  sayit($server, $chan, '[excusarmy] ' . $regrets[int(rand(@regrets))]);
 }
 
 sub sayit { my $s = shift; $s->command("MSG @_"); }
