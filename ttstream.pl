@@ -6,9 +6,10 @@ use AnyEvent::Twitter::Stream;
 use Data::Dumper;
 use HTML::Entities;
 
-my $sysarmy = '57440969';
-my $nerdear = '2179429297';
-my $sqbot   = '324991882';
+my $sysarmy   = '57440969';
+my $nerdear   = '2179429297';
+my $sqbot     = '324991882';
+my $chownealo = '2920961379';
 #my $prsquee = '31968735';
 #
 my $chan  = '#ssqquuee';
@@ -36,8 +37,8 @@ sub show_tweet {
       if ($tweet->{user}{id_str} eq $sqbot) {
         $server->command("MSG #ssqquuee $out");
       }
-      elsif ($tweet->{user}{id_str} =~ /$sysarmy|$nerdear/) {
-        $server->command("MSG #sysarmy $out"); #if ($tweet->{user}{id_str} eq $sysarmy);
+      elsif ($tweet->{user}{id_str} =~ /$sysarmy|$nerdear|$chownealo/) {
+        $server->command("MSG #sysarmy $out");
       }
     }
   }
@@ -58,14 +59,14 @@ sub start_stream {
     token           => settings_get_str('twitter_access_token'),
     token_secret    => settings_get_str('twitter_access_token_secret'),
     method          => "filter",
-    follow          => "$sysarmy, $nerdear, $sqbot",
+    follow          => "$sysarmy, $nerdear, $chownealo, $sqbot",
     on_connect      => sub { print (CRAP "connected to sysarmy stream.");},
     on_tweet        => \&show_tweet,
-    on_eof          => \&restart_stream,
-    on_error        => sub { print (CRAP "error: $_[0];"); \&restart_stream ;},
-    #on_keepalive   => sub { print (CRAP "still alive");},
-    on_delete       => sub { print (CRAP "a tweet was deleted. so sad");},
-    timeout         => 300,
+    on_eof          => sub { print (CRAP "EOF: $_[0]"); },
+    on_error        => sub { print (CRAP "error: $_[0]"); },
+    #on_keepalive   => sub { print (CRAP 'still alive');},
+    on_delete       => sub { print (CRAP 'a tweet was deleted. so sad');},
+    timeout         => 700,
   );
 }
 
