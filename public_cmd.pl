@@ -505,6 +505,13 @@ sub incoming_public {
     if ($cmd eq 'excusa') {
       signal_emit('excusa get', $server, $chan) if is_loaded('excusarmy')
     }
+    if ($cmd eq 'addexcusa') {
+      my ($excusa) = $text =~ m{!addexcusa\s+(.*)$};
+      signal_emit('excusa add', 
+                  $server, 
+                  $chan, 
+                  $excusa) if ($excusa and is_loaded('excusarmy'));
+    }
     ##}}}
     #{{{ !birras 
     if ($cmd =~ /^(?:admin)?birras?$/ and $chan =~ /sysarmy(?:-en)?|ssqquuee/) {
@@ -663,5 +670,6 @@ signal_register( { 'bofh'             => [ 'iobject','string'                   
 signal_register( { 'bash quotes'      => [ 'iobject','string','string'          ]}); #server,chan,$text
 signal_register( { 'hay subte'        => [ 'iobject','string','string'          ]}); #server,chan,$linea
 signal_register( { 'excusa get'       => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'excusa add'       => [ 'iobject','string','string'          ]}); #server,chan,$excusa
 signal_register( { 'birras get'       => [ 'iobject','string'                   ]}); #server,chan
 #}}} 
