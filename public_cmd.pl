@@ -505,12 +505,15 @@ sub incoming_public {
     if ($cmd eq 'excusa') {
       signal_emit('excusa get', $server, $chan) if is_loaded('excusarmy')
     }
-    if ($cmd eq 'addexcusa') {
+    if ($cmd eq 'addexcusa' and $chan =~ /sysarmy(?:-en)?|ssqquuee/) {
       my ($excusa) = $text =~ m{!addexcusa\s+(.*)$};
-      signal_emit('excusa add', 
-                  $server, 
-                  $chan, 
-                  $excusa) if ($excusa and is_loaded('excusarmy'));
+      if (not $excusa) {
+        sayit($server, $chan, 'contribute a new excusa for the excusarmy app!');
+      }
+      else {
+        signal_emit('excusa add', $server, $chan, $excusa) 
+          if ($excusa and is_loaded('excusarmy'));
+      }
     }
     ##}}}
     #{{{ !birras 
