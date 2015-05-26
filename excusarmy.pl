@@ -9,6 +9,7 @@ use JSON;
 settings_add_str('excusarmy', 'excusarmy_appid', '');
 settings_add_str('excusarmy', 'excusarmy_restkey','');
 signal_add('excusa get','get_regret');
+signal_add('excusa add','add_regret');
 
 my $api_url    = 'https://api.parse.com/1/classes/bohf_regrets';
 my $appid      = settings_get_str('excusarmy_appid');
@@ -33,7 +34,8 @@ sub fetch_and_cache {
     $last_fetch = time();
 
     my $parsed_json = eval { $json->utf8->decode($response->decoded_content) };
-    #print (CRAP Dumper($parsed_json));
+
+    @regrets = ();
     foreach my $result (@{ $parsed_json->{results} }) {
       #$regrets{ $result->{'objectId'} } = $result->{'regret'} if $result->{'active'};
       push @regrets, $result->{'regret'} if $result->{'active'};
@@ -53,7 +55,6 @@ sub get_regret {
 }
 
 sub sayit { my $s = shift; $s->command("MSG @_"); }
-
 #initial fetch
 fetch_and_cache;
 
