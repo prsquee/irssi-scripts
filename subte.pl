@@ -21,7 +21,7 @@ my $xs = XML::Simple->new();
 my $ua  = LWP::UserAgent->new( timeout  => 10,
                                agent    => settings_get_str('subte_agent')
                              );
-#{{{ 
+#{{{
 sub check_subte {
   my ($server, $chan, $linea) = @_;
   fetch_status() if (time - $last_fetched > $buffered_for);
@@ -34,9 +34,14 @@ sub check_subte {
 }#}}}
 
 sub fetch_status {
-  my $raw_result = $ua->get(settings_get_str('subte_url'))->content();
-  #print (CRAP Dumper($raw_result));
-  my $parsedxml_ref = $xs->XMLin($raw_result);
+  my $got = $ua->get(settings_get_str('subte_url'));
+  unless ($got->is_success) {
+    print (CRAP "subte error code: $got->code - $got->message");
+    return;
+  }
+  my $raw_xml = $got->content();
+  #print (CRAP Dumper($raw_xml));
+  my $parsedxml_ref = $xs->XMLin($raw_xml);
   %subtes = map { chop($_->{nombre}) =>
                     {
                       'status'  => ref $_->{'estado'}     eq 'HASH' ? 'OK'

@@ -38,10 +38,14 @@ sub do_imdb {
   $url .= "&y=${year}" if $year;
 
   my $got = $ua->get($url);
-  my $content = $got->decoded_content;
-  my $imdb = eval { $json->allow_nonref->decode($content) };
-  return if $@;
+  unless ($got->is_success) {
+    print (CRAP "imdb error code: $got->code - $got->message");
+    return;
+  }
 
+  my $imdb = eval { $json->utf8->decode($got->decoded_content) };
+  return if $@;
+  
   if ($imdb->{Response} !~ /True/ ) {
     sayit($server, $chan, 'not found, try with the full name.');
     return;

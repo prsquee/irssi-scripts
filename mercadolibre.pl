@@ -19,9 +19,13 @@ my $url = 'https://api.mercadolibre.com/items/';
 sub fetch_ml {
   my ($server, $chan, $mla) = @_;
   $ua->agent(settings_get_str('myUserAgent'));
-  my $raw_results = $ua->get($url . $mla)->decoded_content;
-  my $parsed_json = eval { $json->utf8->decode($raw_results) };
-  return if $@;
+  #my $raw_results = $ua->get($url . $mla)->decoded_content;
+  my $req = $ua->get($url . $mla);
+  unless ($req->is_success) {
+    print (CRAP "mercadolibre error code: $req->code - $req->message");
+    return;
+  }
+  my $parsed_json = eval { $json->utf8->decode($req->decoded_content) };
 
   my $condition = uc $parsed_json->{condition};
   my $title     = $parsed_json->{title};

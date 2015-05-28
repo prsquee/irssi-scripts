@@ -24,16 +24,22 @@ sub check_weather {
   my $url = "http://api.wunderground.com/api/${apikey}/conditions/q/${city}_argentina.json";
   $ua->agent(settings_get_str('myUserAgent'));
 
-  my $req = $ua->get($url);
-  my $result = eval { $json->utf8->decode($req->decoded_content) };
+  my $got = $ua->get($url);
+  unless ($got->is_success) {
+    print (CRAP "clima error code: $got->code - $got->message");
+    return;
+  }
+  
+  my $parsed_json = eval { $json->utf8->decode($got->decoded_content) };
   return if $@;
-  if (defined($result->{current_observation})) {
-    my $temp        = $result->{current_observation}->{temp_c};
-    my $lowest      = $result->{current_observation}->{dewpoint_c};
-    my $weather     = $result->{current_observation}->{weather};
-    my $humidity    = $result->{current_observation}->{relative_humidity};
-    my $feelslike   = $result->{current_observation}->{feelslike_c};
-    my $found_city  = $result->{current_observation}->{display_location}->{full};
+
+  if (defined($parsed_json->{current_observation})) {
+    my $temp        = $parsed_json->{current_observation}->{temp_c};
+    my $lowest      = $parsed_json->{current_observation}->{dewpoint_c};
+    my $weather     = $parsed_json->{current_observation}->{weather};
+    my $humidity    = $parsed_json->{current_observation}->{relative_humidity};
+    my $feelslike   = $parsed_json->{current_observation}->{feelslike_c};
+    my $found_city  = $parsed_json->{current_observation}->{display_location}->{full};
 
     my $out = "${found_city}: ${weather}, feels like: ${temp}˚, min: ${lowest}˚, humidity: ${humidity}";
     sayit($server, $chan, $out);

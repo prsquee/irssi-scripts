@@ -32,8 +32,12 @@ sub fetch_tubes {
     my $request_url = $api_url . $vid . $api_key . $part . $field ;
 
     $ua->agent(settings_get_str('myUserAgent'));
-    my $req = $ua->get($request_url);
-    my $result = eval { $json->utf8->decode($req->decoded_content) };
+    my $got = $ua->get($request_url);
+    unless ($got->is_success) {
+      print (CRAP "youtube error code: $got->code - $got->message");
+      return;
+    }
+    my $result = eval { $json->utf8->decode($got->decoded_content) };
     return if $@;
 
     #items comes as an one element array.

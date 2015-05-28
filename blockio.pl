@@ -1,6 +1,5 @@
 #bitcoins and litecoins
 #https://block.io/api
-#TODO make this pretty
 use Irssi qw(signal_add print settings_get_str settings_add_str) ;
 use strict;
 use warnings;
@@ -66,11 +65,18 @@ sub fetch_prices {
 
   $ua->agent(settings_get_str('myUserAgent'));
 
-  my $raw_results = $ua->get($apiurl)->decoded_content;
-  my $decoded_json = $json->utf8->decode($raw_results);
-  if ($decoded_json->{'status'} eq 'success') { 
+  my $got = $ua->get($apiurl);
+  unless ($got->is_success) {
+    print (CRAP "blockio error code: $got->code - $got->message");
+    return;
+  }
+
+  my $parsed_json = eval { $json->utf8->decode($got->decoded_content) };
+  return if $@;
+
+  if ($parsed_json->{'status'} eq 'success') { 
     eval ('$last_' . $coin . '_fetch' = time);
-    return $decoded_json->{'data'}->{'prices'};
+    return $parsed_json->{'data'}->{'prices'};
   } 
   else {
     return undef;

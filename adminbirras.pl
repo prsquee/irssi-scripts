@@ -24,7 +24,7 @@ sub get_event {
   my $response = $ua->get($url);
   if ($response->is_success) {
     my $parsed_json = eval { $json->utf8->decode($response->decoded_content) };
-    
+
     if (scalar @{ $parsed_json->{'results'} } == 0) {
       my $nope = 'Event not created at meetup.com yet, but the next one should be ';
       my $next_date = next_birra();
