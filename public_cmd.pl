@@ -560,7 +560,7 @@ sub incoming_public {
       return;
     }
     #imgur api?
-    if ($url =~ m{http://i\.imgur\.com/(\w{5,8})h?\.[pjgb]\w{2}$}) { 
+    if ($url =~ m{http://i\.imgur\.com/(\w{5,8})h?\.[pjgb]\w{2,}$}) { 
       #h is there for hires
       $url = "http://imgur.com/$1" if ($1);
     }

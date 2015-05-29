@@ -71,7 +71,7 @@ sub format_time {
   
   $time = join(':', map { sprintf("%02d", $_) } @integers);
 
-  $time = 'live' if $time eq '00';
+  $time = ':live:' if $time eq '00';
   $time = '00:' . $time if $time !~ /:/;
   $time = '[' . $time . ']';
   return $time;
