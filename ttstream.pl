@@ -19,6 +19,7 @@ my $bold  = '\x02';
 my $server = server_find_chatnet("fnode");
 
 our $sysarmyStreamer = undef;
+
 sub show_tweet {
   my $tweet = shift;
   #not interested in @replies.
@@ -46,9 +47,9 @@ sub show_tweet {
 }
 
 sub restart_stream {
-  undef $sysarmyStreamer;
+  $sysarmyStreamer = undef;
   print (CRAP "sysarmy stream stopped. sleeping for a while");
-  sleep 60;
+  sleep 75;
   start_stream();
 }
 
@@ -62,8 +63,10 @@ sub start_stream {
     follow          => "$sysarmy, $nerdear, $chownealo, $sqbot",
     on_connect      => sub { print (CRAP "connected to sysarmy stream.");},
     on_tweet        => \&show_tweet,
-    on_eof          => sub { print (CRAP "EOF: $_[0]"); },
-    on_error        => sub { print (CRAP "error: $_[0]"); },
+#    on_eof          => sub { print (CRAP "EOF: $_[0]"); },
+    on_eof          => \&restart_stream,
+#    on_error        => sub { print (CRAP "error: $_[0]"); },
+    on_error        => \&restart_stream,
     #on_keepalive   => sub { print (CRAP 'still alive');},
     on_delete       => sub { print (CRAP 'a tweet was deleted. so sad');},
     timeout         => 700,
