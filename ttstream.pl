@@ -49,7 +49,7 @@ sub show_tweet {
 sub restart_stream {
   $sysarmyStreamer = undef;
   print (CRAP "sysarmy stream stopped. sleeping for a while");
-  sleep 75;
+  sleep 35;
   start_stream();
 }
 
