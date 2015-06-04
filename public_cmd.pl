@@ -466,7 +466,7 @@ sub incoming_public {
       signal_emit('hay subte', $server, $chan, uc($linea)) if ($linea);
     }
     ##}}}
-    #{{{ novelty (?) !shrug !wot !dunno
+    #{{{ novelty (?) !shrug !wot !dunno !caca !flip
     if ($cmd =~ /^(?:shrug|dunno|wot|caca)$/) {
       my ($reason) = $text =~ m{^!\w+\s+(.+)$};
       
@@ -522,6 +522,38 @@ sub incoming_public {
       signal_emit('birras get', $server, $chan) if is_loaded('adminbirras');
     }
     ##}}}
+    #{{{ 
+    # !translate and the novelty method to match commands.
+    if ('translate' =~ /^${cmd}/) {
+      if ($text eq '!' . $cmd) {
+        sayit($server, $chan, 'I can translate stuff.');
+        return;
+      }
+      $text =~ s/^!$cmd\s+//; 
+      
+      my $to_this_lang = undef;
+      if ($text =~ /^to:(\w+)\s+/) {
+        $to_this_lang = $1;
+      }
+      else {
+        $to_this_lang = 'en';
+      }
+      my $need_translation = undef;
+      ($need_translation) = $text =~ /^(?:to:\w+\s+)?(.*)$/;
+      unless ($need_translation) {
+        sayit($server, $chan, 'I dont have any text to translate.');
+        return;
+      }
+
+      signal_emit(
+        'need translate', 
+        $server, 
+        $chan, 
+        $to_this_lang,
+        $need_translation
+      );
+    }
+    #}}}
   } #cmd check ends here. begin general text match
 
 
@@ -675,4 +707,5 @@ signal_register( { 'hay subte'        => [ 'iobject','string','string'          
 signal_register( { 'excusa get'       => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'excusa add'       => [ 'iobject','string','string'          ]}); #server,chan,$excusa
 signal_register( { 'birras get'       => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'need translate'   => [ 'iobject','string','string','string' ]}); #server,chan,$lang,$text
 #}}} 
