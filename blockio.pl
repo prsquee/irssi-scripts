@@ -16,44 +16,35 @@ my $json = JSON->new();
 my $ua  = LWP::UserAgent->new( timeout => 15 );
 
 my $prices_ref   = undef;
-my $buffered_for = 1800;  #30m
+my $buffered_for = 3600;
 
-#this should be a hash
-my $btc_ref = undef;
-my $ltc_ref = undef;
-my $last_btc_fetch   = 0;
-my $last_ltc_fetch   = 0;
+my %coin_prices = ( 'btc' => undef, 'ltc' => undef, );
+my %last_fetch  = ( 'btc' => 0, 'ltc' => 0, );
 
 sub check_coins {
   my ($server, $chan, $coin) = @_;
-  my $prices_ref = undef;
-  if ($coin eq 'btc') {
-    $btc_ref = fetch_prices($coin) if (time - $last_btc_fetch > $buffered_for);
-    send_out($server, $chan, $btc_ref) if ($btc_ref);
-  } 
-  elsif ($coin eq 'ltc') {
-    $ltc_ref = fetch_prices($coin) if (time - $last_ltc_fetch > $buffered_for);
-    send_out($server, $chan, $ltc_ref) if ($ltc_ref);
+  #$coin can only be btc or ltc
+
+  if (time - $last_fetch{$coin} > $buffered_for) {
+    #cache expired, fetch again.
+    $coin_prices{$coin} = fetch_prices_for($coin);
   }
+  send_out($server, $chan, $coin_prices{$coin}) if $coin_prices{$coin};
 }
 
 sub send_out {
   my ($server, $chan, $prices_ref) = @_;
-  my $output = undef;
+  my $prices_output = undef;
+
   foreach my $price (@{$prices_ref}) {
-    #print (CRAP $price->{'exchange'});
-    $output .= "[$price->{'exchange'}] "
-    . '$'
-    . sprintf("%.2f", $price->{'price'})
-    . ' :: ';
+    $prices_output .= '[' . $price->{'exchange'} . '] '
+                    . '$' . sprintf("%.2f", $price->{'price'})
+                    . ' :: ';
   }
-  sayit($server, $chan, $output);
-#  else {
-#    sayit ($server, $chan, "sorry, cant check prices now.");
-#    return;
-#  }
+  $prices_output =~ s/ :: $//;
+  sayit($server, $chan, $prices_output);
 }
-sub fetch_prices {
+sub fetch_prices_for {
   my $coin        = shift;
   my $api_key     = settings_get_str($coin . '_apikey');
   my $price_base  = 'USD';
@@ -74,10 +65,10 @@ sub fetch_prices {
   my $parsed_json = eval { $json->utf8->decode($got->decoded_content) };
   return if $@;
 
-  if ($parsed_json->{'status'} eq 'success') { 
-    eval ('$last_' . $coin . '_fetch' = time);
+  if ($parsed_json->{'status'} eq 'success') {
+    $last_fetch{$coin} = time;
     return $parsed_json->{'data'}->{'prices'};
-  } 
+  }
   else {
     return undef;
   }
