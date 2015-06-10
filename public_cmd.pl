@@ -59,9 +59,9 @@ my $ignore_karma_from = {};
 #
 #novelty faces
 my %faces = ( 
-              'shrug' => '¯\_(ツ)_/¯',
+              'shrug' => '‾\_(ツ)_/‾',
               'wot'   => 'ಠ_ಠ',
-              'dunno' => '¯\(°_o)/¯',
+              'dunno' => '‾\(°_o)/‾',
               'caca'  => '💩',
             );
 #}}}
@@ -526,7 +526,11 @@ sub incoming_public {
     # !translate and the novelty method to match commands.
     if ('translate' =~ /^${cmd}/) {
       if ($text eq '!' . $cmd) {
-        sayit($server, $chan, 'I can translate stuff.');
+        sayit($server, $chan, 'I can translate texts with '
+                            . '!tr[anslate] [to:lang] unkown text. '
+                            . '[lang] must be a 2 letters ISO 639-1 language code. '
+                            . 'Supported languages https://goo.gl/29mEVc'
+                          );
         return;
       }
       $text =~ s/^!$cmd\s+//; 
