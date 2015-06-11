@@ -6,3 +6,7 @@ test/
 datafiles/
 .dropbox
 Icon*
+
+.sync/IgnoreList
+
+.sync/StreamsList
