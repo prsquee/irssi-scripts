@@ -366,15 +366,23 @@ sub incoming_public {
     #{{{ [TWITTER] !follow
     if ($cmd eq 'follow' and is_sQuEE($mask)) {
       my ($new_friend) = $text =~ /^!follow\s+@?(\w+)$/;
-      signal_emit('white rabbit', 
-                  $server, $chan, $new_friend) if (is_loaded('twitter'));
+      signal_emit(
+        'white rabbit', 
+        $server, 
+        $chan, 
+        $new_friend
+      ) if (is_loaded('twitter'));
     }
     #}}}
     #{{{ [TWITTER] !post tweet stuff to my own account
     if ($cmd eq 'post' and is_sQuEE($mask)) {
       my ($tweet_this) = $text =~ /^!post\s+(.*)$/;
-      signal_emit('shit I say', 
-                  $server, $chan, $tweet_this) if (is_loaded('twitter'));
+      signal_emit(
+        'shit I say', 
+        $server, 
+        $chan, 
+        $tweet_this
+      ) if (is_loaded('twitter'));
     }
     ##}}}
     #{{{ !ddg cuac cuac go 
@@ -385,8 +393,12 @@ sub incoming_public {
         return;
       } 
       else {
-        signal_emit('cuac cuac go', 
-                    $server, $chan, $query) if is_loaded('duckduckgo');
+        signal_emit(
+          'cuac cuac go', 
+          $server, 
+          $chan, 
+          $query
+        ) if is_loaded('duckduckgo');
       }
     }#}}}
    #{{{ !btc bitcoins
@@ -434,20 +446,20 @@ sub incoming_public {
       signal_emit('bofh', $server, $chan) if (is_loaded('bofh'));
     } #}}}
     #{{{ #!coins 
-    if ($cmd eq 'coins' ) {
-      my ($coin1, $coin2) 
-        = $text 
-          =~ m{^!coins ([a-zA-Z0-9]+)[-_\|/:!]([a-zA-Z0-9]+)$};
+    #if ($cmd eq 'coins' ) {
+    #  my ($coin1, $coin2) 
+    #    = $text 
+    #      =~ m{^!coins ([a-zA-Z0-9]+)[-_\|/:!]([a-zA-Z0-9]+)$};
 
-      if ($coin1 and $coin2) {
-        signal_emit('insert coins', 
-                    $server, $chan, "${coin1}_${coin2}") if is_loaded('coins');
-      } 
-      else { 
-        sayit($server, $chan, 'usage: !coins coin1/coin2 - '
-               . 'Here is a list: http://www.cryptocoincharts.info/v2'); 
-      }
-    } #}}} 
+    #  if ($coin1 and $coin2) {
+    #    signal_emit('insert coins', 
+    #                $server, $chan, "${coin1}_${coin2}") if is_loaded('coins');
+    #  } 
+    #  else { 
+    #    sayit($server, $chan, 'usage: !coins coin1/coin2 - '
+    #           . 'Here is a list: http://www.cryptocoincharts.info/v2'); 
+    #  }
+    #} #}}} 
     #{{{ #!doge WOW SUCH COMMAND 
     if ($cmd =~ m{doge(?:coin)?s?}) {
       signal_emit('such signal', $server, $chan, $text) if is_loaded('doge');
@@ -556,6 +568,12 @@ sub incoming_public {
       );
     }
     #}}}
+    ##{{{ !interpreter 
+    if ($cmd eq 'interpreter' and is_sQuEE($mask)) {
+
+
+    }
+    ##}}}
   } #cmd check ends here. begin general text match
 
 
@@ -654,8 +672,8 @@ sub is_master {
   return $is_master;
 }
 sub is_sQuEE {
-  my $mask = shift;
-  return ($mask eq '~sQuEE@unaffiliated/sq/x-3560400') ? 'true' : undef; 
+  #my $mask = shift;
+  return (shift(@_) eq '~sQuEE@unaffiliated/sq/x-3560400') ? 'true' : undef; 
 }
 sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
 sub sayit     { my $s = shift; $s->command("MSG @_"); }
