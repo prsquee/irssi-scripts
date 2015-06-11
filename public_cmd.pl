@@ -535,15 +535,13 @@ sub incoming_public {
       }
       $text =~ s/^!$cmd\s+//; 
       
-      my $to_this_lang = undef;
+      my $to_this_lang = 'en';
       if ($text =~ /^to:(\w+)\s+/) {
         $to_this_lang = $1;
       }
-      else {
-        $to_this_lang = 'en';
-      }
       my $need_translation = undef;
       ($need_translation) = $text =~ /^(?:to:\w+\s+)?(.*)$/;
+
       unless ($need_translation) {
         sayit($server, $chan, 'I dont have any text to translate.');
         return;

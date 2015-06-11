@@ -43,6 +43,7 @@ my %langs = (
   'tr' => 'Turkish',
   'uk' => 'Ukrainian',
   'vi' => 'Vietnamese',
+  'zh' => 'Chinese',
   'zh-CHS' => 'Simplified Chinese',
   'zh-CHT' => 'Traditional Chinese',
 );
