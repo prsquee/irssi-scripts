@@ -12,20 +12,11 @@ my %channel_for = (
    '2179429297' => '#sysarmy',    #@nerdear
    '2920961379' => '#sysarmy',    #@chownealo
    '324991882'  => '#ssqquuee',   #@sqbot
-   '2920961379' => '#ekoparty',   #@ekoparty
+   '15521218'   => '#ekoparty',   #@ekoparty
 );
 
-my $sysarmy   = '57440969';
-my $nerdear   = '2179429297';
-my $sqbot     = '324991882';
-my $chownealo = '2920961379';
-my $ekoparty  = '2920961379';
-#
 my $twt_content = undef;
-my $bold  = '\x02';
-
 my $server = server_find_chatnet("fnode");
-
 our $sysarmyStreamer = undef;
 
 #{{{ show this
