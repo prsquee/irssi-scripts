@@ -1,4 +1,6 @@
 #public commands
+#FIXME this is getting awfuly bloated.
+
 use Irssi qw (  print signal_emit 
                 signal_add signal_register 
                 settings_get_str settings_add_str settings_set_str 
@@ -57,17 +59,20 @@ my $ignore_karma_from = {};
 ##multiline karma check
 #my $karmagex = qr{([a-zA-Z0-9_\[\]`|\\-]+(?:--|\+\+))}; 
 #
-#novelty faces
+#novelty stuff
 my %faces = ( 
-              'shrug' => '‾\_(ツ)_/‾',
-              'wot'   => 'ಠ_ಠ',
-              'dunno' => '‾\(°_o)/‾',
-              'caca'  => '💩',
-            );
-#}}}
+  'shrug' => '‾\_(ツ)_/‾',
+  'wot'   => 'ಠ_ಠ',
+  'dunno' => '‾\(°_o)/‾',
+  'caca'  => '💩',
+);
 
+
+#}}}
+#handles all incoming public messages.
 sub incoming_public {
   my($server, $text, $nick, $mask, $chan) = @_;
+  #this needs to be a hash.
   my $active_networks = settings_get_str('active_networks');
   print (CRAP "im not being used on any network!") if (!$active_networks);
   return if $server->{tag} !~ /$active_networks/;
@@ -83,12 +88,12 @@ sub incoming_public {
       return;
     }#}}}
     #{{{ add help
-    if ($cmd eq 'addhalp' and is_master($mask)) {
+    if ($cmd eq 'addhalp' and is_sQuEE($mask)) {
       my ($newhalp) = $text =~ /^!addhalp\s+(.*)$/;
       settings_set_str(
-                        'halpcommands', 
-                        settings_get_str('halpcommands') . " $newhalp"
-                      ) if (defined($newhalp));
+        'halpcommands', 
+        settings_get_str('halpcommands') . " $newhalp"
+      ) if (defined($newhalp));
 
       sayit($server, $chan, settings_get_str('halpcommands'));
       return;
@@ -153,7 +158,8 @@ sub incoming_public {
       my $v = { 'i' => 'o',
                 'o' => 'i',
                 'u' => 'a',
-                'a' => 'u'
+                'a' => 'u',
+                '1' => '0'
               };
       sayit($server, $chan, 'p' . ${$v}{$1} . 'ng');
       return;
@@ -174,19 +180,17 @@ sub incoming_public {
       if (not defined($user)) {
         if (not exists($twit_users_ref->{$nick})) {
           sayit(
-                  $server, $chan, 
-                  "you dont have a twitter handle, so I'll need a twitter username"
-               );
+            $server, $chan, 
+            "you dont have a twitter handle, so I'll need a twitter username"
+          );
           return;
         } 
         else { 
           $user = $twit_users_ref->{$nick};
         }
       }  
-      signal_emit(
-                    "last tweet", 
-                    $server, $chan, $user
-                 ) if defined($user) and is_loaded('twitter');
+      signal_emit("last tweet", $server, $chan, $user) 
+        if defined($user) and is_loaded('twitter');
       return;
     }#}}}
     #{{{ !quotes and stuff 
@@ -208,6 +212,7 @@ sub incoming_public {
         #print (CRAP $tweetme);
         $tweetme .= " \n\n" . '#sysarmy';
 
+        # IM SO UGLY PLS DONT LOOK AT ME.
         # I NEED to attach the url here because I can't replace the nicks in
         # sysarmy.pl
         # we should test cross script %hash sharing.
@@ -233,35 +238,25 @@ sub incoming_public {
     #}}}
     #{{{ karma is a bitch
     if ($cmd eq 'karma') {
-      #my ($name) = $text =~ /!karma\s+([a-zA-Z0-9_\[\]{}`|\\-]+)/;
       my ($name) = $text =~ /!karma\s+($karma_thingy)/;
       $name = $nick if not defined($name);
       if ($name eq $server->{nick}) {
         sayit($server, $chan, 'my karma is over 9000 already!');
         return;
       }
-      #FIXME this is ugly, needs a hash ASAP
-      if ($name eq 'sQuEE')                   { sayit($server, $chan, "karma for ${name}: 🍺 "); return; }
-      if ($name =~ /^osx|mac(?:intosh)?$/i)   { sayit($server, $chan, "karma for ${name}: ⌘" ); return; }
-      if ($name =~ /^apple$/i)                { sayit($server, $chan, "karma for ${name}: " ); return; } 
-      if ($name =~ /^ip(?:[oa]d|hone)|ios$/i) { sayit($server, $chan, "karma for ${name}: 📱 "); return; }
-      if ($name =~ /^perl$/i)                 { sayit($server, $chan, "karma for ${name}: 🐫 "); return; }
-      if ($name =~ /^(spock|nimoy|llap)$/i)   { sayit($server, $chan, "karma for ${name}: 🖖" ); return; }
-
-      #FIXME use server tag as a hash ref, so we'd have one table for server.
-      $name .= $server->{tag};
       signal_emit("karma check", $server, $chan, $name) if is_loaded('karma');
       return;
     }
+    #}}}
     #{{{ !setkarma
     if ($cmd eq 'setkarma' and is_sQuEE($mask)) {
       my ($thingy, $newkarma) = $text =~ /^!setkarma\s+(.+)=(.*)$/;
       signal_emit(
-                    "karma set", 
-                    $server, $chan, 
-                    $thingy.$server->{tag}, 
-                    $newkarma
-                 ) if (is_loaded('karma') and $thingy and $newkarma);
+        "karma set", 
+        $server, $chan, 
+        $thingy,
+        $newkarma
+      ) if (is_loaded('karma') and $thingy and $newkarma);
       return;
     }#}}}
     #{{{ !rank 
@@ -269,7 +264,7 @@ sub incoming_public {
       signal_emit("karma rank", $server, $chan) if is_loaded('karma');
     }
     #}}}
-    #{{{ !flipkarma
+    ##{{{ !flipkarma
     if ($cmd eq 'flipkarma' && is_master($mask)) {
       signal_emit('karma flip', $server, $chan) if is_loaded('karma');
     }#}}}
@@ -534,8 +529,7 @@ sub incoming_public {
       signal_emit('birras get', $server, $chan) if is_loaded('adminbirras');
     }
     ##}}}
-    #{{{ 
-    # !translate and the novelty method to match commands.
+    #{{{ !translate and the novelty method to match commands.
     if ('translate' =~ /^${cmd}/) {
       if ($text eq '!' . $cmd) {
         sayit($server, $chan, 'I can translate texts with '
@@ -569,15 +563,13 @@ sub incoming_public {
     }
     #}}}
     ##{{{ !interpreter 
-    if ($cmd eq 'interpreter' and is_sQuEE($mask)) {
-
-
-    }
+    #if ($cmd eq 'interpreter' and is_sQuEE($mask)) {
+    #}
     ##}}}
   } #cmd check ends here. begin general text match
 
 
-#############################################################################
+################################################################################
   #
   #{{{ GENERAL URL MATCH
   if ($text =~ m{(https?://[^ ]+)}) {
@@ -646,18 +638,20 @@ sub incoming_public {
     #fancy anti-karmabot mechanism.
     return if (time - $karma_lasttime < $karma_antiflood_time);
     
-    #karmas are per server. FIX THIS WITH A HASH
-    my $thingy = $1 . $server->{tag} if $1;     
+    #karma scope is per channel
+    my $thingy = $1;
     my $op = $2 if $2;
+    my $channel = $chan . '_' . $server->{tag};
 
-    signal_emit('karma bitch', $thingy, $op) if ( is_loaded('karma') 
-                                                  and defined($thingy) 
-                                                  and defined($op)
-                                                );
+    signal_emit('karma bitch', $thingy, $op, $channel)
+      if (is_loaded('karma') and $thingy and $op);
+
     $karma_lasttime = time;
   } 
 } #incoming puiblic message ends here #}}}
-#{{{ signal and stuff
+
+################################################################################
+#{{{ helper subroutines
 sub is_master {
   my $mask = shift;
   my @masters = split ',', settings_get_str('bot_masters');
@@ -702,7 +696,7 @@ signal_register( { 'fetch tweet'      => [ 'iobject','string','string'          
 signal_register( { 'last tweet'       => [ 'iobject','string','string'          ]}); #server,chan,user
 signal_register( { 'karma check'      => [ 'iobject','string','string'          ]}); #server,chan,name
 signal_register( { 'karma set'        => [ 'iobject','string','string','string' ]}); #server,chan,key,val
-signal_register( { 'karma bitch'      => [           'string','string'          ]}); #name,op
+signal_register( { 'karma bitch'      => [ 'string' ,'string','string'          ]}); #thingy,op,list
 signal_register( { 'karma rank'       => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'karma flip'       => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'post sysarmy'     => [ 'iobject','string','string'          ]}); #server,chan,text

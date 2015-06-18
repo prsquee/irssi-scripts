@@ -4,68 +4,104 @@ use warnings;
 use strict;
 use Data::Dumper;
 use Storable qw (store retrieve);
+use utf8;
 
-#TODO make karma server independent.
+signal_add('karma check', 'show_karma');
+signal_add('karma bitch', 'calc_karma');
+signal_add('karma set',   'set_karma');
+signal_add('karma rank',  'show_rank');
+signal_add('karma flip',  'flip_karma');
+
 my $karma_storable = get_irssi_dir() . "/scripts/datafiles/karma.storable";
+
 our $karma = eval { retrieve($karma_storable) } || [];
 
+my %novelty = (
+  'sQuEE' => '🍺',
+  'osx' => '⌘',
+  'OSX' => '⌘',
+  'mac' => '⌘',
+  'macintosh' => '⌘',
+  'apple' => '',
+  'iphone' => '📱',
+  'perl' => '🐫 ',
+  'spock' => '🖖',
+);
 
-#flip
+#{{{ (╯°□°）╯︵ ɐɯɹɐʞ
 sub flip_karma {
   my ($server, $chan) = @_;
-  foreach my $thing (keys %$karma) {
-    if ($karma->{$thing} =~ /^-\d+$/) {
-      $karma->{$thing} = abs($karma->{$thing});
+  my $channel = $chan . '_' . $server->{tag};
+  my $this_channel = $karma->{$channel};
+  
+  foreach my $thingy (keys %$this_channel) {
+    if ($this_channel->{$thingy} =~ /^-\d+$/) {
+      $this_channel->{$thingy} = abs($this_channel->{$thingy});
     }
-    elsif ($karma->{$thing} =~ /^\d+$/) {
-      $karma->{$thing} = '-' . $karma->{$thing};
+    elsif ($this_channel->{$thingy} =~ /^\d+$/) {
+      $this_channel->{$thingy} = '-' . $this_channel->{$thingy};
     }
   }
   store $karma, $karma_storable;
   show_rank($server, $chan);
 }
-#{{{ calc
+#}}}
+#{{{ take one and give one
 sub calc_karma {
-  my ($name,$op) = @_;
-  $karma->{$name} = 0 if (not exists($karma->{$name}) or
-                          not defined($karma->{$name}));
-  my $evalme = '$karma->{$name}' . $op;
+  my ($thingy, $op, $channel) = @_;
+
+  $karma->{$channel}->{$thingy} = 0
+    if (not exists($karma->{$channel}->{$thingy})
+        or not defined($karma->{$channel}->{$thingy})
+  );
+  my $evalme = '$karma->{$channel}->{$thingy}' . $op;
   eval "$evalme";
   store $karma, $karma_storable;
 }
+#}}}
+#{{{ show karma when asked
 sub show_karma {
-  my ($server, $chan, $name) = @_;
-  if (not exists($karma->{$name})   or
-      not defined($karma->{$name})  or
-      $karma->{$name} == 0) {
-    $name =~ s/$server->{tag}$//;
-    sayit($server,$chan,"$name has neutral karma");
+  my ($server, $chan, $thingy) = @_;
+  my $channel = $chan . '_' . $server->{tag};
+
+  if (exists($novelty{$thingy})) {
+    sayit($server, $chan, 'karma for ' . $thingy . ': ' . $novelty{$thingy});
   }
-  elsif (defined($karma->{$name})) {
-    my $k = $karma->{$name};
-    $name =~ s/$server->{tag}$//;
-    sayit($server,$chan,"karma for $name: $k");
+  elsif (not exists($karma->{$channel}->{$thingy})  or
+      not defined($karma->{$channel}->{$thingy}) or
+      $karma->{$channel}->{$thingy} == 0) {
+    sayit($server, $chan, $thingy . ' has neutral karma.');
+  }
+  elsif (defined($karma->{$channel}->{$thingy})) {
+    sayit(
+      $server,
+      $chan, 
+      'karma for ' . $thingy . ': ' . $karma->{$channel}->{$thingy}
+    );
   }
 }#}}}
 
-#  set karma
+#{{{ set karma
 sub set_karma {
-  my ($server,$chan,$key,$val) = @_;
-  $karma->{$key} = $val;
+  my ($server, $chan, $thingy, $new_karma) = @_;
+  my $channel = $chan . '_' . $server->{tag};
+  $karma->{$channel}->{$thingy} = $new_karma;
   store $karma, $karma_storable;
-  show_karma($server,$chan,$key) if (not $@);
+  show_karma($server, $chan, $thingy) if (not $@);
 }
-
+#}}}
 # show rank with !rank
 sub show_rank {
-  my ($server,$chan) = @_;
+  my ($server, $chan) = @_;
+  my $this_channel = $chan . '_' . $server->{tag};
+  my $channel_karma_ref = $karma->{$this_channel};
   my %sortme = ();
 
   #keys in karma are namesfnode.
-  foreach (keys %$karma) {
+  foreach (keys %$channel_karma_ref) {
     #now make sure everything in sortme is numerical.
-    delete $karma->{$_} unless (defined($karma->{$_}));
-    $sortme{$_} = $karma->{$_} if ($karma->{$_} =~ /^-?\d+$/)
+    delete $channel_karma_ref->{$_} unless (defined($channel_karma_ref->{$_}));
+    $sortme{$_} = $channel_karma_ref->{$_} if ($channel_karma_ref->{$_} =~ /^-?\d+$/)
   }
   #use the spaceship magic, lowest karma will be the first element.
   my @sorted = sort { $sortme{$a} <=> $sortme{$b} } keys %sortme;
@@ -75,20 +111,20 @@ sub show_rank {
 
   for my $i (0..8) {
     $lowest .= '['
-            .   scalar($sorted[$i] =~ s/$server->{tag}$//r)
+            .   $sorted[$i]
             .   ': '
             .   "\x02"
-            .   $karma->{$sorted[$i]}
+            .   $channel_karma_ref->{$sorted[$i]}
             .   "\x02"
             .   '] ';
 
     my $j = '-' . ++$i;
 
     $highest .= '['
-             .   scalar($sorted[$j] =~ s/$server->{tag}$//r)
+             .   $sorted[$j]
              .   ': '
              .   "\x02"
-             .   $karma->{$sorted[$j]}
+             .   $channel_karma_ref->{$sorted[$j]}
              .   "\x02"
              .   '] ';
   }
@@ -98,9 +134,4 @@ sub show_rank {
 
 #stuff
 sub sayit { my $s = shift; $s->command("MSG @_"); }
-signal_add('karma check', 'show_karma');
-signal_add('karma bitch', 'calc_karma');
-signal_add('karma set',   'set_karma');
-signal_add('karma rank',  'show_rank');
-signal_add('karma flip',  'flip_karma');
 
