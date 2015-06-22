@@ -39,7 +39,7 @@ sub do_imdb {
 
   my $got = $ua->get($url);
   unless ($got->is_success) {
-    print (CRAP "imdb error code: $got->code - $got->message");
+    print (CRAP 'imdb error code: ' . $got->code . ' - ' . $got->message);
     return;
   }
 
