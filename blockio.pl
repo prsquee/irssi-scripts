@@ -34,15 +34,13 @@ sub check_coins {
 
 sub send_out {
   my ($server, $chan, $prices_ref) = @_;
-  my $prices_output = undef;
+  my @formatted_prices = ();
 
   foreach my $price (@{$prices_ref}) {
-    $prices_output .= '[' . $price->{'exchange'} . '] '
-                    . '$' . sprintf("%.2f", $price->{'price'})
-                    . ' :: ';
+    push @formatted_prices, '[' . $price->{'exchange'} . ']'
+                                . sprintf('$%.2f', $price->{'price'});
   }
-  $prices_output =~ s/ :: $//;
-  sayit($server, $chan, $prices_output);
+  sayit($server, $chan, join(' :: ', @formatted_prices));
 }
 sub fetch_prices_for {
   my $coin        = shift;
