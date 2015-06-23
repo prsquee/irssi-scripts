@@ -54,7 +54,8 @@ sub show_tweet {
         #altho keyboard tracking shouldbe another hash.
         my $eko_keyword_re = join('|', @eko_hashtags);
         if ($twt_content =~ /$eko_keyword_re/) {
-          sayit($server, '#ekoparty', $twt_content);
+          sayit($server, '#ekoparty', $twt_content) 
+            unless defined($tweet->{retweeted_status});
         }
       }
     }
