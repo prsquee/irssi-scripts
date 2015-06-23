@@ -15,6 +15,10 @@ my %channel_for = (
    '15521218'   => '#ekoparty',   #@ekoparty
 );
 
+#track this
+
+my @eko_hashtags =  ( '#ekoparty', '#eko11' );
+
 my $twt_content = undef;
 my $server = server_find_chatnet("fnode");
 our $sysarmyStreamer = undef;
@@ -40,11 +44,18 @@ sub show_tweet {
     #check who is the user and send it to the proper channel.
     if (defined($twt_content)) {
       my $id = $tweet->{user}{id_str};
-
       $twt_content =~ s/\n|\r/ /g;
-
       if (exists $channel_for{$id}) {
         sayit($server, $channel_for{$id}, $twt_content);
+      }
+      else {
+        #the uesr id is not found in the channel hash, so this must be from a 
+        #keyword we are tracking
+        #altho keyboard tracking shouldbe another hash.
+        my $eko_keyword_re = join('|', @eko_hashtags);
+        if ($twt_content =~ /$eko_keyword_re/) {
+          sayit($server, '#ekoparty', $twt_content);
+        }
       }
     }
   }
@@ -65,13 +76,12 @@ sub start_stream {
     consumer_secret => settings_get_str('twitter_secret'),
     token           => settings_get_str('twitter_access_token'),
     token_secret    => settings_get_str('twitter_access_token_secret'),
-    method          => "filter",
+    method          => 'filter',
     follow          => join(',', keys %channel_for),
-    on_connect      => sub { print (CRAP "connected to twitter stream.");},
+    track           => join(',', @eko_hashtags),
+    on_connect      => sub { print (CRAP 'connected to twitter stream.');},
     on_tweet        => \&show_tweet,
-#    on_eof          => sub { print (CRAP "EOF: $_[0]"); },
     on_eof          => \&restart_stream,
-#    on_error        => sub { print (CRAP "error: $_[0]"); },
     on_error        => \&restart_stream,
     #on_keepalive   => sub { print (CRAP 'still alive');},
     on_delete       => sub { print (CRAP 'a tweet was deleted. so sad');},
