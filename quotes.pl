@@ -1,13 +1,62 @@
 #quotes.pl
 #TODO refactor this
-use Irssi qw( signal_add print signal_emit settings_add_str
-              settings_get_str get_irssi_dir
-            );
+use Irssi qw(
+  signal_add
+  print
+  signal_emit
+  settings_add_str
+  settings_get_str get_irssi_dir
+);
+
 use strict;
 use warnings;
 use Data::Dump; #use this to store/retrieve quotes
 use File::Slurp qw( read_file write_file append_file);
 
+#{{{ signaal and stuff
+signal_add("quotes", "do_quotes");
+signal_add("random quotes", "random_quotes");
+settings_add_str("quotes", "qfile", '');
+#}}}
+
+
+sub filename_of {
+  my ($server_tag, $chan) = @_;
+  $chan =~ s/#/_/g;
+  return get_irssi_dir() . '/scripts/datafiles/' . $server_tag . $chan . '.txt';
+}
+
+#{{{ qadd
+sub quotes_add {
+  my $add_this = shift;
+  $add_this = strip_all($add_this);
+  my $qfile_path = filename_of(@_);
+  
+  eval { append_file ($qfile_path, "$add_this\n") };
+
+  print (CRAP "error adding quotes: $@") if $@;
+
+  #why cant i ternary here? sadface
+  unless ($@) {
+    return 'ok';
+  }
+  else {
+    return undef;
+  }
+}
+#}}}
+#
+sub random_quotes {
+  my ($server, $chan) = @_;
+  my $qfile_path = filename_of($server->{tag}, $chan);
+
+    my $buf = eval { read_file ($qfile_path, array_ref => 1) };
+    if ($buf) {
+      sayit($server ,$chan ,'[random] ' . $$buf[rand scalar @$buf]);
+    } else {
+      sayit($server, $chan, 'no quotes from this channel.');
+    }
+}
 sub do_quotes { #{{{
   my ($server, $chan, $text) = @_;
   my $qfile = get_irssi_dir()
@@ -15,30 +64,7 @@ sub do_quotes { #{{{
               . $chan . ".txt";
   $qfile =~ s/#/_/g;
 
-  #{{{ add
-  if ( $text =~ /^!qadd\s+(.*)$/ ) {
-    my $addme = strip_all($1) if ($1);
-    #print (CRAP $addme);
-    unless ($addme) {
-      sayit($server, $chan, "I only accept funny quotes!");
-      return;
-    }
-    my ($saveme, $tweeturl) = split ('======', $addme);
-    $addme = $saveme if (defined($saveme));
-
-    eval { append_file ($qfile, "$addme\n") };
-    my $out = 'quote added' if (not $@);
-    $out .= " and tweeted at $tweeturl" if (defined($tweeturl));
-    #if ($chan =~ /sysarmy|ssqquuee/) {
-    #  my $tweetme = $addme . "  \n"  . '#sysarmy';
-    #  my $tweeturl = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($tweetme);
-    #  $out .= " and tweeted at $tweeturl" if ($tweeturl);
-    #}
-    sayit($server, $chan, $out);
-  }
-  #}}}
-  #{{{ last
-  if ( $text =~ /^!qlast\s?(\d+)?$/ ) {
+  if ($text =~ /^!qlast\s?(\d+)?$/ ) {
     my $buf = eval { read_file ($qfile, array_ref => 1) };
     if ($buf) {
       my $c = $1 || '1';
@@ -53,16 +79,6 @@ sub do_quotes { #{{{
       return;
     }
   } #}}}
-  #{{{ random
-  if ( $text =~ /^!q(?:uote)?$/) {
-    my $buf = eval { read_file ($qfile, array_ref => 1) };
-    if ($buf) {
-      #sayit($server,$chan,"[random] $single");
-      sayit($server,$chan,"[random] $$buf[rand scalar @$buf]");
-    } else {
-        sayit($server,$chan, "no quotes from $chan");
-    }
-  }#}}}
   #{{{ count total
   if ( $text =~ /^!qtotal\b/ ) {
     my $buf  = eval { read_file ($qfile, array_ref => 1) }; #total is a ref to an array of the slurped file
@@ -144,9 +160,4 @@ sub strip_all {
 
 sub sayit { my $s = shift; $s->command("MSG @_"); }
 
-#}}}
-#{{{ signaal and stuff
-signal_add("quotes", "do_quotes");
-#signal_add("add quotes", "add_quotes");
-settings_add_str("quotes", "qfile", '');
 #}}}

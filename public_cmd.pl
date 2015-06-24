@@ -78,8 +78,7 @@ sub incoming_public {
   return if $server->{tag} !~ /$active_networks/;
 
   #check if someone said a command
-  if ($text =~ /^!(\w+)\b/) {
-    my $cmd = $1;
+  if (my ($cmd) = $text =~ /^!(\w+)\b/) {
     #{{{ halps 
     if ($cmd =~ /^h[ea]lp$/) {
       my $defaultcmd = settings_get_str('halpcommands') . ' ';
@@ -193,34 +192,64 @@ sub incoming_public {
         if defined($user) and is_loaded('twitter');
       return;
     }#}}}
-    #{{{ !quotes and stuff 
-    #FIXME this is ugh-ly. 
-    if ($cmd =~ /^q(?:uote|last|add |del |search )?/) {
-      my $tweetme = $text;
-
-      if ($cmd eq 'qadd' 
-               and $text ne '!qadd' 
-               and $chan =~ /sysarmy|ssqquuee/) {
-
-        $tweetme =~ s/^!qadd\s+//;
-        $tweetme =~ s/@//g;
-
-        #keys are irc $nicknames, values are @twitterhandle
-        foreach my $nick (keys %{$twit_users_ref}) {
-          $tweetme =~ s/\b\Q$nick\E\b/\@$twit_users_ref->{$nick}/g;
-        }
-        #print (CRAP $tweetme);
-        $tweetme .= " \n\n" . '#sysarmy';
-
-        # IM SO UGLY PLS DONT LOOK AT ME.
-        # I NEED to attach the url here because I can't replace the nicks in
-        # sysarmy.pl
-        # we should test cross script %hash sharing.
-        
-        my $tweeted_url 
-          = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($tweetme);
-        $text .= (defined($tweeted_url) ? "======${tweeted_url}" : '');
+    #{{{ [QUOTE] !qadd and tweet a quote
+    if ($cmd eq 'qadd') {
+      my ($quote_this) = $text =~ /^!qadd\s(.*)$/;
+      unless (defined($quote_this)) {
+        sayit(
+          $server, $chan, 
+          'EL_FORMATO IS DEFINED AS: "<@supreme_leader> because I say so. | ' . 
+          '<peasant1> yes m\'Lord. | ' .
+          '<peasant2> it wont happen again, Sire. | ' .
+          '<peasant-n> please forgive us."'
+        );
+        return;
       }
+
+      #got the quote here. now send it to file. get the confirmation back.
+      my $message_out = undef;
+      if (is_loaded('quotes')) {
+        $message_out 
+          = scalar('Irssi::Script::quotes')->can('quotes_add')->(
+              $quote_this,
+              $server->{tag}, 
+              $chan
+              ) ? 'quote added' : 'cannot add quotes right now';
+
+        if ($chan =~ /sysarmy|ssqquuee/) {
+          #gotta tweet this 
+          #first we remove the @ from ops.
+          $quote_this =~ s/\B@//g;
+          
+          #we replace all the nick with @twitternames
+          #keys are irc $nicknames, values are @twitterhandle
+          foreach my $nick (keys %{$twit_users_ref}) {
+            $quote_this =~ s/\b\Q$nick\E\b/\@$twit_users_ref->{$nick}/g;
+          }
+
+          #append some branding.
+          $quote_this .= "\n\n" . '#sysarmy';
+
+          #and off we go.
+          my $tweeted_url 
+            = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($quote_this);
+          
+          $message_out .= $tweeted_url ? ' and tweeted at ' . $tweeted_url : '.';
+        }
+        sayit($server, $chan, $message_out);
+      }
+      else {
+        sayit($server, $chan, 'cannot do quotes right now.');
+        return;
+      }
+    }
+    ##}}}
+    #{{{ !quotes and stuff 
+    if ('quote' =~ /^${cmd}/ and is_loaded('quotes')) {
+      signal_emit('random quotes', $server, $chan);
+      return;
+    }
+    if ($cmd =~ /^q(?:last|del |search )?/) {
       signal_emit('quotes', $server, $chan, $text) if (is_loaded('quotes'));
       return;
     }
@@ -525,7 +554,6 @@ sub incoming_public {
     ##}}}
     #{{{ !birras 
     if ($cmd =~ /^(?:admin)?birras?$/ and $chan =~ /sysarmy(?:-en)?|ssqquuee/) {
-      #my $birras = scalar('Irssi::Script::adminbirras')->can('get_event')->();
       signal_emit('birras get', $server, $chan) if is_loaded('adminbirras');
     }
     ##}}}
@@ -689,6 +717,7 @@ signal_register( { 'karmadecay'       => [ 'iobject','string','string'          
 signal_register( { 'check tubes'      => [ 'iobject','string','string'          ]}); #server,chan,vid
 signal_register( { 'check vimeo'      => [ 'iobject','string','string'          ]}); #server,chan,vid
 signal_register( { 'quotes'           => [ 'iobject','string','string'          ]}); #server,chan,text
+signal_register( { 'random quotes'    => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'add quotes'       => [ 'iobject','string','string'          ]}); #server,chan,text
 signal_register( { 'showme the money' => [ 'iobject','string','string'          ]}); #server,chan,text
 signal_register( { 'teh fuck is who'  => [ 'iobject','string','string'          ]}); #server,chan,who
