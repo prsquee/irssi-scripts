@@ -35,14 +35,7 @@ sub quotes_add {
   eval { append_file ($qfile_path, "$add_this\n") };
 
   print (CRAP "error adding quotes: $@") if $@;
-
-  #why cant i ternary here? sadface
-  unless ($@) {
-    return 'ok';
-  }
-  else {
-    return undef;
-  }
+  return ($@) ? undef : 'ok';
 }
 #}}}
 #
