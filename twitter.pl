@@ -96,8 +96,8 @@ sub moment_ago {
   }
   elsif ($delta > 86400) {
     my $day = int($delta/86400);
-    $ago = $day <= 1  ? 'today'
-         : $day <= 7  ? 'this week'
+    $ago = $day <= 1  ? 'today.'
+         : $day <= 7  ? 'this week.'
          : $day <= 21 ? 'a couple of weeks ago.'
          : $day <= 32 ? 'about a month ago.'
          : undef;
