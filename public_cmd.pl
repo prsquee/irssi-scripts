@@ -193,12 +193,12 @@ sub incoming_public {
       return;
     }#}}}
     #{{{ [QUOTE] !qadd and tweet a quote
-    if ($cmd eq 'qadd') {
+    if ($cmd eq 'qadd' and is_loaded('quotes')) {
       my ($quote_this) = $text =~ /^!qadd\s(.*)$/;
       unless (defined($quote_this)) {
         sayit(
-          $server, $chan, 
-          'EL_FORMATO IS DEFINED AS: "<@supreme_leader> because I say so. | ' . 
+          $server, $chan,
+          'EL_FORMATO IS DEFINED AS: "<@supreme_leader> because I say so. | ' .
           '<peasant1> yes m\'Lord. | ' .
           '<peasant2> it wont happen again, Sire. | ' .
           '<peasant-n> please forgive us."'
@@ -212,15 +212,15 @@ sub incoming_public {
         $message_out 
           = scalar('Irssi::Script::quotes')->can('quotes_add')->(
               $quote_this,
-              $server->{tag}, 
+              $server->{tag},
               $chan
-              ) ? 'quote added' : 'cannot add quotes right now';
+            ) ? 'quote added' : 'cannot add quotes right now';
 
-        if ($chan =~ /sysarmy|ssqquuee/) {
-          #gotta tweet this 
+        if ($chan =~ /sysarmy|ssqquuee/ and is_loaded('sysarmy')) {
+          #gotta tweet this to sysarmIRC
           #first we remove the @ from ops.
           $quote_this =~ s/\B@//g;
-          
+
           #we replace all the nick with @twitternames
           #keys are irc $nicknames, values are @twitterhandle
           foreach my $nick (keys %{$twit_users_ref}) {
@@ -233,7 +233,7 @@ sub incoming_public {
           #and off we go.
           my $tweeted_url 
             = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($quote_this);
-          
+
           $message_out .= $tweeted_url ? ' and tweeted at ' . $tweeted_url : '.';
         }
         sayit($server, $chan, $message_out);
@@ -244,15 +244,38 @@ sub incoming_public {
       }
     }
     ##}}}
-    #{{{ !quotes and stuff 
+    #{{{ [QUOTE] random, lastone, search and delete.
     if ('quote' =~ /^${cmd}/ and is_loaded('quotes')) {
       signal_emit('random quotes', $server, $chan);
       return;
     }
-    if ($cmd =~ /^q(?:last|del |search )?/) {
-      signal_emit('quotes', $server, $chan, $text) if (is_loaded('quotes'));
+    if ('qlast' =~ /^${cmd}/ and is_loaded('quotes')) {
+      my $lastquote = 1;
+      if ($text ne "!${cmd}") {
+        ($lastquote) = $text =~ /^!${cmd}\s+(\d+)?$/ ;
+      }
+      signal_emit('last quote', $server, $chan, $lastquote);
       return;
     }
+    if ('qdelete' =~ /^${cmd}/ and is_loaded('quotes')) {
+      my ($delete_this) = $text =~ /^!${cmd}\s+(.*)/;
+      if (defined($delete_this)) {
+        signal_emit('delete quote', $server, $chan, $delete_this);
+      }
+      else {
+        sayit($server, $chan, 'I can delete one quote at a time. ' .
+                              'Just a partial match is enough.'
+        );
+      }
+    }
+    if ('qsearch' =~ /^${cmd}/ and is_loaded('quotes')) {
+      my ($find_this) = $text =~ /^!${cmd}\s+(.*)/;
+      signal_emit('find quote', $server, $chan, $find_this) if ($find_this);
+    }
+    #if ($cmd =~ /^q(?:search )?/) {
+    #  signal_emit('quotes', $server, $chan, $text) if (is_loaded('quotes'));
+    #  return;
+    #}
     #}}}
     #{{{ !imgur reimgur 
     if ($cmd eq 'imgur') {
@@ -591,7 +614,7 @@ sub incoming_public {
     }
     #}}}
     ##{{{ !interpreter 
-    #if ($cmd eq 'interpreter' and is_sQuEE($mask)) {
+    #if ($cmd eq 'interpreter' an.nnd is_sQuEE($mask)) {
     #}
     ##}}}
   } #cmd check ends here. begin general text match
@@ -693,7 +716,7 @@ sub is_master {
   }
   return $is_master;
 }
-sub is_sQuEE {
+sn.nub is_sQuEE {
   #my $mask = shift;
   return (shift(@_) eq '~sQuEE@unaffiliated/sq/x-3560400') ? 'true' : undef; 
 }
@@ -718,7 +741,10 @@ signal_register( { 'check tubes'      => [ 'iobject','string','string'          
 signal_register( { 'check vimeo'      => [ 'iobject','string','string'          ]}); #server,chan,vid
 signal_register( { 'quotes'           => [ 'iobject','string','string'          ]}); #server,chan,text
 signal_register( { 'random quotes'    => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'last quote'       => [ 'iobject','string','string'          ]}); #server,chan,lastquote
 signal_register( { 'add quotes'       => [ 'iobject','string','string'          ]}); #server,chan,text
+signal_register( { 'delete quote'     => [ 'iobject','string','string'          ]}); #server,chan,delete_me
+signal_register( { 'find quote'       => [ 'iobject','string','string'          ]}); #server,chan,find_me
 signal_register( { 'showme the money' => [ 'iobject','string','string'          ]}); #server,chan,text
 signal_register( { 'teh fuck is who'  => [ 'iobject','string','string'          ]}); #server,chan,who
 signal_register( { 'fetch tweet'      => [ 'iobject','string','string'          ]}); #server,chan,url

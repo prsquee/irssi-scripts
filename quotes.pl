@@ -14,9 +14,13 @@ use Data::Dump; #use this to store/retrieve quotes
 use File::Slurp qw( read_file write_file append_file);
 
 #{{{ signaal and stuff
-signal_add("quotes", "do_quotes");
-signal_add("random quotes", "random_quotes");
-settings_add_str("quotes", "qfile", '');
+signal_add('quotes', 'do_quotes');
+signal_add('random quotes', 'random_quotes');
+signal_add('last quote', 'fetch_last');
+signal_add('delete quote', 'delete_quote');
+signal_add('find quote', 'find_it');
+
+settings_add_str('quotes', 'qfile', '');
 #}}}
 
 
@@ -38,18 +42,116 @@ sub quotes_add {
   return ($@) ? undef : 'ok';
 }
 #}}}
-#
+#{{{ random one 
 sub random_quotes {
   my ($server, $chan) = @_;
   my $qfile_path = filename_of($server->{tag}, $chan);
+  my $buf = eval { read_file ($qfile_path, array_ref => 1) };
 
-    my $buf = eval { read_file ($qfile_path, array_ref => 1) };
-    if ($buf) {
-      sayit($server ,$chan ,'[random] ' . $$buf[rand scalar @$buf]);
-    } else {
-      sayit($server, $chan, 'no quotes from this channel.');
+  my $found = ($buf) ? '[random] ' . $$buf[rand scalar @$buf]
+                     : 'no quotes from this channel'
+                     ;
+
+  sayit($server, $chan, $found);
+}#}}}
+#{{{ fetch last #
+sub fetch_last {
+  my ($server, $chan, $quote_pos) = @_;
+  my $qfile_path = filename_of($server->{tag}, $chan);
+
+  my $buf = eval { read_file ($qfile_path, array_ref => 1) };
+  if ($buf) {
+    if ($quote_pos > scalar(@$buf)) {
+      sayit($server, $chan, 'STAHP! too much D:');
     }
+    else {
+      sayit($server, $chan, "[quote] $$buf[-$quote_pos]");
+    }
+    return;
+  } 
+  else {
+    sayit($server, $chan, 'no quotes from this channel.');
+  }
 }
+#}}}
+#{{{ delete a quote 
+sub delete_quote {
+  my ($server, $chan, $deleteme) = @_;
+  my $qfile_path = filename_of($server->{tag}, $chan);
+
+  $deleteme = strip_all($deleteme);
+  $deleteme =~ s/\./\\W/g;
+  use re 'eval';
+  eval { $deleteme = qr/($deleteme)/; };
+
+  if ($@) {
+    sayit($server, $chan, 'nope, your regex is bad and you should feel bad.');
+    return;
+  }
+
+  my $buf = eval { read_file ($qfile_path, array_ref => 1) };
+  return if $@;
+
+  my @found_quotes = grep { /($deleteme)/i } @$buf;
+  if (@found_quotes) {
+    if (scalar(@found_quotes) == 1) {
+      #we found exactly 1 match, this what we want to delete.
+      @$buf = grep { ! /$deleteme/i } @$buf;
+      #write it back atomically
+      write_file ($qfile_path, {atomic => 1}, @$buf);
+      sayit($server, $chan, "deleted quote: \"$found_quotes[0]\"");
+    } 
+    else {
+      sayit($server, $chan, 'stahp! that\'s more than one quote!');
+      return;
+    }
+  } 
+  else { 
+    sayit($server,$chan,'quote not found!');
+    return;
+  }
+}
+#}}}
+#{{{ find a quote  MAKE THIS PRETTY
+sub find_it {
+  my ($server, $chan, $find_me) = @_;
+  my $qfile_path = filename_of($server->{tag}, $chan);
+  $find_me = strip_all($find_me);
+
+  my @words2find = split(/\s+/, $find_me);
+  my $found  = eval { read_file ($qfile_path, array_ref => 1) };
+  if ($found) {
+    foreach (@words2find) {
+      my $singleWord = eval { qr/$_/i };
+      eval { @$found = grep { /$singleWord/ } @$found; } if ($singleWord and not $@);
+    }
+
+    if (scalar(@$found) == 0) {
+      sayit($server, $chan, 'found nothing.');
+    } 
+    else {
+      if (scalar(@$found) >= 1 and scalar(@$found) <= 4) {
+        sayit($server, $chan, "[found] $_") for (@$found);
+      } 
+      else {
+        my @randq = [];
+        for (0..3) {
+          my $n = rand scalar @$found;
+          $randq[$_] = $found->[$n];
+          splice(@$found, $n, 1);
+        }
+        my $totalFound = scalar(@$found) + scalar(@randq);
+        sayit($server, $chan, "found $totalFound quotes, here are 4 random quotes");
+        sayit($server,$chan,"[found] $_") foreach (@randq);
+      }
+    }
+  } 
+  else { 
+    sayit($server,$chan, "no quotes for $chan");
+    return; 
+  }
+}
+#}}}
 sub do_quotes { #{{{
   my ($server, $chan, $text) = @_;
   my $qfile = get_irssi_dir()
@@ -57,21 +159,6 @@ sub do_quotes { #{{{
               . $chan . ".txt";
   $qfile =~ s/#/_/g;
 
-  if ($text =~ /^!qlast\s?(\d+)?$/ ) {
-    my $buf = eval { read_file ($qfile, array_ref => 1) };
-    if ($buf) {
-      my $c = $1 || '1';
-      if ($c > scalar(@$buf)) {
-        sayit($server,$chan,"STAHP! too much D:");
-        return;
-      }
-      sayit($server, $chan, "[quote] $$buf[-${c}]");
-      return;
-    } else {
-      sayit($server,$chan, "looks like no quotes for $chan");
-      return;
-    }
-  } #}}}
   #{{{ count total
   if ( $text =~ /^!qtotal\b/ ) {
     my $buf  = eval { read_file ($qfile, array_ref => 1) }; #total is a ref to an array of the slurped file
@@ -80,64 +167,9 @@ sub do_quotes { #{{{
       sayit($server,$chan,"total quotes: $total");
       return;
     } else {
-      sayit($server,$chan, "I dont see any quotes for $chan");
+      sayit($server, $chan, "I dont see any quotes for $chan");
       return;
     }
-  }#}}}
-  #{{{ #delete
-  if ($text =~ /^!qdel(.*)/) {
-    my $deleteme = strip_all($1) if ($1);
-    if ($deleteme) {
-      #$deleteme =~ s/\./\\W/g;
-      $deleteme = qr/$deleteme/i;
-      my @toBeDeleted;
-      my $buf = eval { read_file ($qfile, array_ref => 1) };
-      eval { @toBeDeleted = grep { /($deleteme)/ } @$buf; } if ($buf);
-      if (@toBeDeleted) {
-        if ( scalar(@toBeDeleted) == 1) {
-          #if we found exactly 1 match
-          @$buf = grep { ! /($deleteme)/ } @$buf;
-          #write it atomically
-          write_file ($qfile, {atomic => 1}, @$buf);
-          sayit($server, $chan, "deleted quote: \"$_\"") for (@toBeDeleted);
-        } else { sayit($server,$chan,"stahp! that's more than one quote!"); return; }
-      } else { sayit($server,$chan,"quote not found!");                     return; }
-    } else { sayit($server,$chan,"delete a quote with a few words.");       return; }
-  }#}}}
-  #{{{ search
-  if ($text =~ /^!qs(?:earch)?(.*)/) {
-    my $searchme = strip_all($1) if ($1);
-    if ($searchme) {
-      my @words2find = split(/\s+/, $searchme);
-      my @found = eval { read_file $qfile };
-      if (@found) {
-        foreach (@words2find) {
-          my $singleWord = eval { qr/$_/i } ;
-          #$singleWord =~ s%/%%;
-          eval { @found = grep { /$singleWord/ } @found; } if ($singleWord and not $@);
-        }
-
-        if (scalar(@found) == 0) {
-          sayit($server,$chan,"found nothin'");
-        } else {
-            if (scalar(@found) >= 1 and scalar(@found) <= 4) {
-              #si encontro menos de 4
-              sayit($server,$chan, "[found] $_") for (@found);
-            } else {
-                #si encontro mas de 4, tirar 4 random quotes de los encontrados
-                my @randq = [];
-                for (0..3) {
-                  my $n = rand scalar @found;
-                  $randq[$_] = $found[$n];
-                  splice(@found, $n, 1);
-                }
-                my $totalFound = scalar(@found) + scalar(@randq);
-                sayit($server,$chan,"found $totalFound quotes, here are 4 random quotes");
-                sayit($server,$chan,"[found] $_") foreach (@randq);
-              }
-        }
-      } else { sayit($server,$chan, "no quotes for $chan");   return; }
-    } else { sayit($server,$chan,"I can find you a quote.");  return;}
   }#}}}
 } #do_quotes ends here
 #}}}
@@ -147,7 +179,7 @@ sub strip_all {
 	$text =~ s/\x03\d{0,2}(,\d{0,2})?//g; #mirc colors
 	$text =~ s/\x1b\[\d+(?:,\d+)?m//g;    #ansi colors
 	$text =~ s/\x02|\x16|\x1F|\x0F//g;    #bold, inverse, underline and clear
-	$text =~ s/^\s+//g;				            #espacios vacios al ppio
+	$text =~ s/^\s+//g;                   #spaces.
 	return $text;
 }
 
