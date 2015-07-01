@@ -26,13 +26,13 @@ sub search_and_replace {
   if ($text =~ $regex) {
     my $search = undef;
     my $replace = $3;
+    my $another_user = $4 if $4;
     use re 'eval';
     eval { $search = qr/$2/; };
     if ($@) {
       sayit($server, $chan, 'your regex is bad and you should feel bad.');
       return;
     }
-    my $another_user = $4 if $4;
     my $this_user = ($another_user) ? $another_user . $mask : $nick . $mask;
     my $replaced = $lastline_of{$this_user};
     return if (!$replaced);
