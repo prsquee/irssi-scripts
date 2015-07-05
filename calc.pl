@@ -19,8 +19,8 @@ sub do_calculate {
 
   my $answer = eval($math);
   #print (CRAP "$answer and $math");
-  $answer = $error if (not $answer or $answer eq 'inf');
- sayit($server, $chan, $answer);
+  $answer = $error if (not defined($answer) or $answer eq 'inf');
+  sayit($server, $chan, $answer);
 }
 sub sayit { my $s = shift; $s->command("MSG @_"); }
 signal_add("calculate","do_calculate");
