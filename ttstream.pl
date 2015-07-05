@@ -65,9 +65,9 @@ sub show_tweet {
 #{{{ restart stream
 sub restart_stream {
   $sysarmyStreamer = undef;
-  print (CRAP "sysarmy stream stopped. sleeping for a while");
-  sleep 35;
-  start_stream();
+  timeout_add_once(45000, 'start_stream', undef);
+  print (CRAP "twitter stream stopped. wait for 45 secs to reconnect");
+  #do a incremental sleep here.
 }
 #}}}
 
