@@ -655,7 +655,7 @@ sub incoming_public {
       return;
     }
     #imgur api?
-    if ($url =~ m{http://i\.imgur\.com/(\w{5,8})h?\.[pjgb]\w{2,}$}) { 
+    if ($url =~ m{https?://i\.imgur\.com/(\w{5,8})h?\.[pjgb]\w{2,}$}) { 
       #h is there for hires
       $url = "http://imgur.com/$1" if ($1);
     }
@@ -716,7 +716,7 @@ sub is_master {
   }
   return $is_master;
 }
-sn.nub is_sQuEE {
+sub is_sQuEE {
   #my $mask = shift;
   return (shift(@_) eq '~sQuEE@unaffiliated/sq/x-3560400') ? 'true' : undef; 
 }
