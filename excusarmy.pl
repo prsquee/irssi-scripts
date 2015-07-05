@@ -15,25 +15,27 @@ my $api_url    = 'https://api.parse.com/1/classes/bohf_regrets';
 my $appid      = settings_get_str('excusarmy_appid');
 my $rest_key   = settings_get_str('excusarmy_restkey');
 my $last_fetch = 0;
-my $cached_for = 86400; #172800; #2 days
+my $cached_for = 43200; #halfday;
 
 my $json = JSON->new();
 my $ua   = LWP::UserAgent->new( timeout => '15' );
 
-my %headers = ( 
-                'X-Parse-Application-Id' => $appid,
-                'X-Parse-REST-API-Key'   => $rest_key,
-                'content-type'           => 'application/json',
-              );
+my %headers = (
+  'X-Parse-Application-Id' => $appid,
+  'X-Parse-REST-API-Key'   => $rest_key,
+  'content-type'           => 'application/json',
+);
 
-my $get = HTTP::Request->new( 'GET' => $api_url,
-                               HTTP::Headers->new(%headers),
-                            );
-                                
-my $post = HTTP::Request->new( 'POST' => $api_url,
-                               HTTP::Headers->new(%headers),
-                             );
-                                
+my $get = HTTP::Request->new( 
+  'GET' => $api_url,
+  HTTP::Headers->new(%headers),
+);
+
+my $post = HTTP::Request->new( 
+  'POST' => $api_url,
+  HTTP::Headers->new(%headers),
+);
+
 #here be regrets
 my @regrets = ();
 
@@ -58,7 +60,7 @@ sub fetch_and_cache {
 
 sub get_regret {
   my ($server, $chan) = @_;
-  fetch_and_cache if time - $last_fetch > $cached_for; 
+  fetch_and_cache if time - $last_fetch > $cached_for;
   #return $regrets[rand scalar @regrets];
   sayit($server, $chan, '[excusarmy] ' . $regrets[int(rand(@regrets))]);
 }
