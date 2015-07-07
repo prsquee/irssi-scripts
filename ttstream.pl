@@ -1,5 +1,14 @@
-#stream @sysarmy to #sysarmy
-use Irssi qw(server_find_chatnet signal_emit signal_add print settings_add_str settings_get_str settings_set_str ) ;
+#stream twitter to channels
+use Irssi qw(
+  server_find_chatnet
+  signal_emit
+  signal_add
+  print
+  settings_add_str
+  settings_get_str
+  settings_set_str
+  timeout_add_once
+);
 use strict;
 use warnings;
 use AnyEvent::Twitter::Stream;
