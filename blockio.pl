@@ -37,7 +37,7 @@ sub send_out {
   my @formatted_prices = ();
 
   foreach my $price (@{$prices_ref}) {
-    push @formatted_prices, '[' . $price->{'exchange'} . ']'
+    push @formatted_prices, '[' . $price->{'exchange'} . '] '
                                 . sprintf('$%.2f', $price->{'price'});
   }
   sayit($server, $chan, join(' :: ', @formatted_prices));
