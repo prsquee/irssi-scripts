@@ -25,46 +25,44 @@ settings_add_str('bot config', 'bot_masters',     '');
 settings_add_str('bot config', 'flip_table_status', '0');
 
 #nick 2 twitter list
-our $twit_users_file 
+our $twit_users_file
   = get_irssi_dir() . '/scripts/datafiles/twitternames.storable';
 
 our $twit_users_ref = eval { retrieve($twit_users_file) } || [];
 #print (CRAP Dumper($twit_users_ref));
 
 # static and complex regexes
-my $youtubex = qr{(?x-sm:
-    (?:http://)?(?:www\.)?      #optional 
+my $youtubex
+  = qr{(?x-sm:
+    https?://(?:www\.)?         #optional
     youtu(?:\.be|be\.com)       #matches the short youtube link
     /                           #the 1st slash
     (?:watch\?\S*v=)?           #this wont be here if it's short uri
-    (?:user/.*/)?               #username can be 
+    (?:user/.*/)?               #username can be
     ([^&]{11})                  #the vid id
 )};
 
-my $karma_thingy = qr{[\w\[\]`|\\-^`]+};
-my $karmagex = qr{(?x-sm:
-                    #([\w\[\]{}`|\\-^]+) #thingy can contain \w with ^{}[]`|\-^
-                    ($karma_thingy) 
-                    ( ([-+])\3 )      #match a -/+ then match the same symbol
-                                      #save the double symbol into \2
-                                      #\1 is the 1st word
-                                      #\2 is the matched ++ or --
-                                      #\3 is the single + or -
-                 )};
+my $karma_thingy = qr{[\w\[\]`|\\-^]+}; #thingy can be \w with {}[]`|\-^
+my $karmagex
+  = qr{(?x-sm:
+      ($karma_thingy)
+      ( ([-+])\3 )      #match a single - or + then match the same symbol
+                        #save the matched ++ or -- into \2
+                        #\1 is the thingy we matched
+                        #\2 is the matched ++ or --
+                        #\3 is the single + or -
+)};
 
 my $karma_antiflood_time = 2;
 my $karma_lasttime = 0;
 my $ignore_karma_from = {};
 
-##multiline karma check
-#my $karmagex = qr{([a-zA-Z0-9_\[\]`|\\-]+(?:--|\+\+))}; 
-#
 #novelty stuff
-my %faces = ( 
+my %faces = (
   'shrug' => '‾\_(ツ)_/‾',
-  'wot'   => 'ಠ_ಠ',
-  'dunno' => '‾\(°_o)/‾',
-  'caca'  => '💩',
+  'wot'   => 'ಠ_ಠ'       ,
+  'dunno' => '‾\(°_o)/‾' ,
+  'caca'  => '💩'         ,
 );
 
 
@@ -456,18 +454,6 @@ sub incoming_public {
     if ($cmd =~ m{^li?te?c(?:oin)?s?}) {
       signal_emit('silver digger', $server, $chan, 'ltc') if is_loaded('blockio'); 
     }#}}}
-    #{{{ !tpb the pirate bay FIXME GET MY OWN API SERVER
-    #if ($cmd eq 'tpb') {
-    #  my ($booty) = $text =~ /!tpb\s+(.*)$/;
-    #  if ($booty and is_loaded('tpb')) { 
-    #    signal_emit('arrr', $server, $chan, $booty);
-    #  } 
-    #  else {
-    #    sayit($server, $chan, 
-    #          qq(Ahoy, Matey! I've sailed the seven proxies!)
-    #         );
-    #  }
-    #}#}}}
     #{{{ !clima 
     if ($cmd eq 'clima') {
       my ($city) = $text =~ /^!clima\s+(.*)$/;
@@ -492,26 +478,10 @@ sub incoming_public {
     if ($cmd eq 'bofh') {
       signal_emit('bofh', $server, $chan) if (is_loaded('bofh'));
     } #}}}
-    #{{{ #!coins 
-    #if ($cmd eq 'coins' ) {
-    #  my ($coin1, $coin2) 
-    #    = $text 
-    #      =~ m{^!coins ([a-zA-Z0-9]+)[-_\|/:!]([a-zA-Z0-9]+)$};
-
-    #  if ($coin1 and $coin2) {
-    #    signal_emit('insert coins', 
-    #                $server, $chan, "${coin1}_${coin2}") if is_loaded('coins');
-    #  } 
-    #  else { 
-    #    sayit($server, $chan, 'usage: !coins coin1/coin2 - '
-    #           . 'Here is a list: http://www.cryptocoincharts.info/v2'); 
-    #  }
-    #} #}}} 
     #{{{ #!doge WOW SUCH COMMAND 
     if ($cmd =~ m{doge(?:coin)?s?}) {
       signal_emit('such signal', $server, $chan, $text) if is_loaded('doge');
     }
-
     #}}}
     ##{{{ !bash bash.org quotes
     if ($cmd =~ m{^bash\b}) {
@@ -613,12 +583,11 @@ sub incoming_public {
       );
     }
     #}}}
-    ##{{{ !interpreter 
+    ##{{{ !interpreter  FIXME
     #if ($cmd eq 'interpreter' an.nnd is_sQuEE($mask)) {
     #}
     ##}}}
   } #cmd check ends here. begin general text match
-
 
 ################################################################################
   #
