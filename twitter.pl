@@ -1,7 +1,11 @@
 #twitter
 #  http://search.cpan.org/~mmims/Net-Twitter-Lite-0.11002/lib/Net/Twitter/Lite.pm
 
-use Irssi qw(signal_emit signal_add print settings_add_str settings_get_str settings_set_str ) ;
+use Irssi qw(
+  signal_emit signal_add
+  print
+  settings_add_str settings_get_str settings_set_str
+);
 use strict;
 use warnings;
 use Net::Twitter::Lite::WithAPIv1_1;
@@ -36,8 +40,8 @@ sub tweet_myself {
 
 sub follow {
   my ($server, $chan, $new_friend) = @_;
-  if ($twitter_ref->create_friend({ screen_name => $new_friend})->{'screen_name'} eq $new_friend) {
-      sayit ($server, $chan, 'followed.');
+  if ($twitter_ref->create_friend({screen_name => $new_friend})->{'screen_name'} eq $new_friend) {
+    sayit ($server, $chan, 'followed.');
   }
 }
 #{{{ update twitter
@@ -48,10 +52,10 @@ sub update {
 }#}}}
 #{{{ fetch last tweet
 sub do_last {
-  my ($server,$chan,$user) = @_;
+  my ($server, $chan, $user) = @_;
   if ($user) {
     eval {
-      my $results = $twitter_ref->show_user( { screen_name => $user } );   #needed since v1.1
+      my $results = $twitter_ref->show_user({screen_name => $user});   #needed since v1.1
       #print CRAP Dumper($results);
       if ($results->{status}{created_at}) {
         my $delta = moment_ago($results->{status}{created_at});
@@ -128,41 +132,48 @@ sub userbio {
       $user .= " - " . "Location: " . $r->{location} if ($r->{location});
       my ($year) = $r->{created_at} =~ /(2\d{3})$/;
       $user .= " - " . "User since $year" if ($year);
-      my $userstats = "Tweets: " . $r->{statuses_count} . " - ". "Followers: " . $r->{followers_count} . " - " . "Following: " . $r->{friends_count};
-      sayit($server,$chan,$user);
-      sayit($server,$chan,$userstats);
+      my $userstats = 'Tweets: '
+                    . $r->{statuses_count}
+                    . ' -  Followers: '
+                    . $r->{followers_count}
+                    . ' -  Following: '
+                    . $r->{friends_count}
+                    ;
+      sayit($server, $chan, $user);
+      sayit($server, $chan, $userstats);
     };
     print (CRAP $@) if $@;
   }
 }
 #}}}
 #{{{ search twt
-sub do_search {
-  my ($text, $chan, $server) = @_;
-  if ($text =~ /^!searchtwt$/) {
-    sayit($server,$chan,"i will search anything on twittersphere!");
-  } else {
-    my ($query) = $text =~ /^!searchtwt (.*)/i;
-    if ($query) {
-      #my $twitter = new_twitter();
-      eval {
-        my $r = $twitter_ref->search($query);
-        for (0..9) {
-          #for (all) my $status ( @${$r->{results}}) {
-          for my $status ( ${$r->{results}}[$_]) {
-            #my $a = Dumper($status);
-            #print_msg("$a");
-            return if (!$status);
-            my $tweet = decode_entities($status->{text});
-            my $msg = "\@" . $status->{from_user} . ": " . $tweet;
-            sayit($server, $chan, $msg);
-          }
-        }
-      };
-      return if $@;
-    }
-  }
-}
+#sub do_search {
+#  
+#  my ($text, $chan, $server) = @_;
+#  if ($text =~ /^!searchtwt$/) {
+#    sayit($server,$chan,"i will search anything on twittersphere!");
+#  }
+#  else {
+#    my ($query) = $text =~ /^!searchtwt (.*)/i;
+#    if ($query) {
+#      eval {
+#        my $r = $twitter_ref->search($query);
+#        for (0..9) {
+#          #for (all) my $status ( @${$r->{results}}) {
+#          for my $status ( ${$r->{results}}[$_]) {
+#            #my $a = Dumper($status);
+#            #print_msg("$a");
+#            return if (!$status);
+#            my $tweet = decode_entities($status->{text});
+#            my $msg = "\@" . $status->{from_user} . ": " . $tweet;
+#            sayit($server, $chan, $msg);
+#          }
+#        }
+#      };
+#      return if $@;
+#    }
+#  }
+#}
 #}}}
 #{{{ do twitter
 sub do_twitter {
@@ -170,16 +181,48 @@ sub do_twitter {
   my ($user, $status_id) = $text =~ m{twitter\.com(?:/\#!)?/([^/]+)/status(?:es)?/(\d+)}i;
   my $status = eval { $twitter_ref->show_status($status_id) };
   return if $@;
-
+  
   my $delta = moment_ago($status->{created_at});
-  my $result = "\@${user} " . 'tweeted: '. '"'. decode_entities($status->{text}) . '" ';
-  $result .= 'from ' . $delta if ($delta);
 
-  my $shorturl = ($status->{in_reply_to_status_id})
-               ? scalar('Irssi::Script::ggl')->can('do_shortme')->("http://twitter.com/" . $user . "/status/" . $status->{in_reply_to_status_id})
-               : undef;
+  my $result = "\@${user} "
+             . 'tweeted: '
+             . decode_entities($status->{text})
+             ;
 
-  $result .= ". in reply to " . $shorturl if ($shorturl);
+  $result =~ s/\n|\r/ /g;
+  $result .= $delta ? ' from ' . $delta : '';
+
+  #replace all the t.co urls
+  if (ref $status->{'entities'}->{'urls'} eq 'ARRAY') {
+    foreach my $link (@{ $status->{'entities'}->{'urls'} }) {
+      my $expanded_url = $link->{'expanded_url'};
+      $expanded_url =~ s/(?:\?|&)utm_\w+=\w+//g;
+      $result =~ s/($link->{'url'})/$expanded_url/;
+    }
+  }
+
+  if (ref $status->{'entities'}->{'media'} eq 'ARRAY') {
+    foreach my $link (@{ $status->{'entities'}->{'media'} }) {
+      my $media_url = $link->{'media_url'};
+      $result =~ s/($link->{'url'})/$media_url/;
+    }
+  }
+
+  my $shorten_reply_url = undef;
+  if ($status->{'in_reply_to_status_id'} and is_loaded('ggl')) {
+    my $full_reply_url 
+      = 'https://twitter.com/' 
+      . $user 
+      . '/status/' 
+      . $status->{'in_reply_to_status_id'}
+      ;
+
+    $shorten_reply_url 
+      = scalar('Irssi::Script::ggl')->can('do_shortme')->($full_reply_url);
+  }
+
+  $result .= $shorten_reply_url ? ' In reply to ' . $shorten_reply_url : '';
+
   sayit($server, $chan, $result) if ($result);
 }
 #}}}
@@ -216,3 +259,4 @@ sub new_twitter {
 #{{{ signals and stuff
 sub sayit { my $s = shift; $s->command("MSG @_"); }
 #}}}
+sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
