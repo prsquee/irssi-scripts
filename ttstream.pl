@@ -49,6 +49,21 @@ sub show_tweet {
                    . decode_entities($tweet->{text})
                    ;
     }
+    #replace all the t.co urls
+    if (ref $tweet->{'entities'}->{'urls'} eq 'ARRAY') {
+      foreach my $link (@{ $tweet->{'entities'}->{'urls'} }) {
+        my $expanded_url = $link->{'expanded_url'};
+        $expanded_url =~ s/(?:\?|&)utm_\w+=\w+//g;
+        $twt_content =~ s/($link->{'url'})/$expanded_url/;
+      }
+    }
+
+    if (ref $tweet->{'entities'}->{'media'} eq 'ARRAY') {
+      foreach my $link (@{ $tweet->{'entities'}->{'media'} }) {
+        my $media_url = $link->{'media_url'};
+        $twt_content =~ s/($link->{'url'})/$media_url/;
+      }
+    }
 
     #check who is the user and send it to the proper channel.
     if (defined($twt_content)) {
