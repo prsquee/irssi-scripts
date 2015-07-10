@@ -203,8 +203,8 @@ sub do_twitter {
 
   if (ref $status->{'entities'}->{'media'} eq 'ARRAY') {
     foreach my $link (@{ $status->{'entities'}->{'media'} }) {
-      my $media_url = $link->{'media_url'};
-      $result =~ s/($link->{'url'})/$media_url/;
+      my $expanded_url = $link->{'expanded_url'};
+      $result =~ s/($link->{'url'})/$expanded_url/;
     }
   }
 
