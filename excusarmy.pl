@@ -37,7 +37,8 @@ my $post = HTTP::Request->new(
 );
 
 #here be regrets
-my @regrets = ();
+my %regrets = ();
+my @last_ten = ();
 
 sub fetch_and_cache {
   my $response = $ua->request($get);
@@ -46,12 +47,11 @@ sub fetch_and_cache {
 
     my $parsed_json = eval { $json->utf8->decode($response->decoded_content) };
 
-    @regrets = ();
     foreach my $result (@{ $parsed_json->{results} }) {
-      #$regrets{ $result->{'objectId'} } = $result->{'regret'} if $result->{'active'};
-      push @regrets, $result->{'regret'} if $result->{'active'};
+      $regrets{ $result->{'objectId'} } 
+        = $result->{'regret'} if $result->{'active'};
     }
-    print (CRAP 'excusarmy updated with ' . scalar(@regrets) . ' excuses.');
+    print (CRAP 'excusarmy updated with ' . scalar(keys %regrets) . ' excuses.');
   }
   else {
     print (CRAP "excusarmy error code: $get->code - $get->message");
@@ -61,8 +61,21 @@ sub fetch_and_cache {
 sub get_regret {
   my ($server, $chan) = @_;
   fetch_and_cache if time - $last_fetch > $cached_for;
-  #return $regrets[rand scalar @regrets];
-  sayit($server, $chan, '[excusarmy] ' . $regrets[int(rand(@regrets))]);
+
+  #use all the keys as an anon array, then accessing a random member.
+  my $lucky_id = (keys %regrets)[int rand keys %regrets];
+
+  #check if we already got that id from the past ten.
+  #if so, get a new id.
+  while ($lucky_id ~~ @last_ten) {
+    $lucky_id = (keys %regrets)[int rand keys %regrets];
+  }
+
+  #make this a stack of 10 elements
+  push @last_ten, $lucky_id;
+  shift(@last_ten) if (scalar(@last_ten) > 10);
+
+  sayit($server, $chan, '[excusarmy] ' . $regrets{$lucky_id});
 }
 
 sub add_regret {
