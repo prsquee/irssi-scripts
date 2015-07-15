@@ -225,6 +225,9 @@ sub incoming_public {
             $quote_this =~ s/\b\Q$nick\E\b/\@$twit_users_ref->{$nick}/g;
           }
 
+          # replace | for \n
+          $quote_this =~ s{(?:\s+)?\|(?:\s+)?}{\n}g;
+          
           #append some branding.
           $quote_this .= "\n\n" . '#sysarmy';
 
