@@ -2,7 +2,6 @@
 #http://search.cpan.org/~mmims/Net-Twitter-Lite-0.10004/lib/Net/Twitter/Lite.pm
 
 use Irssi qw(signal_add print settings_add_str settings_get_str settings_set_str ) ;
-use Scalar::Util 'blessed';
 use strict;
 use warnings;
 use Net::Twitter::Lite::WithAPIv1_1;
@@ -48,7 +47,6 @@ else {
 #print (CRAP Dumper($army));
 #}}} 
 #{{{ post to twitter and return a short url
-#TODO refacor this.
 sub send_to_twitter {
   my $tweet_this = shift;
   my $status = undef;
@@ -61,8 +59,8 @@ sub send_to_twitter {
     my $shorten 
       = scalar('Irssi::Script::ggl')->can('do_shortme')->(
                                         'https://twitter.com/sysARmIRC/status/' 
-                                       . $status->{'id'}
-                                     );
+                                        . $status->{'id'}
+                                      );
     #return that short url
     return $shorten;
   } 
@@ -73,27 +71,4 @@ sub send_to_twitter {
   }
 }
 #}}}
-#{{{ do twitter
-#sub post_twitter {
-#  my ($server, $chan, $text) = @_;
-#  #print (CRAP $text));
-#  my $status;
-#  eval { $status = $twitter->update(decode('utf8', $text)) };
-#  if ($@) {
-#    my $err = $@;
-#    sayit($server, $chan,"error: $@") unless blessed $err && $err->isa('Net::Twitter::Lite::Error');
-#    print (CRAP "HTTP Response Code: ", $err->code);
-#    print (CRAP "HTTP Message: ", $err->message);
-#    print (CRAP "Twitter error: ", $err->error);
-#  } else {
-#    #sayit($server,$chan,"*chirp*");
-#    my $url = 'https://twitter.com/sysARmIRC/status/' . $status->{id};
-#    my $short = scalar('Irssi::Script::ggl')->can('do_shortme')->($url);
-#    sayit($server, $chan, "tweet sent at $short") if ($short);
-#  }
-#  #print (CRAP Dumper($twitter));
-#}
-#}}}
-#{{{ sayit
 sub sayit { my $s = shift; $s->command("MSG @_"); }
-#}}}
