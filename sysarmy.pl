@@ -26,66 +26,73 @@ my $twitter;
 if (%consumer_tokens) {
   $twitter = Net::Twitter::Lite::WithAPIv1_1->new(
     %consumer_tokens,
-    ssl                   =>  1,
+    ssl => 1,
   );
-} else {
+} 
+else {
   print (CRAP "no keys!");
   return;
 }
 
-my $at      = settings_get_str('sysarmy_access_token');
-my $ats     = settings_get_str('sysarmy_access_token_secret');
+my $at  = settings_get_str('sysarmy_access_token');
+my $ats = settings_get_str('sysarmy_access_token_secret');
 
 if ($at && $ats) {
   $twitter->access_token($at);
   $twitter->access_token_secret($ats);
-} else {
+} 
+else {
   print (CRAP "I cant hold all these non existen token in my hands!");
   return;
 }
 #print (CRAP Dumper($army));
 #}}} 
-#{{{ quote 2 tweet
+#{{{ post to twitter and return a short url
 #TODO refacor this.
-sub tweetquote {
-  my $text = shift;
-  my $status;
+sub send_to_twitter {
+  my $tweet_this = shift;
+  my $status = undef;
 
-  eval { $status = $twitter->update(decode("utf8", $text)) };
+  eval { $status = $twitter->update(decode('utf8', $tweet_this)) };
  
   if (!$@) {
     #get the link to the tweet we just sent.
     #shorten that
-    my $shorten = scalar('Irssi::Script::ggl')->can('do_shortme')->('https://twitter.com/sysARmIRC/status/' . $status->{'id'});
+    my $shorten 
+      = scalar('Irssi::Script::ggl')->can('do_shortme')->(
+                                        'https://twitter.com/sysARmIRC/status/' 
+                                       . $status->{'id'}
+                                     );
     #return that short url
     return $shorten;
-  } else {
+  } 
+  else {
     #my $err = $@;
-    print (CRAP $@); # unless blessed $err && $err->isa('Net::Twitter::Lite::Error');
+    print (CRAP $@);
     return undef;
   }
 }
 #}}}
 #{{{ do twitter
-sub post_twitter {
-  my ($server,$chan,$text) = @_;
-  #print (CRAP $text));
-  my $status;
-  eval { $status = $twitter->update(decode("utf8", $text)) }; #no idea why this works, and who am i to argue with the encodeing gods.
-  if ($@) {
-    my $err = $@;
-    sayit($server,$chan,"error: $@") unless blessed $err && $err->isa('Net::Twitter::Lite::Error');
-    print (CRAP "HTTP Response Code: ", $err->code);
-    print (CRAP "HTTP Message: ", $err->message);
-    print (CRAP "Twitter error: ", $err->error);
-  } else {
-    #sayit($server,$chan,"*chirp*");
-    my $url = 'https://twitter.com/sysARmIRC/status/' . $status->{id};
-    my $short = scalar('Irssi::Script::ggl')->can('do_shortme')->($url);
-    sayit($server, $chan, "tweet sent at $short") if ($short);
-  }
-  #print (CRAP Dumper($twitter));
-}
+#sub post_twitter {
+#  my ($server, $chan, $text) = @_;
+#  #print (CRAP $text));
+#  my $status;
+#  eval { $status = $twitter->update(decode('utf8', $text)) };
+#  if ($@) {
+#    my $err = $@;
+#    sayit($server, $chan,"error: $@") unless blessed $err && $err->isa('Net::Twitter::Lite::Error');
+#    print (CRAP "HTTP Response Code: ", $err->code);
+#    print (CRAP "HTTP Message: ", $err->message);
+#    print (CRAP "Twitter error: ", $err->error);
+#  } else {
+#    #sayit($server,$chan,"*chirp*");
+#    my $url = 'https://twitter.com/sysARmIRC/status/' . $status->{id};
+#    my $short = scalar('Irssi::Script::ggl')->can('do_shortme')->($url);
+#    sayit($server, $chan, "tweet sent at $short") if ($short);
+#  }
+#  #print (CRAP Dumper($twitter));
+#}
 #}}}
 #{{{ sayit
 sub sayit { my $s = shift; $s->command("MSG @_"); }

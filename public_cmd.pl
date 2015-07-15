@@ -233,7 +233,7 @@ sub incoming_public {
 
           #and off we go.
           my $tweeted_url 
-            = scalar('Irssi::Script::sysarmy')->can('tweetquote')->($quote_this);
+            = scalar('Irssi::Script::sysarmy')->can('send_to_twitter')->($quote_this);
 
           $message_out .= $tweeted_url ? ' and tweeted at ' . $tweeted_url : '.';
         }
@@ -403,13 +403,20 @@ sub incoming_public {
         sayit($server, $chan, 'send a tweet to @sysARmIRC');
         return;
       }
-      $text =~ s/!tt\s+//;
-      foreach (keys %{$twit_users_ref}) {
-        $text =~ s/\b\Q$_\E\b/\@$twit_users_ref->{$_}/g;
+      if (is_loaded('sysarmy')) {
+        $text =~ s/!tt\s+//;
+        foreach (keys %{$twit_users_ref}) {
+          $text =~ s/\b\Q$_\E\b/\@$twit_users_ref->{$_}/g;
+        }
+        my $tweeted_url 
+          = scalar('Irssi::Script::sysarmy')->can('send_to_twitter')->($text);
+
+        my $message_out = $tweeted_url ? 'tweet sent at ' . $tweeted_url
+                                       : 'cannot post to twitter right now.'
+                                       ;
+        sayit($server, $chan, $message_out);
+        return;
       }
-      signal_emit('post sysarmy', 
-                  $server, $chan, $text) if is_loaded('sysarmy');
-      return;
     } #}}}
     #{{{ [TWITTER] !follow
     if ($cmd eq 'follow' and is_sQuEE($mask)) {
