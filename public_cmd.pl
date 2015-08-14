@@ -352,7 +352,7 @@ sub incoming_public {
         $givenName =~ s/^\@//;
         #check if given is a nick and has a twitter user 
         if (exists ($twit_users_ref->{$givenName})) {
-          sayit($server, $chan, 'I know $givenName is '
+          sayit($server, $chan, "I know $givenName is "
                               . "\@$twit_users_ref->{$givenName} on twitter");
           return;
         }
