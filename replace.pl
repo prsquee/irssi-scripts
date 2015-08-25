@@ -63,7 +63,7 @@ sub search_and_replace {
     my $replaced = $lastline_of{$this_user};
     return unless $replaced;
 
-    if (not $another_user and $text !~ /$used_delimiter[ig]?$/) {
+    if (not $another_user and $text !~ /${used_delimiter}i?g?$/) {
       sayit($server, $chan, 'CLOSE YOUR REGEX! 1 karma taken from ' . $nick);
       signal_emit('karma bitch', $nick, '--', $chan . '_' . $server->{tag});
       return;
