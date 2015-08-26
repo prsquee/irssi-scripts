@@ -74,6 +74,7 @@ sub search_and_replace {
                                    ;
 
       sayit($server, $chan, $result);
+      $lastline_of{$nick . $mask} = $replaced;
     }
   }
   else {
