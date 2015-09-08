@@ -12,11 +12,11 @@ settings_add_str('imgur', 'imgurkey', '');
 signal_add('reimgur','reupload');
 
 my $imgur = WWW::Imgur->new();
+$imgur->key(settings_get_str('imgurkey'));
 my $json = JSON->new();
 
 sub reupload {
   my ($server, $chan, $url) = @_;
-  $imgur->key(settings_get_str('imgurkey'));
   my $success = $imgur->upload($url) or ( sayit($server,$chan,"Upload failed") 
                                           and return
                                         );
