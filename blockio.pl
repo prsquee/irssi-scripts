@@ -37,6 +37,7 @@ sub send_out {
   my @formatted_prices = ();
 
   foreach my $price (@{$prices_ref}) {
+    next if ($price->{'exchange'} eq 'cryptsy');
     push @formatted_prices, '[' . $price->{'exchange'} . '] '
                                 . sprintf('$%.2f', $price->{'price'});
   }
@@ -56,7 +57,7 @@ sub fetch_prices_for {
 
   my $got = $ua->get($apiurl);
   unless ($got->is_success) {
-    print (CRAP "blockio error code: $got->code - $got->message");
+    print (CRAP "blockio not success");
     return;
   }
 
