@@ -18,6 +18,7 @@ our $karma = eval { retrieve($karma_storable) } || [];
 
 my %novelty = (
   'sQuEE' => '🍺',
+  'sQuEE`' => '🍺',
   'osx' => '⌘',
   'OSX' => '⌘',
   'mac' => '⌘',
@@ -99,6 +100,7 @@ sub show_rank {
 
   #keys in karma are namesfnode.
   foreach (keys %$channel_karma_ref) {
+    next if /^sQ/;
     #now make sure everything in sortme is numerical.
     delete $channel_karma_ref->{$_} unless (defined($channel_karma_ref->{$_}));
     $sortme{$_} = $channel_karma_ref->{$_} if ($channel_karma_ref->{$_} =~ /^-?\d+$/)
