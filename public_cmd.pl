@@ -15,7 +15,7 @@ use Data::Dumper;
 use Time::HiRes;
 use Encode qw (encode decode);
 
-#{{{ init stuff
+#{{{ initial variables
 
 settings_add_str('bot config', 'halpcommands',    '');
 settings_add_str('bot config', 'halp_sysarmy',    '');
@@ -42,7 +42,7 @@ my $youtubex
     ([^&]{11})                  #the vid id
 )};
 
-my $karma_thingy = qr{[\w\[\]`|\\-^]+}; #thingy can be \w with {}[]`|\-^
+my $karma_thingy = qr{[\w\[\]`|\\-^.]+}; #thingy can be \w with .{}[]`|\-^
 my $karmagex
   = qr{(?x-sm:
       ($karma_thingy)

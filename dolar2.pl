@@ -49,7 +49,9 @@ sub do_dolar {
     if (!$how_much) {
       #my $output = '[Oficial] ';
       my $output = ($oficial_compra and $oficial_venta)
-                 ? 'Compra: ARS $' . $oficial_compra . ' :: Venta: ARS $' . $oficial_venta
+                 ? 'Compra: ARS $' . $oficial_compra 
+                 . ' :: '
+                 .  'Venta: ARS $' . $oficial_venta
                  : 'no idea';
 
       sayit($server, $chan, $output);
@@ -58,7 +60,9 @@ sub do_dolar {
     elsif ($how_much > 0) {
       my $pesos = undef;
       $pesos .= ($oficial_compra)
-              ? 'ARS $' . sprintf("%.2f", eval($how_much * $oficial_compra))
+              ? 'Compra: ARS $' . sprintf("%.2f", eval($how_much * $oficial_compra))
+              . ' :: '
+              . 'Venta: ARS $' . sprintf("%.2f", eval($how_much * $oficial_venta))
               : undef;
 
       $pesos = $pesos || 'no price found, try later.';
@@ -71,8 +75,10 @@ sub do_dolar {
   if ($ask eq 'pesos' and $how_much > 0) {
     my $dollars = undef;
     $dollars .= ($oficial_venta)
-                ? 'USD $' . sprintf("%.2f", eval($how_much / $oficial_venta))
-                : undef;
+              ? 'Compra: USD $' . sprintf("%.2f", eval($how_much / $oficial_compra))
+              . ' :: '
+              . 'Venta USD $' . sprintf("%.2f", eval($how_much / $oficial_venta))
+              : undef;
 
     $dollars = $dollars || 'no price found, try later.';
 
