@@ -15,7 +15,7 @@ use Data::Dumper;
 use Time::HiRes;
 use Encode qw (encode decode);
 
-#{{{ init stuff
+#{{{ initial variables
 
 settings_add_str('bot config', 'halpcommands',    '');
 settings_add_str('bot config', 'halp_sysarmy',    '');
@@ -42,7 +42,7 @@ my $youtubex
     ([^&]{11})                  #the vid id
 )};
 
-my $karma_thingy = qr{[\w\[\]`|\\-^]+}; #thingy can be \w with {}[]`|\-^
+my $karma_thingy = qr{[\w\[\]`|\\-^.]+}; #thingy can be \w with .{}[]`|\-^
 my $karmagex
   = qr{(?x-sm:
       ($karma_thingy)
@@ -80,7 +80,8 @@ sub incoming_public {
     #{{{ halps 
     if ($cmd =~ /^h[ea]lp$/) {
       my $defaultcmd = settings_get_str('halpcommands') . ' ';
-      $defaultcmd .= settings_get_str('halp_sysarmy') if $chan =~ /##?sysarmy(?:-en)?/;
+      $defaultcmd .= settings_get_str('halp_sysarmy')   if $chan =~ /##?sysarmy(?:-en)?/;
+      $defaultcmd .= settings_get_str('halp_linuxchix') if $chan eq '#linuxchixar';
       sayit($server, $chan, $defaultcmd);
       return;
     }#}}}
@@ -560,6 +561,11 @@ sub incoming_public {
       signal_emit('birras get', $server, $chan) if is_loaded('adminbirras');
     }
     ##}}}
+    #{{{ !meetup for linuxchix
+    if ('meetup' =~ /^${cmd}/ and $chan =~ /linuxchixar|ssqquuee/) {
+      signal_emit('chix meetup', $server, $chan) if is_loaded('chixmeetup');
+    }
+    # }}}
     #{{{ !translate and the novelty method to match commands.
     if ('translate' =~ /^${cmd}/) {
       if ($text eq '!' . $cmd) {

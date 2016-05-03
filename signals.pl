@@ -48,4 +48,5 @@ signal_register( { 'hay subte'        => [ 'iobject','string','string'          
 signal_register( { 'excusa get'       => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'excusa add'       => [ 'iobject','string','string'          ]}); #server,chan,$excusa
 signal_register( { 'birras get'       => [ 'iobject','string'                   ]}); #server,chan
+signal_register( { 'chix meetup'      => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'need translate'   => [ 'iobject','string','string','string' ]}); #server,chan,$lang,$text
