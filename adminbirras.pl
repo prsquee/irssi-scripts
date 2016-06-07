@@ -7,6 +7,7 @@ use Date::Manip;
 use LWP::UserAgent;
 use Data::Dumper;
 use JSON;
+use utf8;
 
 settings_add_str('meetup', 'meetup_apikey', '');
 signal_add('birras get','get_event');
@@ -26,7 +27,7 @@ sub get_event {
     my $parsed_json = eval { $json->utf8->decode($response->decoded_content) };
 
     if (scalar @{ $parsed_json->{'results'} } == 0) {
-      my $nope = '[🍺] Event not created at meetup.com yet, but the next one should be ';
+      my $nope = '🍺 Event not created at meetup.com yet, but the next one should be ';
       my $next_date = next_birra();
 
       sayit($server, $chan, $nope . $next_date);
@@ -36,7 +37,7 @@ sub get_event {
       #print strftime '%A, %h %d at %H:%M', localtime 1432936800;
       my $event = shift @{ $parsed_json->{'results'}};
       if ($event->{'status'} eq 'upcoming') {
-        my $output = '[🍺] '. $event->{'name'} . ' :: '
+        my $output = '🍺 '. $event->{'name'} . ' :: '
                    . strftime('%A, %h %d at %H:%M', localtime ($event->{'time'}/1000))
                    . ' :: '
                    . $event->{'venue'}->{'name'}      . ', '
