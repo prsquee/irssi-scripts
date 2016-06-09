@@ -1,5 +1,4 @@
 #quotes.pl
-#TODO refactor this
 use Irssi qw(
   signal_add
   print
@@ -14,21 +13,15 @@ use Data::Dump; #use this to store/retrieve quotes
 use File::Slurp qw( read_file write_file append_file);
 
 #{{{ signaal and stuff
-signal_add('quotes', 'do_quotes');
 signal_add('random quotes', 'random_quotes');
 signal_add('last quote', 'fetch_last');
 signal_add('delete quote', 'delete_quote');
 signal_add('find quote', 'find_it');
+signal_add('count quotes', 'count_quotes');
 
 settings_add_str('quotes', 'qfile', '');
 #}}}
 
-
-sub filename_of {
-  my ($server_tag, $chan) = @_;
-  $chan =~ s/#/_/g;
-  return get_irssi_dir() . '/scripts/datafiles/' . $server_tag . $chan . '.txt';
-}
 
 #{{{ qadd
 sub quotes_add {
@@ -45,8 +38,7 @@ sub quotes_add {
 #{{{ random one 
 sub random_quotes {
   my ($server, $chan) = @_;
-  my $qfile_path = filename_of($server->{tag}, $chan);
-  my $buf = eval { read_file ($qfile_path, array_ref => 1) };
+  my $buf = open_quotes_from($server, $chan);
 
   my $found = ($buf) ? '[random] ' . $$buf[rand scalar @$buf]
                      : 'no quotes from this channel'
@@ -57,9 +49,8 @@ sub random_quotes {
 #{{{ fetch last #
 sub fetch_last {
   my ($server, $chan, $quote_pos) = @_;
-  my $qfile_path = filename_of($server->{tag}, $chan);
+  my $buf = open_quotes_from($server, $chan);
 
-  my $buf = eval { read_file ($qfile_path, array_ref => 1) };
   if ($buf) {
     if ($quote_pos > scalar(@$buf)) {
       sayit($server, $chan, 'STAHP! too much D:');
@@ -115,34 +106,33 @@ sub delete_quote {
 #{{{ find a quote  MAKE THIS PRETTY
 sub find_it {
   my ($server, $chan, $find_me) = @_;
-  my $qfile_path = filename_of($server->{tag}, $chan);
-  $find_me = strip_all($find_me);
 
-  my @words2find = split(/\s+/, $find_me);
-  my $found  = eval { read_file ($qfile_path, array_ref => 1) };
-  if ($found) {
+  my @words2find = split(/\s+/, strip_all($find_me));
+
+  my $buf = open_quotes_from($server, $chan);
+  if ($buf) {
     foreach (@words2find) {
-      my $singleWord = eval { qr/$_/i };
-      eval { @$found = grep { /$singleWord/ } @$found; } if ($singleWord and not $@);
+      my $single_word = eval { qr/$_/i };
+      eval { @$buf = grep { /$single_word/ } @$buf; } if ($single_word and not $@);
     }
 
-    if (scalar(@$found) == 0) {
+    if (scalar(@$buf) == 0) {
       sayit($server, $chan, 'found nothing.');
     } 
     else {
-      if (scalar(@$found) >= 1 and scalar(@$found) <= 4) {
-        sayit($server, $chan, "[found] $_") for (@$found);
+      if (scalar(@$buf) >= 1 and scalar(@$buf) <= 4) {
+        sayit($server, $chan, "[found] $_") for (@$buf);
       } 
       else {
-        my @randq = [];
+        my @randfour = [];
         for (0..3) {
-          my $n = rand scalar @$found;
-          $randq[$_] = $found->[$n];
-          splice(@$found, $n, 1);
+          my $n = rand scalar @$buf;
+          $randfour[$_] = $buf->[$n];
+          splice(@$buf, $n, 1);
         }
-        my $totalFound = scalar(@$found) + scalar(@randq);
+        my $totalFound = scalar(@$buf) + scalar(@randfour);
         sayit($server, $chan, "found $totalFound quotes, here are 4 random quotes");
-        sayit($server,$chan,"[found] $_") foreach (@randq);
+        sayit($server,$chan,"[found] $_") foreach (@randfour);
       }
     }
   } 
@@ -152,28 +142,24 @@ sub find_it {
   }
 }
 #}}}
-sub do_quotes { #{{{
-  my ($server, $chan, $text) = @_;
-  my $qfile = get_irssi_dir()
-              . "/scripts/datafiles/$server->{tag}"
-              . $chan . ".txt";
-  $qfile =~ s/#/_/g;
-
-  #{{{ count total
-  if ( $text =~ /^!qtotal\b/ ) {
-    my $buf  = eval { read_file ($qfile, array_ref => 1) }; #total is a ref to an array of the slurped file
-    if ($buf) {
-      my $total = scalar @$buf;
-      sayit($server,$chan,"total quotes: $total");
-      return;
-    } else {
-      sayit($server, $chan, "I dont see any quotes for $chan");
-      return;
-    }
-  }#}}}
-} #do_quotes ends here
+#{{{ count quotes
+sub count_quotes {
+  my ($server, $chan) = @_;
+  my $total = scalar @{ open_quotes_from($server, $chan) };
+  sayit($server, $chan, "I have a total of $total quotes.");
+}
 #}}}
-#{{{ misc strip all; open file; print and say
+#{{{ misc strip all; open file; open from, print and say
+sub filename_of {
+  my ($server_tag, $chan) = @_;
+  $chan =~ s/#/_/g;
+  return get_irssi_dir() . '/scripts/datafiles/' . $server_tag . $chan . '.txt';
+}
+sub open_quotes_from {
+  my ($server, $chan) = @_;
+  my $buffer = eval { read_file(filename_of($server->{tag}, $chan), array_ref => 1) };
+  return $buffer if not $@;
+}
 sub strip_all {
   my $text = shift;
 	$text =~ s/\x03\d{0,2}(,\d{0,2})?//g; #mirc colors
@@ -184,5 +170,4 @@ sub strip_all {
 }
 
 sub sayit { my $s = shift; $s->command("MSG @_"); }
-
 #}}}

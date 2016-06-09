@@ -197,10 +197,10 @@ sub incoming_public {
       unless (defined($quote_this)) {
         sayit(
           $server, $chan,
-          'EL_FORMATO IS DEFINED AS: "<@supreme_leader> because I say so. | ' .
-          '<peasant1> yes m\'Lord. | ' .
-          '<peasant2> it wont happen again, Sire. | ' .
-          '<peasant-n> please forgive us."'
+          'EL_FORMATO IS DEFINED AS: "<@supreme_leader> because I say so. | '
+          . '<peasant1> yes m\'Lord. | '
+          . '<peasant2> it wont happen again, Sire. | '
+          . '<peasant-n> please forgive us."'
         );
         return;
       }
@@ -228,7 +228,7 @@ sub incoming_public {
 
           # replace | for \n
           $quote_this =~ s{(?:\s+)?\|(?:\s+)?}{\n}g;
-          
+
           #append some branding.
           $quote_this .= "\n\n" . '#sysarmy';
 
@@ -265,8 +265,8 @@ sub incoming_public {
         signal_emit('delete quote', $server, $chan, $delete_this);
       }
       else {
-        sayit($server, $chan, 'I can delete one quote at a time. ' .
-                              'Just a partial match is enough.'
+        sayit($server, $chan,
+          'I can delete one quote at a time. Just a partial match is enough.'
         );
       }
     }
@@ -274,10 +274,9 @@ sub incoming_public {
       my ($find_this) = $text =~ /^!${cmd}\s+(.*)/;
       signal_emit('find quote', $server, $chan, $find_this) if ($find_this);
     }
-    #if ($cmd =~ /^q(?:search )?/) {
-    #  signal_emit('quotes', $server, $chan, $text) if (is_loaded('quotes'));
-    #  return;
-    #}
+    if ('qtotal' =~ /^${cmd}/ and is_loaded('quotes')) {
+      signal_emit('count quotes', $server, $chan);
+    }
     #}}}
     #{{{ !imgur reimgur 
     if ($cmd eq 'imgur') {
