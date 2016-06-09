@@ -178,15 +178,20 @@ sub userbio {
 #{{{ do twitter
 sub do_twitter {
   my ($server, $chan, $text) = @_;
-  my ($user, $status_id) = $text =~ m{twitter\.com(?:/\#!)?/([^/]+)/status(?:es)?/(\d+)}i;
+  my ($user, $status_id)
+    = $text
+      =~ m{twitter\.com(?:/\#!)?/([^/]+)/status(?:es)?/(\d+)}i;
+
   my $status = eval { $twitter_ref->show_status($status_id) };
   return if $@;
-  
+
   my $delta = moment_ago($status->{created_at});
 
   my $result = "\@${user} "
              . 'tweeted: '
+             . '"'
              . decode_entities($status->{text})
+             . '"'
              ;
 
   $result =~ s/\n|\r/ /g;
