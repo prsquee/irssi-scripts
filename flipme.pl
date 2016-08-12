@@ -87,6 +87,13 @@ my %upside_down_map = (
   '‾' => '_',
   '┻' => '┬',
   '━' => '─',
+  '^' => '⌄',
+  '↖︎' => '↘︎',
+  '⌥' => '⎇',
+  '↑' => '↓',
+  '←' => '→',
+  '⌠' => '⌡',
+  '⌢' => '⌣',
 );
 
 %upside_down_map = (%upside_down_map, reverse %upside_down_map);

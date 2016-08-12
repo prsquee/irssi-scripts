@@ -26,8 +26,8 @@ sub get_price {
 
   ($oficial_venta, $oficial_compra)
     = $raw_result =~ m{ 
-			"CasaCambioVentaValue" :"([^"]+)?"
-			.*
+      "CasaCambioVentaValue" :"([^"]+)?"
+      .*
                         "CasaCambioCompraValue":"([^"]+)?"
                       }x;
 
