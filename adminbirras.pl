@@ -58,15 +58,16 @@ sub get_event {
 }
 
 sub next_birra {
-  #today's weekday number.
   my $today = strftime('%u', localtime);
 
-  #$odd_week = yes birra ; even_week = no birra
-  # is this week a birra week?
-  if (strftime('%V', localtime) % 2) {
-    #this IS a birraweek.
+  # odd_week = yes birra ; even_week = no birra
+  # is this week a birra week? (swap 1 and 0 to toggle)
+  my $is_birraweek = (strftime('%V', localtime) % 2) ? 0 : 1;
+
+  if ($is_birraweek) {
     #is it past thusday?
-    return 'today.' if $today == 4;
+    return 'today.' if ($today == 4);
+
     if ($today < 4) {
       return 'this Thursday.';
     }
@@ -77,7 +78,7 @@ sub next_birra {
     }
   }
   else {
-    #this is NOT a birraweek. even week number 
+    #this is NOT a birraweek.
     return UnixDate('next Thursday', '%A, %B %d.') if $today == 4;
     if ($today < 4) {
       #we are between Mon and Wed.
