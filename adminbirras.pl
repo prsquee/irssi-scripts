@@ -38,7 +38,7 @@ sub get_event {
       my $event = shift @{ $parsed_json->{'results'}};
       if ($event->{'status'} eq 'upcoming') {
         my $output = '🍺 '. $event->{'name'} . ' :: '
-                   . strftime('%A, %h %d at %H:%M', localtime ($event->{'time'}/1000))
+                   . get_dates($event->{'time'}/1000)
                    . ' :: '
                    . $event->{'venue'}->{'name'}      . ', '
                    . $event->{'venue'}->{'address_1'} . ', '
@@ -56,7 +56,15 @@ sub get_event {
     print (CRAP "meetup.com error code: $response->code - $response->message");
   }
 }
-
+sub get_dates {
+  my ($event_time) = @_;
+  if (strftime('%F', localtime) eq strftime('%F', localtime($event_time))) {
+    return 'TONIGHT at ' . strftime('%H:%M', localtime($event_time));
+  }
+  else {
+    return strftime('%A, %h %d at %H:%M', localtime($event_time));
+  }
+}
 sub next_birra {
   my $today = strftime('%u', localtime);
 
