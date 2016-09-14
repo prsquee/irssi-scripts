@@ -20,10 +20,10 @@ my $api_url = 'https://www.googleapis.com/youtube/v3/videos?id=';
 my $api_key = '&key=' . settings_get_str('google_apikey');
 my $part    = '&part=contentDetails,snippet,statistics';
 my $field   = '&fields=items('
-                          . 'contentDetails(duration),'
-                          . 'snippet(title),'
-                          . 'statistics(viewCount)'
-                          . ')';
+            . 'contentDetails(duration),'
+            . 'snippet(title),'
+            . 'statistics(viewCount)'
+            . ')';
 
 sub fetch_tubes {
   my($server, $chan, $vid) = @_;
@@ -47,7 +47,6 @@ sub fetch_tubes {
     my $time  = $item->{'contentDetails'}->{'duration'};
     my $views = $item->{'statistics'}->{'viewCount'};
 
-    #print (CRAP "$title - $time - $views");
     if ($title) {
       #print (CRAP $time);
       $time = format_time($time);
@@ -55,26 +54,23 @@ sub fetch_tubes {
       sayit($server, $chan, $vid_info);
 
       $fetched_vids{$vid} = $vid_info;
-    } 
+    }
     else { return; }
-  } 
+  }
   else { sayit ($server, $chan, $fetched_vids{$vid}); }
 }
 
 sub format_time {
   my $time = shift;
-
   #time comes in iso 8601 duration format
   #like PT2H11M12S, if the vid is longer than a day: P2DT2H11M12S
   #we match all the integers and start from the last element, seconds.
   my @integers = $time =~ /(\d+)/g;
-  
   $time = join(':', map { sprintf("%02d", $_) } @integers);
 
-  $time = ':live:' if $time eq '00';
-  $time = '00:' . $time if $time !~ /:/;
-  $time = '[' . $time . ']';
-  return $time;
+  return ($time eq '00') ? '[LIVE]'
+        :($time !~ /:/) ? '[00:' . $time . ']'
+        : '[' . $time . ']'
+        ;
 }
 sub sayit { my $s = shift; $s->command("MSG @_"); }
-
