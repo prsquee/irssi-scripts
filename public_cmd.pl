@@ -42,7 +42,7 @@ my $youtubex
     ([^&]{11})                  #the vid id
 )};
 
-my $karma_thingy = qr{[\w\[\]`|\\-^.]+}; #thingy can be \w with .{}[]`|\-^
+my $karma_thingy = qr{[\w\[\]`|\-^.]+}; #thingy can be \w with .{}[]`|\-^
 my $karmagex
   = qr{(?x-sm:
       ($karma_thingy)
