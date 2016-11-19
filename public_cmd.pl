@@ -1,9 +1,9 @@
 #public commands
 #FIXME this is getting awfuly bloated.
 
-use Irssi qw (  print signal_emit 
-                signal_add signal_register 
-                settings_get_str settings_add_str settings_set_str 
+use Irssi qw (  print signal_emit
+                signal_add signal_register
+                settings_get_str settings_add_str settings_set_str
                 get_irssi_dir
              );
 use v5.20;
@@ -77,7 +77,7 @@ sub incoming_public {
 
   #check if someone said a command
   if (my ($cmd) = $text =~ /^!(\w+)\b/) {
-    #{{{ halps 
+    #{{{ halps
     if ($cmd =~ /^h[ea]lp$/) {
       my $defaultcmd = settings_get_str('halpcommands') . ' ';
       $defaultcmd .= settings_get_str('halp_sysarmy')   if $chan =~ /##?sysarmy(?:-en)?/;
@@ -89,7 +89,7 @@ sub incoming_public {
     if ($cmd eq 'addhalp' and is_sQuEE($mask)) {
       my ($newhalp) = $text =~ /^!addhalp\s+(.*)$/;
       settings_set_str(
-        'halpcommands', 
+        'halpcommands',
         settings_get_str('halpcommands') . " $newhalp"
       ) if (defined($newhalp));
 
@@ -141,15 +141,15 @@ sub incoming_public {
       if (not $query) {
         sayit($server, $chan, 'too lazy to google it yourself?');
         return;
-      } 
+      }
       elsif ($query =~ /\bgoogle\b/i) {
         sayit($server, $chan, 'no! this will break the interwebz!');
         return;
-      } 
+      }
       elsif (is_loaded('google3')) {
         signal_emit('google me', $server, $chan, $query);
         return;
-      } 
+      }
     }#}}}
     #{{{ !ping !pong
     if ($cmd =~ /p([ioua])ng/) {
@@ -162,10 +162,10 @@ sub incoming_public {
       sayit($server, $chan, 'p' . ${$v}{$1} . 'ng');
       return;
     }#}}}
-    #{{{ !dol[ao]r and !pesos 
+    #{{{ !dol[ao]r and !pesos
     if ($cmd =~ /^dol[ao]r$/ or $cmd eq 'pesos') {
       signal_emit(
-                    'showme the money', 
+                    'showme the money',
                     $server, $chan, $text
                  ) if is_loaded('dolar2');
       return;
@@ -178,16 +178,16 @@ sub incoming_public {
       if (not defined($user)) {
         if (not exists($twit_users_ref->{$nick})) {
           sayit(
-            $server, $chan, 
+            $server, $chan,
             "you dont have a twitter handle, so I'll need a twitter username"
           );
           return;
-        } 
-        else { 
+        }
+        else {
           $user = $twit_users_ref->{$nick};
         }
-      }  
-      signal_emit("last tweet", $server, $chan, $user) 
+      }
+      signal_emit("last tweet", $server, $chan, $user)
         if defined($user) and is_loaded('twitter');
       return;
     }#}}}
@@ -208,7 +208,7 @@ sub incoming_public {
       #got the quote here. now send it to file. get the confirmation back.
       my $message_out = undef;
       if (is_loaded('quotes')) {
-        $message_out 
+        $message_out
           = scalar('Irssi::Script::quotes')->can('quotes_add')->(
               $quote_this,
               $server->{tag},
@@ -233,7 +233,7 @@ sub incoming_public {
           $quote_this .= "\n\n" . '#sysarmy';
 
           #and off we go.
-          my $tweeted_url 
+          my $tweeted_url
             = scalar('Irssi::Script::sysarmy')->can('send_to_twitter')->($quote_this);
 
           $message_out .= $tweeted_url ? ' and tweeted at ' . $tweeted_url : '.';
@@ -278,7 +278,7 @@ sub incoming_public {
       signal_emit('count quotes', $server, $chan);
     }
     #}}}
-    #{{{ !imgur reimgur 
+    #{{{ !imgur reimgur
     if ($cmd eq 'imgur') {
       my ($url) = $text =~ m{^!imgur\s+(https?://.*)$}i;
 
@@ -305,15 +305,15 @@ sub incoming_public {
     if ($cmd eq 'setkarma' and is_sQuEE($mask)) {
       my ($thingy, $newkarma) = $text =~ /^!setkarma\s+(.+)=(.*)$/;
       signal_emit(
-        "karma set", 
-        $server, $chan, 
+        "karma set",
+        $server, $chan,
         $thingy,
         $newkarma
       ) if (is_loaded('karma') and $thingy and $newkarma);
       return;
     }#}}}
-    #{{{ !rank 
-    if ($cmd eq 'rank' ) { 
+    #{{{ !rank
+    if ($cmd eq 'rank' ) {
       signal_emit("karma rank", $server, $chan) if is_loaded('karma');
     }
     #}}}
@@ -321,7 +321,7 @@ sub incoming_public {
     if ($cmd eq 'flipkarma' && is_master($mask)) {
       signal_emit('karma flip', $server, $chan) if is_loaded('karma');
     }#}}}
-    #{{{ [TWITTER] !mytwitteris 
+    #{{{ [TWITTER] !mytwitteris
     if ($cmd eq 'mytwitteris') {
       #print (CRAP Dumper($twit_users_ref));
       my ($givenName) = $text =~ /^!mytwitteris\s+(.+)$/;
@@ -350,7 +350,7 @@ sub incoming_public {
       my ($givenName) = $text =~ /^!ishere\s+(.+)$/;
       if ($givenName) {
         $givenName =~ s/^\@//;
-        #check if given is a nick and has a twitter user 
+        #check if given is a nick and has a twitter user
         if (exists ($twit_users_ref->{$givenName})) {
           sayit($server, $chan, "I know $givenName is "
                               . "\@$twit_users_ref->{$givenName} on twitter");
@@ -373,13 +373,13 @@ sub incoming_public {
         return;
        }
      }
-    #}}} 
-    #{{{ [TWITTER] !isnolongerhere 
+    #}}}
+    #{{{ [TWITTER] !isnolongerhere
     if ($cmd eq 'isnolongerhere' and is_master($mask)) {
       my ($given_name) = $text =~ /^!isnolongerhere\s+(.+)$/;
       if ($given_name) {
         $given_name =~ s/^\@//;
-        delete $twit_users_ref->{$given_name}; 
+        delete $twit_users_ref->{$given_name};
         if (not exists $twit_users_ref->{$given_name}) {
           store $twit_users_ref, $twit_users_file;
           sayit($server, $chan, 'deleted!');
@@ -391,13 +391,13 @@ sub incoming_public {
     if ($cmd eq 'user') {
       my ($who) = $text =~ /^!user\s+@?(\w+)/;
 
-      signal_emit('teh fuck is who', 
+      signal_emit('teh fuck is who',
                   $server, $chan, $who) if $who and is_loaded('twitter');
 
       sayit($server, $chan, "!user <twitter_username>") if not defined($who);
       return;
     }#}}}
-    #{{{ [TWITTER] !tt post tweet to sysarmy 
+    #{{{ [TWITTER] !tt post tweet to sysarmy
     if ($cmd eq 'tt' and $chan =~ /sysarmy|ssqquuee/) {
       if ($text eq '!tt') {
         sayit($server, $chan, 'send a tweet to @sysARmIRC');
@@ -408,7 +408,7 @@ sub incoming_public {
         foreach (keys %{$twit_users_ref}) {
           $text =~ s/\b\Q$_\E\b/\@$twit_users_ref->{$_}/g;
         }
-        my $tweeted_url 
+        my $tweeted_url
           = scalar('Irssi::Script::sysarmy')->can('send_to_twitter')->($text);
 
         my $message_out = $tweeted_url ? 'tweet sent at ' . $tweeted_url
@@ -422,9 +422,9 @@ sub incoming_public {
     if ($cmd eq 'follow' and is_sQuEE($mask)) {
       my ($new_friend) = $text =~ /^!follow\s+@?(\w+)$/;
       signal_emit(
-        'white rabbit', 
-        $server, 
-        $chan, 
+        'white rabbit',
+        $server,
+        $chan,
         $new_friend
       ) if (is_loaded('twitter'));
     }
@@ -433,25 +433,25 @@ sub incoming_public {
     if ($cmd eq 'post' and is_sQuEE($mask)) {
       my ($tweet_this) = $text =~ /^!post\s+(.*)$/;
       signal_emit(
-        'shit I say', 
-        $server, 
-        $chan, 
+        'shit I say',
+        $server,
+        $chan,
         $tweet_this
       ) if (is_loaded('twitter'));
     }
     ##}}}
-    #{{{ !ddg cuac cuac go 
+    #{{{ !ddg cuac cuac go
     if ($cmd eq 'ddg') {
       my ($query) = $text =~ /^!ddg\s+(.*)$/;
       unless ($query) {
         sayit($server, $chan, 'cuac cuac go!');
         return;
-      } 
+      }
       else {
         signal_emit(
-          'cuac cuac go', 
-          $server, 
-          $chan, 
+          'cuac cuac go',
+          $server,
+          $chan,
           $query
         ) if is_loaded('duckduckgo');
       }
@@ -462,33 +462,33 @@ sub incoming_public {
     }#}}}
    #{{{ !ltc litecoins
     if ($cmd =~ m{^li?te?c(?:oin)?s?}) {
-      signal_emit('silver digger', $server, $chan, 'ltc') if is_loaded('blockio'); 
+      signal_emit('silver digger', $server, $chan, 'ltc') if is_loaded('blockio');
     }#}}}
-    #{{{ !clima 
+    #{{{ !clima
     if ($cmd eq 'clima') {
       my ($city) = $text =~ /^!clima\s+(.*)$/;
-      if (is_loaded('clima') and defined($city)) { 
+      if (is_loaded('clima') and defined($city)) {
         signal_emit('weather', $server, $chan, $city);
-      } 
-      else { 
-        sayit($server, $chan, "!clima <una ciudad o codigo del aeropuerto>"); 
+      }
+      else {
+        sayit($server, $chan, "!clima <una ciudad o codigo del aeropuerto>");
       }
     } #}}}
-    #{{{ wolfram alpha !wa 
+    #{{{ wolfram alpha !wa
     if ($cmd eq 'wa') {
       my ($query) = $text =~ /^!wa\s+(.*)$/;
-      if (is_loaded('wolfram') and defined($query)) { 
+      if (is_loaded('wolfram') and defined($query)) {
         signal_emit('wolfram', $server, $chan, $query);
-      } 
-      else { 
+      }
+      else {
         sayit($server, $chan, 'I can pass on any question to this dude.');
       }
     } #}}}
-    #{{{ !bofh 
+    #{{{ !bofh
     if ($cmd eq 'bofh') {
       signal_emit('bofh', $server, $chan) if (is_loaded('bofh'));
     } #}}}
-    #{{{ #!doge WOW SUCH COMMAND 
+    #{{{ #!doge WOW SUCH COMMAND
     if ($cmd =~ m{doge(?:coin)?s?}) {
       signal_emit('such signal', $server, $chan, $text) if is_loaded('doge');
     }
@@ -508,7 +508,7 @@ sub incoming_public {
     #{{{ novelty (?) !shrug !wot !dunno !caca !flip
     if ($cmd =~ /^(?:shrug|dunno|wot|caca)$/) {
       my ($reason) = $text =~ m{^!\w+\s+(.+)$};
-      
+
       if (defined $reason) {
         my $answer = decode('utf8', $reason) . ' ' . $faces{$cmd};
         sayit($server, $chan, encode('utf8', $answer));
@@ -521,7 +521,7 @@ sub incoming_public {
       my ($flipme) = $text =~ m{^!flip\s+(.*)$}i;
       if ( defined $flipme and $flipme ne 'DEM TABLES') {
         $flipme = decode('utf8', $flipme);
-        my $flipped 
+        my $flipped
           = scalar('Irssi::Script::flipme')->can('flip_text')->($flipme)
             if is_loaded('flipme');
 
@@ -540,7 +540,7 @@ sub incoming_public {
       }
     }
     #}}}
-    #{{{ !excusas 
+    #{{{ !excusas
     if ($cmd eq 'excusa') {
       signal_emit('excusa get', $server, $chan) if is_loaded('excusarmy')
     }
@@ -550,12 +550,12 @@ sub incoming_public {
         sayit($server, $chan, 'contribute a new excusa for the excusarmy app!');
       }
       else {
-        signal_emit('excusa add', $server, $chan, $excusa) 
+        signal_emit('excusa add', $server, $chan, $excusa)
           if ($excusa and is_loaded('excusarmy'));
       }
     }
     ##}}}
-    #{{{ !birras 
+    #{{{ !birras
     if ($cmd =~ /^(?:admin)?birras?$/ and $chan =~ /sysarmy(?:-en)?|ssqquuee/) {
       signal_emit('birras get', $server, $chan) if is_loaded('adminbirras');
     }
@@ -575,9 +575,9 @@ sub incoming_public {
                           );
         return;
       }
-      $text =~ s/^!$cmd\s+//; 
-      
+      $text =~ s/^!$cmd\s+//;
       my $to_this_lang = 'en';
+
       if ($text =~ /^to:(\w+)\s+/) {
         $to_this_lang = $1;
       }
@@ -590,14 +590,20 @@ sub incoming_public {
       }
 
       signal_emit(
-        'need translate', 
-        $server, 
-        $chan, 
+        'need translate',
+        $server,
+        $chan,
         $to_this_lang,
         $need_translation
       );
     }
     #}}}
+    #{{{
+    if ($cmd eq 'settopic' and is_sQuEE($mask)) {
+      my ($new_topic) = $text =~ /^!settopic +(.*)$/;
+      $server->send_message('chanserv', "topic $chan $new_topic");
+    }
+    ##}}}
     ##{{{ !interpreter  FIXME
     #if ($cmd eq 'interpreter' an.nnd is_sQuEE($mask)) {
     #}
@@ -612,7 +618,7 @@ sub incoming_public {
     return if ($url =~ /wikipedia|facebook|fbcdn/i);
     #site specific stuff
     if ($url =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
-        signal_emit('search imdb', 
+        signal_emit('search imdb',
                     $server, $chan, $1) if ($1 and is_loaded('imdb'));
         return;
     }
@@ -621,15 +627,15 @@ sub incoming_public {
       signal_emit('check tubes', $server, $chan, $1) if (is_loaded('youtube'));
       return;
     }
-    #show twitter user bio info from an url 
+    #show twitter user bio info from an url
     if ($url =~ m{twitter\.com/(\w+)$}) {
-      signal_emit('teh fuck is who', 
+      signal_emit('teh fuck is who',
                   $server, $chan, $1) if ($1 and is_loaded('twitter'));
       return;
     }
     #twitter status fetch
     if ($url =~ m{twitter\.com(?:/\#!)?/[^/]+/status(?:es)?/\d+}) {
-      signal_emit('fetch tweet', 
+      signal_emit('fetch tweet',
                   $server, $chan, $url) if (is_loaded('twitter'));
       return;
     }
@@ -639,7 +645,7 @@ sub incoming_public {
       return;
     }
     #imgur api?
-    if ($url =~ m{https?://i\.imgur\.com/(\w{5,8})h?\.[pjgb]\w{2,}$}) { 
+    if ($url =~ m{https?://i\.imgur\.com/(\w{5,8})h?\.[pjgb]\w{2,}$}) {
       #h is there for hires
       $url = "http://imgur.com/$1" if ($1);
     }
@@ -655,7 +661,7 @@ sub incoming_public {
 
   #{{{ do stuff with anything that is not a cmd or a http link
   #
-  ## karma check against the text 
+  ## karma check against the text
   ## too much abuse of this.
 #  my @karmacheck = $text =~ /$karmagex/g;
 #  if (scalar(@karmacheck) > 0) {
@@ -706,7 +712,7 @@ sub is_master {
 }
 sub is_sQuEE {
   #my $mask = shift;
-  return (shift(@_) eq '~sQuEE@unaffiliated/sq/x-3560400') ? 'true' : undef; 
+  return (shift(@_) eq '~sQuEE@unaffiliated/sq/x-3560400') ? 'true' : undef;
 }
 sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
 sub sayit     { my $s = shift; $s->command("MSG @_"); }
