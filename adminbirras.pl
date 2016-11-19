@@ -1,5 +1,13 @@
 #adminbirras
-use Irssi qw (signal_add print settings_get_str settings_add_str);
+use Irssi qw (
+  signal_add
+  print
+  settings_get_str
+  settings_add_str
+  timeout_add_once
+  server_find_tag
+);
+
 use strict;
 use warnings;
 use POSIX qw(strftime);
@@ -7,6 +15,7 @@ use Date::Manip;
 use LWP::UserAgent;
 use Data::Dumper;
 use JSON;
+use Encode qw(encode decode);
 use utf8;
 
 settings_add_str('meetup', 'meetup_apikey', '');
@@ -15,10 +24,13 @@ signal_add('birras get','get_event');
 my $json = JSON->new();
 my $ua   = LWP::UserAgent->new( timeout => '15' );
 
-my $group = 'sysarmy';
+my $this_group = 'sysarmy';
 my $url  = 'https://api.meetup.com/2/events?key='
-         . settings_get_str('meetup_apikey')
-         . '&group_urlname=' . $group . '&sign=true';
+         .  settings_get_str('meetup_apikey')
+         . '&group_urlname=' . $this_group
+         . '&sign=true'
+         . '&fields=short_link'
+         ;
 
 sub get_event {
   my ($server, $chan) = @_;
@@ -37,7 +49,7 @@ sub get_event {
       #print strftime '%A, %h %d at %H:%M', localtime 1432936800;
       my $event = shift @{ $parsed_json->{'results'}};
       if ($event->{'status'} eq 'upcoming') {
-        my $output = '🍺 '. $event->{'name'} . ' :: '
+        my $output = $event->{'name'} . ' :: '
                    . get_dates($event->{'time'}/1000)
                    . ' :: '
                    . $event->{'venue'}->{'name'}      . ', '
@@ -46,9 +58,16 @@ sub get_event {
                    . ' :: '
                    . $event->{'yes_rsvp_count'} . ' going'
                    . ' :: '
-                   . scalar('Irssi::Script::ggl')->can('do_shortme')->($event->{'event_url'})
+                   . $event->{'short_link'}
                    ;
-        sayit($server, $chan, $output);
+
+        sayit($server, $chan, '🍺 ' . $output);
+
+        # we only need the name, date and the link for the topic
+        my @split_event = split(' :: ', $output);
+        my $add_this_to_topic = join (' :: ', @split_event[0,2,5]);
+
+        check_topic_for($server, $chan, $add_this_to_topic, $event->{'time'});
       }
     }
   }
@@ -99,4 +118,32 @@ sub next_birra {
   }
 }
 
+sub check_topic_for {
+  my ($server, $chan, $add_this, $event_time) = @_;
+
+  # check current topic, if set do nothing
+  my $current_topic = decode('utf8', $server->channel_find($chan)->{'topic'});
+
+  unless ($current_topic =~ /^adminbirra/i ) {
+    # topic not set with this event.
+    set_topic($chan, encode('utf8', $add_this . ' || ' . $current_topic));
+
+    # event start time is in miliseconds, diff with now, then +4hs
+    my $event_ends_at = $event_time - time * 1000 + 14400000;
+    timeout_add_once($event_ends_at, 'restore_topic', $chan);
+    print (CRAP "topic set for $chan and will be removed in $event_ends_at msecs.");
+  }
+  # else topic is already set.
+}
+
+sub restore_topic {
+  my $chan = shift;
+  my $birra_topic = Irssi::Server->channel_find($chan)->{'topic'};
+  my @birra_topic = split(/ \|\| /, $birra_topic);
+  shift @birra_topic;
+  my $old_topic = join(' || ', @birra_topic);
+  set_topic($chan, $old_topic);
+}
+
+sub set_topic { Irssi::server_find_tag('fnode')->send_message("chanserv", "topic @_", 1); }
 sub sayit { my $s = shift; $s->command("MSG @_"); }
