@@ -28,24 +28,25 @@ my %channel_for = (
 
 my @eko_hashtags =  ( '#ekoparty', '#eko11' );
 
-my $twt_content = undef;
 my $server = server_find_chatnet("fnode");
 our $sysarmyStreamer = undef;
 
 #{{{ show this
 sub show_tweet {
   my $tweet = shift;
+  my $twt_content = undef;
+
   #ignore @ replies
   unless (defined($tweet->{in_reply_to_screen_name})) {
     #check if it's a RT, then get the untrunked text
     if (defined($tweet->{retweeted_status})) {
-      $twt_content = "[\x02\@$tweet->{user}{screen_name}\x02] "
+      $twt_content = "[\@$tweet->{user}{screen_name}] "
                    . "RT \@$tweet->{retweeted_status}{user}{screen_name}: "
                    . decode_entities($tweet->{retweeted_status}{text})
                    ;
     }
     else {
-      $twt_content = "[\x02\@$tweet->{user}{screen_name}\x02] "
+      $twt_content = "[\@$tweet->{user}{screen_name}] "
                    . decode_entities($tweet->{text})
                    ;
     }
@@ -53,9 +54,11 @@ sub show_tweet {
     if (ref $tweet->{'entities'}->{'urls'} eq 'ARRAY') {
       if (scalar @{ $tweet->{'entities'}->{'urls'}} > 0 ) {
         foreach my $link (@{ $tweet->{'entities'}->{'urls'} }) {
-          my $expanded_url = $link->{'expanded_url'};
-          $expanded_url =~ s/(?:\?|&)utm_\w+=\w+//g;
-          $twt_content =~ s/($link->{'url'})/$expanded_url/;
+          my $expanded_url = $link->{'expanded_url'} || undef;
+          if ($expanded_url) {
+            $expanded_url =~ s/(?:\?|&)utm_\w+=\w+//g;
+            $twt_content  =~ s/($link->{'url'})/$expanded_url/;
+          }
         }
       }
     }
@@ -75,7 +78,7 @@ sub show_tweet {
         sayit($server, $channel_for{$id}, $twt_content);
       }
       else {
-        #the uesr id is not found in the channel hash, so this must be from a 
+        #the uesr id is not found in the channel hash, so this must be from a
         #keyword we are tracking
         #altho keyboard tracking shouldbe another hash.
         my $eko_keyword_re = join('|', @eko_hashtags);
