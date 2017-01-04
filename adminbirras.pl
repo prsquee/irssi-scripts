@@ -41,6 +41,7 @@ sub get_event {
     if (scalar @{ $parsed_json->{'results'} } == 0) {
       my $nope = '🍺 Event not created at meetup.com yet, but the next one should be ';
       my $next_date = next_birra();
+      my $joinus = ' Join us at ';
 
       sayit($server, $chan, $nope . $next_date);
     }
@@ -49,24 +50,21 @@ sub get_event {
       #print strftime '%A, %h %d at %H:%M', localtime 1432936800;
       my $event = shift @{ $parsed_json->{'results'}};
       if ($event->{'status'} eq 'upcoming') {
-        my $output = $event->{'name'} . ' :: '
-                   . get_dates($event->{'time'}/1000)
-                   . ' :: '
-                   . $event->{'venue'}->{'name'}      . ', '
-                   . $event->{'venue'}->{'address_1'} . ', '
-                   . $event->{'venue'}->{'city'}
-                   . ' :: '
-                   . $event->{'yes_rsvp_count'} . ' going'
-                   . ' :: '
-                   . $event->{'short_link'}
-                   ;
+        my @output;
+        push @output, $event->{'name'};
+        push @output, get_dates($event->{'time'}/1000);
+        push @output, $event->{'venue'}->{'name'}       . ', '
+                    . $event->{'venue'}->{'address_1'}  . ', '
+                    . $event->{'venue'}->{'city'};
+        push @output, $event->{'yes_rsvp_count'} . ' going';
+        push @output, $event->{'short_link'};
 
-        sayit($server, $chan, '🍺 ' . $output);
+        sayit($server, $chan, '🍺 ' . join (' :: ', @output));
 
         # we only need the name, date and the link for the topic
-        my @split_event = split(' :: ', $output);
-        my $add_this_to_topic = join (' :: ', @split_event[0,2,5]);
-
+        #print (CRAP "$output");
+        my $add_this_to_topic = join (' :: ', @output[0,1,2]);
+        #print (CRAP "$add_this_to_topic");
         check_topic_for($server, $chan, $add_this_to_topic, $event->{'time'});
       }
     }
