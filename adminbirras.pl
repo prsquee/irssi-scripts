@@ -1,4 +1,5 @@
 #adminbirras
+# this is prolly the worst way to use an api
 use Irssi qw (
   signal_add
   print
@@ -19,36 +20,50 @@ use Encode qw(encode decode);
 use utf8;
 
 settings_add_str('meetup', 'meetup_apikey', '');
-signal_add('birras get','get_event');
+signal_add('birras get','say_event');
 
 my $json = JSON->new();
 my $ua   = LWP::UserAgent->new( timeout => '15' );
 
 my $this_group = 'sysarmy';
-my $url  = 'https://api.meetup.com/2/events?key='
-         .  settings_get_str('meetup_apikey')
-         . '&group_urlname=' . $this_group
-         . '&sign=true'
-         . '&fields=short_link'
-         ;
+my $birra_meetup_url = 'https://api.meetup.com/2/events?key='
+                     .  settings_get_str('meetup_apikey')
+                     . '&group_urlname=' . $this_group
+                     . '&sign=true'
+                     . '&fields=short_link'
+                     ;
 
-sub get_event {
+my $refresh_topic_tag = undef;
+
+sub say_event {
   my ($server, $chan) = @_;
-  my $response = $ua->get($url);
+  my @this_event = fetch_event();
+  my $event_time = pop @this_event;
+  # we only need the name, date and the link for the topic
+  my $topic_material = join(' :: ', @this_event[0,1,2]);
+
+  sayit($server, $chan, '🍺 ' . join(' :: ', @this_event));
+
+  #print (CRAP "$topic_material $event_time");
+  is_topic_set($chan, $topic_material, $event_time);
+
+  #TODO put something here to check timeout and refresh topic
+
+}
+#{{{ this is so fetch!
+sub fetch_event {
+  my $response = $ua->get($birra_meetup_url);
   if ($response->is_success) {
     my $parsed_json = eval { $json->utf8->decode($response->decoded_content) };
 
     if (scalar @{ $parsed_json->{'results'} } == 0) {
-      my $nope = '🍺 Event not created at meetup.com yet, but the next one should be ';
-      my $next_date = next_birra();
-      my $joinus = ' Join us at ';
-
-      sayit($server, $chan, $nope . $next_date);
+      return '🍺 No event not created at meetup.com.';
+      # now this should never be the case.
     }
     else {
       #we just need the 1st result.
       #print strftime '%A, %h %d at %H:%M', localtime 1432936800;
-      my $event = shift @{ $parsed_json->{'results'}};
+      my $event = shift @{ $parsed_json->{'results'} };
       if ($event->{'status'} eq 'upcoming') {
         my @output;
         push @output, $event->{'name'};
@@ -56,23 +71,22 @@ sub get_event {
         push @output, $event->{'venue'}->{'name'}       . ', '
                     . $event->{'venue'}->{'address_1'}  . ', '
                     . $event->{'venue'}->{'city'};
+
         push @output, $event->{'yes_rsvp_count'} . ' going';
         push @output, $event->{'short_link'};
+        push @output, $event->{'time'};
 
-        sayit($server, $chan, '🍺 ' . join (' :: ', @output));
-
-        # we only need the name, date and the link for the topic
-        #print (CRAP "$output");
-        my $add_this_to_topic = join (' :: ', @output[0,1,2]);
-        #print (CRAP "$add_this_to_topic");
-        check_topic_for($server, $chan, $add_this_to_topic, $event->{'time'});
+        #return join (' :: ', @output);
+        return @output;
       }
     }
   }
   else {
-    print (CRAP "meetup.com error code: $response->code - $response->message");
+    print (CRAP "meetup.com error code: $response->{status_line}");
   }
 }
+# }}}
+# {{{ dating service
 sub get_dates {
   my ($event_time) = @_;
   if (strftime('%F', localtime) eq strftime('%F', localtime($event_time))) {
@@ -82,66 +96,64 @@ sub get_dates {
     return strftime('%A, %h %d at %H:%M', localtime($event_time));
   }
 }
-sub next_birra {
-  my $today = strftime('%u', localtime);
+# }}}
+#
+#{{{ no need to calculate this manually anymore 
+#sub next_birra {
+#  my $today = strftime('%u', localtime);
+#
+#  # odd_week = yes birra ; even_week = no birra
+#  # is this week a birra week? (swap 1 and 0 to toggle)
+#  my $is_birraweek = (strftime('%V', localtime) % 2) ? 0 : 1;
+#
+#  if ($is_birraweek) {
+#    #is it past thusday?
+#    return 'today.' if ($today == 4);
+#
+#    if ($today < 4) {
+#      return 'this Thursday.';
+#    }
+#    else {
+#      #past thursday on a birraweek.
+#      #jump to next thursday, which will be nonbirraweek, then plus one week.
+#      return strftime('%A, %B %d.', localtime(UnixDate('next Thursday', '%s') + 604800));
+#    }
+#  }
+#  else {
+#    #this is NOT a birraweek.
+#    return UnixDate('next Thursday', '%A, %B %d.') if $today == 4;
+#    if ($today < 4) {
+#      #we are between Mon and Wed.
+#      #jump to next thursday on a non birraweek then + 1 week.
+#      return strftime('%A, %B %d.', localtime(UnixDate('next Thursday', '%s') + 604800));
+#    }
+#    else {
+#      return strftime('%A, %B %d.', localtime(UnixDate('next Thursday', '%s')));
+#    }
+#  }
+#}
+#}}}
 
-  # odd_week = yes birra ; even_week = no birra
-  # is this week a birra week? (swap 1 and 0 to toggle)
-  my $is_birraweek = (strftime('%V', localtime) % 2) ? 0 : 1;
+sub is_topic_set {
+  my ($chan, $new_part, $event_time) = @_;
 
-  if ($is_birraweek) {
-    #is it past thusday?
-    return 'today.' if ($today == 4);
+  # check current topic, if birra part is equal do nothing
+  my $current_topic = decode('utf8', Irssi::Server->channel_find($chan)->{'topic'});
 
-    if ($today < 4) {
-      return 'this Thursday.';
+  if ($current_topic =~ /adminbirras/i) {
+    my @current_topic = split(/ \|\| /, $current_topic);
+    my $old_part = shift @current_topic;
+    if ($old_part ne $new_part) {
+      unshift @current_topic, $new_part;
+      set_topic ($chan, join(' || ', @current_topic));
     }
     else {
-      #past thursday on a birraweek.
-      #jump to next thursday, which will be nonbirraweek, then plus one week.
-      return strftime('%A, %B %d.', localtime(UnixDate('next Thursday', '%s') + 604800));
+      print (CRAP 'topic is already set for this event.');
     }
   }
   else {
-    #this is NOT a birraweek.
-    return UnixDate('next Thursday', '%A, %B %d.') if $today == 4;
-    if ($today < 4) {
-      #we are between Mon and Wed.
-      #jump to next thursday on a non birraweek then + 1 week.
-      return strftime('%A, %B %d.', localtime(UnixDate('next Thursday', '%s') + 604800));
-    }
-    else {
-      return strftime('%A, %B %d.', localtime(UnixDate('next Thursday', '%s')));
-    }
+    set_topic ($chan, $new_part . ' || ' . $current_topic);
   }
 }
-
-sub check_topic_for {
-  my ($server, $chan, $add_this, $event_time) = @_;
-
-  # check current topic, if set do nothing
-  my $current_topic = decode('utf8', $server->channel_find($chan)->{'topic'});
-
-  unless ($current_topic =~ /^adminbirra/i ) {
-    # topic not set with this event.
-    set_topic($chan, encode('utf8', $add_this . ' || ' . $current_topic));
-
-    # event start time is in miliseconds, diff with now, then +4hs
-    my $event_ends_at = $event_time - time * 1000 + 14400000;
-    timeout_add_once($event_ends_at, 'restore_topic', $chan);
-    print (CRAP "topic set for $chan and will be removed in $event_ends_at msecs.");
-  }
-  # else topic is already set.
-}
-
-sub restore_topic {
-  my $chan = shift;
-  my $birra_topic = Irssi::Server->channel_find($chan)->{'topic'};
-  my @birra_topic = split(/ \|\| /, $birra_topic);
-  shift @birra_topic;
-  my $old_topic = join(' || ', @birra_topic);
-  set_topic($chan, $old_topic);
-}
-
 sub set_topic { Irssi::server_find_tag('fnode')->send_message("chanserv", "topic @_", 1); }
 sub sayit { my $s = shift; $s->command("MSG @_"); }
