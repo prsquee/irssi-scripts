@@ -33,28 +33,27 @@ my $birra_meetup_url = 'https://api.meetup.com/2/events?key='
                      . '&fields=short_link'
                      ;
 
-my $refresh_topic_tag = undef;
+my $tag_is_set = undef;
 
 sub say_event {
   my ($server, $chan) = @_;
   my @this_event = fetch_event();
   my $event_time = pop @this_event;
-  # we only need the name, date and the link for the topic
-  my $topic_material = join(' :: ', @this_event[0,1,2]);
 
   sayit($server, $chan, '🍺 ' . join(' :: ', @this_event));
 
-  #print (CRAP "$topic_material $event_time");
-  is_topic_set($chan, $topic_material, $event_time);
+  # we only need the name, date and the link for the topic
+  is_topic_set($chan, join(' :: ', @this_event[0,1,2]));
 
-  #TODO put something here to check timeout and refresh topic
-
+  check_tag_for($event_time, $chan, @this_event[0,1,2]);
 }
+
 #{{{ this is so fetch!
 sub fetch_event {
   my $response = $ua->get($birra_meetup_url);
   if ($response->is_success) {
     my $parsed_json = eval { $json->utf8->decode($response->decoded_content) };
+    print (CRAP $@) if $@;
 
     if (scalar @{ $parsed_json->{'results'} } == 0) {
       return '🍺 No event not created at meetup.com.';
@@ -97,7 +96,6 @@ sub get_dates {
   }
 }
 # }}}
-#
 #{{{ no need to calculate this manually anymore 
 #sub next_birra {
 #  my $today = strftime('%u', localtime);
@@ -133,26 +131,50 @@ sub get_dates {
 #  }
 #}
 #}}}
+sub check_tag_for {
+  my ($event_time, $chan, $new_part) = @_;
+  print (CRAP "event time is $event_time");
+
+  #event start time is in miliseconds, diff with now, then +4hs
+  unless ($tag_is_set) {
+    my $when_ends = $event_time - time * 1000 + 14400000;
+    $tag_is_set = timeout_add_once($when_ends, 'refresh_topic', $chan);
+
+    print (CRAP "refresh topic at $when_ends :: tag: $tag_is_set");
+  }
+  else {
+    print (CRAP "tag is already set: $tag_is_set");
+  }
+}
+sub refresh_topic {
+  # this means we need to put the next 'new' event onto the topic.
+  my $chan = shift;
+  my @events = fetch_event();
+  my $new_part = join(' :: ', @events[0,1,2]);
+
+  # print (CRAP "$chan will have $new_part");
+  is_topic_set ($chan, $new_part);
+}
 
 sub is_topic_set {
-  my ($chan, $new_part, $event_time) = @_;
+  my ($chan, $new_part) = @_;
 
   # check current topic, if birra part is equal do nothing
   my $current_topic = decode('utf8', Irssi::Server->channel_find($chan)->{'topic'});
 
-  if ($current_topic =~ /adminbirras/i) {
+  if ($current_topic =~ /#adminbirras/i) {
     my @current_topic = split(/ \|\| /, $current_topic);
     my $old_part = shift @current_topic;
     if ($old_part ne $new_part) {
       unshift @current_topic, $new_part;
-      set_topic ($chan, join(' || ', @current_topic));
+      set_topic ($chan, encode('utf8', join(' || ', @current_topic)));
     }
     else {
       print (CRAP 'topic is already set for this event.');
     }
   }
   else {
-    set_topic ($chan, $new_part . ' || ' . $current_topic);
+    set_topic ($chan, encode('utf8', $new_part . ' || ' . $current_topic));
   }
 }
 sub set_topic { Irssi::server_find_tag('fnode')->send_message("chanserv", "topic @_", 1); }
