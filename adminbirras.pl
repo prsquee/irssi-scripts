@@ -137,15 +137,16 @@ sub check_tag_for {
 
   #event start time is in miliseconds, diff with now, then +4hs
   unless ($tag_is_set) {
-    my $when_ends = $event_time - time * 1000 + 14400000;
-    $tag_is_set = timeout_add_once($when_ends, 'refresh_topic', $chan);
+    my $msecs_until_ends = $event_time - time * 1000 + 14400000;
+    $tag_is_set = timeout_add_once($msecs_until_ends, 'refresh_topic', $chan);
 
-    print (CRAP "refresh topic at $when_ends :: tag: $tag_is_set");
+    print (CRAP "refresh topic after $msecs_until_ends :: internal tag: $tag_is_set");
   }
   else {
-    print (CRAP "tag is already set: $tag_is_set");
+    print (CRAP "internal tag is already set: $tag_is_set");
   }
 }
+# TODO make tag a hash and save a tag per channel
 sub refresh_topic {
   # this means we need to put the next 'new' event onto the topic.
   my $chan = shift;
@@ -160,9 +161,10 @@ sub is_topic_set {
   my ($chan, $new_part) = @_;
 
   # check current topic, if birra part is equal do nothing
-  my $current_topic = decode('utf8', Irssi::Server->channel_find($chan)->{'topic'});
+  my $current_topic 
+    = decode('utf8', Irssi::Server->channel_find($chan)->{'topic'});
 
-  if ($current_topic =~ /#adminbirras/i) {
+  if ($current_topic =~ /^#(?:adminbirras)|(?:meetarmy)/i) {
     my @current_topic = split(/ \|\| /, $current_topic);
     my $old_part = shift @current_topic;
     if ($old_part ne $new_part) {
@@ -177,5 +179,7 @@ sub is_topic_set {
     set_topic ($chan, encode('utf8', $new_part . ' || ' . $current_topic));
   }
 }
-sub set_topic { Irssi::server_find_tag('fnode')->send_message("chanserv", "topic @_", 1); }
+sub set_topic { 
+  Irssi::server_find_tag('fnode')->send_message("chanserv", "topic @_", 1); 
+}
 sub sayit { my $s = shift; $s->command("MSG @_"); }
