@@ -25,11 +25,11 @@ sub get_price {
   #print (CRAP $raw_result);
 
   ($oficial_venta, $oficial_compra)
-    = $raw_result =~ m{ 
-      "CasaCambioVentaValue" :"([^"]+)?"
+    = $raw_result =~ m{
+      "CasaCambioVentaValue".+?"([^"]+)"
       .*
-                        "CasaCambioCompraValue":"([^"]+)?"
-                      }x;
+      "CasaCambioCompraValue".+?"([^"]+)"
+    }x;
 
   $last_fetch = time() if ($oficial_compra and $oficial_venta);
 }
@@ -49,7 +49,7 @@ sub do_dolar {
     if (!$how_much) {
       #my $output = '[Oficial] ';
       my $output = ($oficial_compra and $oficial_venta)
-                 ? 'Compra: ARS $' . $oficial_compra 
+                 ? 'Compra: ARS $' . $oficial_compra
                  . ' :: '
                  .  'Venta: ARS $' . $oficial_venta
                  : 'no idea';
