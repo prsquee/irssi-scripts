@@ -2,23 +2,17 @@ use Irssi qw (print signal_add);
 use strict;
 use warnings;
 use Data::Dumper;
+use Unix::Uptime;
 
 signal_add('show uptime', 'get_uptime');
 
 sub get_uptime {
   my ($server,$chan) = @_;
-  my ($days, $hour, $mins) 
-    = qx(/usr/bin/uptime) 
-      =~ /up (?:(\d+) days?,)?\s+(\d+):(\d+),/;
-
-  $days = 0 if not $days;
-  $hour = 0 if not $hour;
-
-  my $uptime = $days . ' day'    . (($days > 1) ? 's ' : ' ')
-             . $hour . ' hour'   . (($hour > 1) ? 's ' : ' ')
-             . $mins . ' mintue' . (($mins > 1) ? 's ' : ' ')
-             ;
-  sayit($server, $chan, $uptime);
+  my $uptime_days = 'about '
+                  . sprintf ("%d", Unix::Uptime->uptime() / 86400)
+                  . ' days.'
+                  ;
+  sayit($server, $chan, "$uptime_days");
 }
 
 sub sayit { my $s = shift; $s->command("MSG @_"); }
