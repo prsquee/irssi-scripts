@@ -457,7 +457,8 @@ sub incoming_public {
       }
     }#}}}
    #{{{ !btc bitcoins
-    if ($cmd =~ m{^bi?tc(?:oin)?s?}) {
+    if ($cmd =~ m{^bi?tc(?:oin)?s?$}) {
+      # print(CRAP "btc: $1") if $1;
       signal_emit('gold digger', $server, $chan, 'btc') if is_loaded('blockio');
     }#}}}
    #{{{ !ltc litecoins
