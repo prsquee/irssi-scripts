@@ -163,11 +163,12 @@ sub incoming_public {
       return;
     }#}}}
     #{{{ !dol[ao]r and !pesos
-    if ($cmd =~ /^dol[ao]r$/ or $cmd eq 'pesos') {
+    #if ($cmd =~ /^dol[aoe]r$/ or $cmd eq 'pesos') {
+    if ($cmd =~ /^dol[aoe]r$/ ) {
       signal_emit(
                     'showme the money',
                     $server, $chan, $text
-                 ) if is_loaded('dolar2');
+                 ) if is_loaded('dolar_geeklab');
       return;
     }
     #}}}
@@ -233,10 +234,10 @@ sub incoming_public {
           $quote_this .= "\n\n" . '#sysarmy';
 
           #and off we go.
-          my $tweeted_url
-            = scalar('Irssi::Script::sysarmy')->can('send_to_twitter')->($quote_this);
+          #my $tweeted_url
+          #  = scalar('Irssi::Script::sysarmy')->can('send_to_twitter')->($quote_this);
 
-          $message_out .= $tweeted_url ? ' and tweeted at ' . $tweeted_url : '.';
+          #$message_out .= $tweeted_url ? ' and tweeted at ' . $tweeted_url : '.';
         }
         sayit($server, $chan, $message_out);
       }
