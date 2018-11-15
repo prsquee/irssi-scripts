@@ -163,12 +163,11 @@ sub incoming_public {
       return;
     }#}}}
     #{{{ !dol[ao]r and !pesos
-    #if ($cmd =~ /^dol[aoe]r$/ or $cmd eq 'pesos') {
-    if ($cmd =~ /^dol[aoe]r$/ ) {
+    if ($cmd =~ /^dol[aoe]r$/ or $cmd eq 'pesos') {
       signal_emit(
                     'showme the money',
                     $server, $chan, $text
-                 ) if is_loaded('dolar_geeklab');
+                 ) if is_loaded('dolar3');
       return;
     }
     #}}}
@@ -198,10 +197,10 @@ sub incoming_public {
       unless (defined($quote_this)) {
         sayit(
           $server, $chan,
-          'EL_FORMATO IS DEFINED AS: "<@supreme_leader> because I say so. | '
+          'EL_FORMATO IS DEFINED AS: <@supreme_leader> because I say so. | '
           . '<peasant1> yes m\'Lord. | '
           . '<peasant2> it wont happen again, Sire. | '
-          . '<peasant-n> please forgive us."'
+          . '<peasant-n> please forgive us.'
         );
         return;
       }
@@ -234,10 +233,9 @@ sub incoming_public {
           $quote_this .= "\n\n" . '#sysarmy';
 
           #and off we go.
-          #my $tweeted_url
-          #  = scalar('Irssi::Script::sysarmy')->can('send_to_twitter')->($quote_this);
+          my $status = scalar('Irssi::Script::sysarmy')->can('send_to_twitter')->($quote_this);
 
-          #$message_out .= $tweeted_url ? ' and tweeted at ' . $tweeted_url : '.';
+          $message_out .= $status ? ' and tweeted to @sysarmIRC.' : '';
         }
         sayit($server, $chan, $message_out);
       }
@@ -409,12 +407,12 @@ sub incoming_public {
         foreach (keys %{$twit_users_ref}) {
           $text =~ s/\b\Q$_\E\b/\@$twit_users_ref->{$_}/g;
         }
-        my $tweeted_url
+        my $status
           = scalar('Irssi::Script::sysarmy')->can('send_to_twitter')->($text);
 
-        my $message_out = $tweeted_url ? 'tweet sent at ' . $tweeted_url
-                                       : 'cannot post to twitter right now.'
-                                       ;
+        my $message_out = $status ? 'tweet sent.'
+                                  : 'cannot post to twitter right now.';
+
         sayit($server, $chan, $message_out);
         return;
       }
@@ -605,10 +603,6 @@ sub incoming_public {
       my ($new_topic) = $text =~ /^!settopic +(.*)$/;
       $server->send_message('chanserv', "topic $chan $new_topic");
     }
-    ##}}}
-    ##{{{ !interpreter  FIXME
-    #if ($cmd eq 'interpreter' an.nnd is_sQuEE($mask)) {
-    #}
     ##}}}
   } #cmd check ends here. begin general text match
 

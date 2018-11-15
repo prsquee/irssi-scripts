@@ -213,20 +213,7 @@ sub do_twitter {
     }
   }
 
-  my $shorten_reply_url = undef;
-  if ($status->{'in_reply_to_status_id'} and is_loaded('ggl')) {
-    my $full_reply_url 
-      = 'https://twitter.com/' 
-      . $user 
-      . '/status/' 
-      . $status->{'in_reply_to_status_id'}
-      ;
-
-    $shorten_reply_url 
-      = scalar('Irssi::Script::ggl')->can('do_shortme')->($full_reply_url);
-  }
-
-  $result .= $shorten_reply_url ? ' In reply to ' . $shorten_reply_url : '';
+  #$result .= $status->{'in_reply_to_screen_name'} ? ' In reply to @' . $status->{'in_reply_to_screen_name'} : '';
 
   sayit($server, $chan, $result) if ($result);
 }

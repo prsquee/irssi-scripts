@@ -52,23 +52,16 @@ sub send_to_twitter {
   my $status = undef;
 
   eval { $status = $twitter->update(decode('utf8', $tweet_this)) };
- 
+
   if (!$@) {
-    #get the link to the tweet we just sent.
-    #shorten that
-    my $shorten 
-      = scalar('Irssi::Script::ggl')->can('do_shortme')->(
-                                        'https://twitter.com/sysARmIRC/status/' 
-                                        . $status->{'id'}
-                                      );
-    #return that short url
-    return $shorten;
-  } 
+    #print (CRAP $status->{id});
+    return 'tweeted';
+  }
   else {
     #my $err = $@;
     print (CRAP $@);
     return undef;
   }
 }
-#}}}
+
 sub sayit { my $s = shift; $s->command("MSG @_"); }
