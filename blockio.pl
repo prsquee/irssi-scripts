@@ -16,7 +16,7 @@ my $json = JSON->new();
 my $ua  = LWP::UserAgent->new( timeout => 15 );
 
 my $prices_ref   = undef;
-my $buffered_for = 3600;
+my $buffered_for = 1800;
 
 my %coin_prices = ( 'btc' => undef, 'ltc' => undef, );
 my %last_fetch  = ( 'btc' => 0, 'ltc' => 0, );

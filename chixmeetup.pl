@@ -3,7 +3,6 @@ use Irssi qw (signal_add print settings_get_str settings_add_str);
 use strict;
 use warnings;
 use POSIX qw(strftime);
-use Date::Manip;
 use LWP::UserAgent;
 use Data::Dumper;
 use JSON;

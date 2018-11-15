@@ -20,18 +20,20 @@ my $cached_for = 43200; #halfday;
 my $json = JSON->new();
 my $ua   = LWP::UserAgent->new( timeout => '15' );
 
+$ua->ssl_opts( verify_hostnames => 0 ,SSL_verify_mode => 0x00);
+
 my %headers = (
   'X-Parse-Application-Id' => $appid,
   'X-Parse-REST-API-Key'   => $rest_key,
   'content-type'           => 'application/json',
 );
 
-my $get = HTTP::Request->new( 
+my $get = HTTP::Request->new(
   'GET' => $api_url,
   HTTP::Headers->new(%headers),
 );
 
-my $post = HTTP::Request->new( 
+my $post = HTTP::Request->new(
   'POST' => $api_url,
   HTTP::Headers->new(%headers),
 );
@@ -54,7 +56,7 @@ sub fetch_and_cache {
     print (CRAP 'excusarmy updated with ' . scalar(keys %regrets) . ' excuses.');
   }
   else {
-    print (CRAP "excusarmy error code: $get->code - $get->message");
+    print (CRAP "excusarmy error code: " . $response->status_line);
   }
 }
 

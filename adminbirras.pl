@@ -12,7 +12,6 @@ use Irssi qw (
 use strict;
 use warnings;
 use POSIX qw(strftime);
-use Date::Manip;
 use LWP::UserAgent;
 use Data::Dumper;
 use JSON;

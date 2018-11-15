@@ -21,7 +21,7 @@ sub check_weather {
   my $apikey = settings_get_str('weatherkey');
   print (CRAP "no weather apikey") unless (defined($apikey));
 
-  my $url = "http://api.wunderground.com/api/${apikey}/conditions/q/${city}_argentina.json";
+  my $url = "http://api.wunderground.com/api/${apikey}/conditions/q/${city}.json";
   $ua->agent(settings_get_str('myUserAgent'));
 
   my $got = $ua->get($url);
