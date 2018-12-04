@@ -67,7 +67,8 @@ sub fetch_event {
         push @output, $event->{'name'};
         push @output, get_dates($event->{'time'}/1000);
         push @output, $event->{'venue'}->{'name'}       . ', '
-                    . $event->{'venue'}->{'address_1'}  . ', '
+                    . $event->{'venue'}->{'address_1'}  . ' '
+                    . $event->{'venue'}->{'address_2'}  . ', '
                     . $event->{'venue'}->{'city'};
 
         push @output, $event->{'yes_rsvp_count'} . ' going';
