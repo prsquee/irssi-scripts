@@ -471,7 +471,7 @@ sub incoming_public {
         signal_emit('weather', $server, $chan, $city);
       }
       else {
-        sayit($server, $chan, "!clima <una ciudad o codigo del aeropuerto>");
+        sayit($server, $chan, "I need a city name.");
       }
     } #}}}
     #{{{ wolfram alpha !wa
