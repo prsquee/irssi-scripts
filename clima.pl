@@ -42,7 +42,13 @@ my $ua   = LWP::UserAgent->new( timeout => 15 );
 
 sub check_weather {
   my ($server, $chan, $city) = @_;
-  $city = uri_escape($city);
+  if ($city =~ /,[a-zA-Z]{2}$/) {
+    $city = uri_escape($city);
+  }
+  else {
+    $city = $city . ',ar';
+    $city = uri_escape($city);
+  }
 
   my $url = $apiurl . $city . $apikey;
   $ua->agent(settings_get_str('myUserAgent'));
@@ -59,14 +65,15 @@ sub check_weather {
   if ($parsed_json->{cod} == '200' and $parsed_json->{count} > 0) {
     my $item = $parsed_json->{list}[0];
     my $temp        = int($item->{main}->{temp});
+    my $min         = int($item->{main}->{temp_min});
+    my $max         = int($item->{main}->{temp_max});
+    my $humidity    = int($item->{main}->{humidity});
     my $found_city  = $item->{name};
     my $weather     = $item->{weather}[0];
     my $icon        = $weather->{icon};
-    #my $lowest      = $parsed_json->{current_observation}->{dewpoint_c};
-    #my $humidity    = $parsed_json->{current_observation}->{relative_humidity};
-    #my $feelslike   = $parsed_json->{current_observation}->{feelslike_c};
 
-    my $out = "${found_city}: ${temp}˚C - $weather{$icon}";
+    my $out = "${found_city}: ${temp}˚C - $weather{$icon} - min: ${min}˚C, max: ${max}˚C - humidity: ${humidity}% ";
+
     sayit($server, $chan, $out);
   } else { sayit($server,$chan,"city not found."); }
 }
