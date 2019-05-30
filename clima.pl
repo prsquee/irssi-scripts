@@ -42,13 +42,7 @@ my $ua   = LWP::UserAgent->new( timeout => 15 );
 
 sub check_weather {
   my ($server, $chan, $city) = @_;
-  if ($city =~ /,[a-zA-Z]{2}$/) {
-    $city = uri_escape($city);
-  }
-  else {
-    $city = $city . ',ar';
-    $city = uri_escape($city);
-  }
+  $city = uri_escape($city);
 
   my $url = $apiurl . $city . $apikey;
   $ua->agent(settings_get_str('myUserAgent'));
