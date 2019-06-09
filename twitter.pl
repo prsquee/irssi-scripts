@@ -187,33 +187,16 @@ sub do_twitter {
 
   my $delta = moment_ago($status->{created_at});
 
-  my $result = "\@${user} "
-             . 'tweeted: '
-             . '"'
-             . decode_entities($status->{text})
-             . '"'
-             ;
+  #print (CRAP Dumper($status));
+  my $result = "\@${user} ";
+  $result .= ($status->{user}{screen_name} eq $status->{in_reply_to_screen_name})
+                ? 'tweeted: "'
+                : 'replied: "';
 
-  $result =~ s/\n|\r/ /g;
+  $result .= decode_entities($status->{text}) . '"';
   $result .= $delta ? ' from ' . $delta : '';
+  $result =~ s/\n|\r/ /g;
 
-  #replace all the t.co urls
-  if (ref $status->{'entities'}->{'urls'} eq 'ARRAY') {
-    foreach my $link (@{ $status->{'entities'}->{'urls'} }) {
-      my $expanded_url = $link->{'expanded_url'};
-      $expanded_url =~ s/(?:\?|&)utm_\w+=\w+//g;
-      $result =~ s/($link->{'url'})/$expanded_url/;
-    }
-  }
-
-  if (ref $status->{'entities'}->{'media'} eq 'ARRAY') {
-    foreach my $link (@{ $status->{'entities'}->{'media'} }) {
-      my $expanded_url = $link->{'expanded_url'};
-      $result =~ s/($link->{'url'})/$expanded_url/;
-    }
-  }
-
-  #$result .= $status->{'in_reply_to_screen_name'} ? ' In reply to @' . $status->{'in_reply_to_screen_name'} : '';
 
   sayit($server, $chan, $result) if ($result);
 }
