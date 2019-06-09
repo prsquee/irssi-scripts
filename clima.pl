@@ -13,7 +13,7 @@ use utf8;
 settings_add_str('weather', 'weatherkey', '');
 signal_add('weather','check_weather');
 
-my $apiurl = 'http://api.openweathermap.org/data/2.5/find?q=';
+my $apiurl = 'http://api.openweathermap.org/data/2.5/weather?';
 my $apikey = '&units=metric&APPID=' . settings_get_str('weatherkey');
 
 my %weather = (
@@ -42,28 +42,36 @@ my $ua   = LWP::UserAgent->new( timeout => 15 );
 
 sub check_weather {
   my ($server, $chan, $city) = @_;
-  $city = uri_escape($city);
+  my $url = '';
 
-  my $url = $apiurl . $city . $apikey;
+  if ($city =~ /^\d+$/) {
+    $url = $apiurl . "id=$city" . $apikey;
+  } else {
+    $city = uri_escape($city);
+    $url = $apiurl . "q=$city" . $apikey;
+  }
+
   $ua->agent(settings_get_str('myUserAgent'));
 
   my $got = $ua->get($url);
   unless ($got->is_success) {
-    print (CRAP "clima error code: $got->code - $got->message");
+    my $status = $got->status_line;
+    #print (CRAP "clima error code: $status");
+    sayit($server,$chan,"error: $status");
     return;
   }
   
-  my $parsed_json = eval { $json->utf8->decode($got->decoded_content) };
+  my $parsed = eval { $json->utf8->decode($got->decoded_content) };
   return if $@;
 
-  if ($parsed_json->{cod} == '200' and $parsed_json->{count} > 0) {
-    my $item = $parsed_json->{list}[0];
-    my $temp        = int($item->{main}->{temp});
-    my $min         = int($item->{main}->{temp_min});
-    my $max         = int($item->{main}->{temp_max});
-    my $humidity    = int($item->{main}->{humidity});
-    my $found_city  = $item->{name};
-    my $weather     = $item->{weather}[0];
+  if ($parsed->{cod} == '200') {
+    #my $item = $parsed_json->{list}[0];
+    my $temp        = int($parsed->{main}->{temp});
+    my $min         = int($parsed->{main}->{temp_min});
+    my $max         = int($parsed->{main}->{temp_max});
+    my $humidity    = int($parsed->{main}->{humidity});
+    my $found_city  = $parsed->{name};
+    my $weather     = $parsed->{weather}[0];
     my $icon        = $weather->{icon};
 
     my $out = "${found_city}: ${temp}˚C - $weather{$icon} - min: ${min}˚C, max: ${max}˚C - humidity: ${humidity}% ";
