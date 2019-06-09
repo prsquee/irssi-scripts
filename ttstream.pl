@@ -34,22 +34,45 @@ our $sysarmyStreamer = undef;
 #{{{ show this
 sub show_tweet {
   my $tweet = shift;
-  my $twt_content = undef;
+  my $output = undef;
 
   #ignore @ replies
   unless (defined($tweet->{in_reply_to_screen_name})) {
     #check if it's a RT, then get the untrunked text
-    if (defined($tweet->{retweeted_status})) {
-      $twt_content = "[\@$tweet->{user}{screen_name}] "
-                   . "RT \@$tweet->{retweeted_status}{user}{screen_name}: "
-                   . decode_entities($tweet->{retweeted_status}{text})
-                   ;
+    if ($tweet->{retweeted_status}) {
+      $output = "[\@$tweet->{user}{screen_name}] "
+                   . "retweeted: \"\@$tweet->{retweeted_status}{user}{screen_name}: "
+                   . decode_entities(
+                      $tweet->{retweeted_status}->{'truncated'}
+                      ? $tweet->{retweeted_status}{extended_tweet}{full_text}
+                      : $tweet->{retweeted_status}{text}
+                     ) . '"';
+    }
+    elsif ($tweet->{is_quote_status}) {
+    # original quoted tweet
+      $output = "[\@$tweet->{user}{screen_name}] \"<\@$tweet->{quoted_status}{user}{screen_name}> "
+              . decode_entities(
+                  $tweet->{quoted_status}->{'truncated'}
+                  ? $tweet->{quoted_status}{extended_tweet}{full_text}
+                  : $tweet->{quoted_status}{text}
+                ) . '"';
+    # our added text
+      $output .=  ' << '
+              . decode_entities(
+                  $tweet->{truncated}
+                  ? $tweet->{extended_tweet}{full_text}
+                  : $tweet->{text}
+                );
     }
     else {
-      $twt_content = "[\@$tweet->{user}{screen_name}] "
-                   . decode_entities($tweet->{text})
-                   ;
+      $output = "[\@$tweet->{user}{screen_name}] "
+              . decode_entities(
+                  $tweet->{truncated}
+                  ? $tweet->{extended_tweet}{full_text}
+                  : $tweet->{text}
+                ) . '"';
     }
+
     #replace all the t.co urls
     if (ref $tweet->{'entities'}->{'urls'} eq 'ARRAY') {
       if (scalar @{ $tweet->{'entities'}->{'urls'}} > 0 ) {
@@ -57,7 +80,7 @@ sub show_tweet {
           my $expanded_url = $link->{'expanded_url'} || undef;
           if ($expanded_url) {
             $expanded_url =~ s/(?:\?|&)utm_\w+=\w+//g;
-            $twt_content  =~ s/($link->{'url'})/$expanded_url/;
+            $output  =~ s/($link->{'url'})/$expanded_url/;
           }
         }
       }
@@ -66,24 +89,24 @@ sub show_tweet {
     if (ref $tweet->{'entities'}->{'media'} eq 'ARRAY') {
       foreach my $link (@{ $tweet->{'entities'}->{'media'} }) {
         my $media_url = $link->{'media_url'};
-        $twt_content =~ s/($link->{'url'})/$media_url/;
+        $output =~ s/($link->{'url'})/$media_url/;
       }
     }
 
     #check who is the user and send it to the proper channel.
-    if (defined($twt_content)) {
+    if (defined($output)) {
       my $id = $tweet->{user}{id_str};
-      $twt_content =~ s/\n|\r/ /g;
+      $output =~ s/\n|\r/ /g;
       if (exists $channel_for{$id}) {
-        sayit($server, $channel_for{$id}, $twt_content);
+        sayit($server, $channel_for{$id}, $output);
       }
       else {
         #the uesr id is not found in the channel hash, so this must be from a
         #keyword we are tracking
         #altho keyboard tracking shouldbe another hash.
         my $eko_keyword_re = join('|', @eko_hashtags);
-        if ($twt_content =~ /$eko_keyword_re/) {
-          sayit($server, '#ekoparty', $twt_content) 
+        if ($output =~ /$eko_keyword_re/) {
+          sayit($server, '#ekoparty', $output) 
             unless defined($tweet->{retweeted_status});
         }
       }
