@@ -18,7 +18,7 @@ my %subtes;
 
 my $ua = LWP::UserAgent->new(
   timeout  => 10,
-  agent    => settings_get_str('subte_agent')
+  agent    => settings_get_str('subte_agent'),
 );
 #{{{
 sub check_subte {

@@ -137,7 +137,7 @@ sub check_tag_for {
 
   #event start time is in miliseconds, diff with now, then +4hs
   unless ($tag_is_set) {
-    my $msecs_until_ends = $event_time - time * 1000 + 14400000;
+    my $msecs_until_ends = $event_time - time * 1000 + 14400000 + 10;
     $tag_is_set = timeout_add_once($msecs_until_ends, 'refresh_topic', $chan);
 
     print (CRAP "refresh topic after $msecs_until_ends :: internal tag: $tag_is_set");
@@ -148,20 +148,20 @@ sub check_tag_for {
 }
 # TODO make tag a hash and save a tag per channel
 sub refresh_topic {
-  # this means we need to put the next 'new' event onto the topic.
+  # this means we need to put the next 'new' event onto the topic
   my $chan = shift;
   my @events = fetch_event();
   my $new_part = join(' :: ', @events[0,1,2]);
 
   # print (CRAP "$chan will have $new_part");
-  is_topic_set ($chan, $new_part);
+  is_topic_set($chan, $new_part);
 }
 
 sub is_topic_set {
   my ($chan, $new_part) = @_;
 
   # check current topic, if birra part is equal do nothing
-  my $current_topic 
+  my $current_topic
     = decode('utf8', Irssi::Server->channel_find($chan)->{'topic'});
 
   if ($current_topic =~ /^#(?:adminbirras)|(?:meetarmy)/i) {
@@ -179,7 +179,7 @@ sub is_topic_set {
     set_topic ($chan, encode('utf8', $new_part . ' || ' . $current_topic));
   }
 }
-sub set_topic { 
-  Irssi::server_find_tag('fnode')->send_message("chanserv", "topic @_", 1); 
+sub set_topic {
+  Irssi::server_find_tag('fnode')->send_message("chanserv", "topic @_", 1);
 }
 sub sayit { my $s = shift; $s->command("MSG @_"); }

@@ -70,7 +70,7 @@ sub show_tweet {
                   $tweet->{truncated}
                   ? $tweet->{extended_tweet}{full_text}
                   : $tweet->{text}
-                ) . '"';
+                );
     }
 
     #replace all the t.co urls
