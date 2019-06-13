@@ -182,18 +182,32 @@ sub do_twitter {
     = $text
       =~ m{twitter\.com(?:/\#!)?/([^/]+)/status(?:es)?/(\d+)}i;
 
-  my $status = eval { $twitter_ref->show_status($status_id) };
-  return if $@;
+  my $status = eval { $twitter_ref->show_status({
+        id => $status_id,
+        tweet_mode => 'extended',
+      })
+  };
+
+  #return if $@;
+  if ($@) {
+    print (CRAP "$@");
+    return;
+  }
 
   my $delta = moment_ago($status->{created_at});
 
   #print (CRAP Dumper($status));
   my $result = "\@${user} ";
-  $result .= ($status->{user}{screen_name} eq $status->{in_reply_to_screen_name})
+  $result .= (defined($status->{in_reply_to_screen_name}))
+              ? ($status->{user}{screen_name} eq $status->{in_reply_to_screen_name})
                 ? 'tweeted: "'
-                : 'replied: "';
+                : (defined($status->{in_reply_to_status_id}))
+                  ? 'replied: "'
+                  : 'tweeted: "'
+              : 'tweeted: "'
+              ;
 
-  $result .= decode_entities($status->{text}) . '"';
+  $result .= decode_entities($status->{full_text}) . '"';
   $result .= $delta ? ' from ' . $delta : '';
   $result =~ s/\n|\r/ /g;
 
@@ -203,31 +217,17 @@ sub do_twitter {
 #}}}
 #{{{ new twtrr
 sub new_twitter {
-  my %consumer_tokens = (
-  consumer_key    => settings_get_str('twitter_apikey'),
-  consumer_secret => settings_get_str('twitter_secret'),
+  my %tokens = (
+  consumer_key        => settings_get_str('twitter_apikey'),
+  consumer_secret     => settings_get_str('twitter_secret'),
+  access_token        => settings_get_str('twitter_access_token'),
+  access_token_secret => settings_get_str('twitter_access_token_secret'),
   );
-  my $twitter;
-  if (%consumer_tokens) {
-    $twitter = Net::Twitter::Lite::WithAPIv1_1->new(
-      %consumer_tokens,
+  my $twitter = Net::Twitter::Lite::WithAPIv1_1->new(
+      %tokens,
       legacy_lists_api  =>  0,
       ssl               =>  1,
     );
-  } else {
-    print (CRAP "no keys!");
-    return;
-  }
-  #my ($at, $ats) = restore_tokens(); #this seems like forever
-  my $at  = settings_get_str('twitter_access_token');
-  my $ats = settings_get_str('twitter_access_token_secret');
-  if ($at && $ats) {
-    $twitter->access_token($at);
-    $twitter->access_token_secret($ats);
-  } else {
-    print (CRAP "no tokens!");
-    return;
-  }
   return $twitter;
 }
 #}}}
