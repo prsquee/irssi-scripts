@@ -464,6 +464,10 @@ sub incoming_public {
     if ($cmd =~ m{^li?te?c(?:oin)?s?}) {
       signal_emit('silver digger', $server, $chan, 'ltc') if is_loaded('blockio');
     }#}}}
+   #{{{ !eth ethereum
+    if ($cmd =~ m{^eth(reum)?}) {
+      signal_emit('ethereum', $server, $chan) if is_loaded('ethereum');
+    }#}}}
     #{{{ !clima
     if ($cmd eq 'clima') {
       my ($city) = $text =~ /^!clima\s+(.*)$/;

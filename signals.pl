@@ -36,6 +36,7 @@ signal_register( { 'write to file'    => [           'string'                   
 signal_register( { 'cuac cuac go'     => [ 'iobject','string','string'          ]}); #server,chan,query
 signal_register( { 'gold digger'      => [ 'iobject','string','string'          ]}); #server,chan,btc
 signal_register( { 'silver digger'    => [ 'iobject','string','string'          ]}); #server,chan,ltc
+signal_register( { 'ethereum'         => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'insert coins'     => [ 'iobject','string','string'          ]}); #server,chan,$pair
 signal_register( { 'such signal'      => [ 'iobject','string','string'          ]}); #server,chan,$text
 signal_register( { 'such difficult'   => [ 'iobject','string','string'          ]}); #server,chan,$text
