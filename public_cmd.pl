@@ -605,7 +605,7 @@ sub incoming_public {
     #{{{
     if ($cmd eq 'settopic' and is_sQuEE($mask)) {
       my ($new_topic) = $text =~ /^!settopic +(.*)$/;
-      $server->send_message('chanserv', "topic $chan $new_topic");
+      $server->send_message('chanserv', "topic $chan $new_topic", 0);
     }
     ##}}}
   } #cmd check ends here. begin general text match
@@ -718,7 +718,3 @@ sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
 sub sayit     { my $s = shift; $s->command("MSG @_"); }
 
 signal_add("message public", "incoming_public");
-
-#apikeys
-settings_add_str('wolfram', 'wa_appid', '');
-#}}}

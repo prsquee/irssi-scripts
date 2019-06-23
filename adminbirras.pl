@@ -69,7 +69,7 @@ sub fetch_event {
         push @output, $event->{'venue'}->{'name'}       . ', '
                     . $event->{'venue'}->{'address_1'}  . ' '
                     . $event->{'venue'}->{'address_2'}  . ', '
-                    . $event->{'venue'}->{'city'};
+                    . ($event->{'venue'}->{'city'}) ? $event->{'venue'}->{'city'} : '';
 
         push @output, $event->{'yes_rsvp_count'} . ' going';
         push @output, $event->{'short_link'};
