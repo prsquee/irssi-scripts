@@ -95,7 +95,14 @@ sub moment_ago {
          : $mon <= 13 ? 'almost a year ago.'
          : $mon <= 18 ? 'more than a year ago.'
          : $mon <= 25 ? 'almost 2 years ago.'
-         : $mon >  26 ? 'more than 2 years ago.'
+         : $mon <= 37 ? 'almost 3 years ago.'
+         : $mon <= 49 ? 'almost 4 years ago.'
+         : $mon <= 61 ? 'almost 5 years ago.'
+         : $mon <= 73 ? 'almost 6 years ago.'
+         : $mon <= 85 ? 'almost 7 years ago.'
+         : $mon <= 97 ? 'almost 8 years ago.'
+         : $mon <= 109 ? 'almost 9 years ago.'
+         : $mon <= 111 ? 'almost 10 years ago.'
          : undef;
   }
   elsif ($delta > 86400) {
