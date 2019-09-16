@@ -7,30 +7,60 @@ use Irssi qw (
   settings_add_str
   timeout_add_once
   server_find_tag
+  get_irssi_dir
 );
 
 use strict;
 use warnings;
 use POSIX qw(strftime);
-use LWP::UserAgent;
 use Data::Dumper;
 use JSON;
 use Encode qw(encode decode);
+use Net::OAuth2::Client;
+use Storable qw (store retrieve);
 use utf8;
 
-settings_add_str('meetup', 'meetup_apikey', '');
+settings_add_str('meetup', 'meetup_client_id', '');
+settings_add_str('meetup', 'meetup_client_secret', '');
 signal_add('birras get','say_event');
 
 my $json = JSON->new();
-my $ua   = LWP::UserAgent->new( timeout => '15' );
+my $client_id = settings_get_str('meetup_client_id');
+my $client_secret = settings_get_str('meetup_client_secret');
+my $redirect_uri = 'https://fnord.com.ar';
+my $birra_meetup_url = 'https://api.meetup.com/sysarmy/events?&sign=true&photo-host=public&page=1&fields=short_link&status=upcoming';
 
-my $this_group = 'sysarmy';
-my $birra_meetup_url = 'https://api.meetup.com/2/events?key='
-                     .  settings_get_str('meetup_apikey')
-                     . '&group_urlname=' . $this_group
-                     . '&sign=true'
-                     . '&fields=short_link'
-                     ;
+my $site = 'https://api.meetup.com';
+my $auth_url = 'https://secure.meetup.com/oauth2/authorize';
+my $access_token_url  = 'https://secure.meetup.com/oauth2/access';
+my $token_file = get_irssi_dir() . '/scripts/datafiles//meetup_token.storable';
+my $access_token = undef;
+
+my $meetup = Net::OAuth2::Profile::WebServer->new(
+        name          => 'meetup.com',
+        client_id     => $client_id,
+        client_secret => $client_secret,
+        grant_type    => 'authorization_code',
+        site          => $site,
+        redirect_uri  => $redirect_uri,
+        authorize_url => $auth_url,
+        access_token_url  => $access_token_url,
+        refresh_token_url => $access_token_url,
+);
+
+if (-r $token_file) {
+  my $session = retrieve($token_file);
+  $access_token = Net::OAuth2::AccessToken->session_thaw($session, profile => $meetup);
+}
+else {
+  print (CRAP 'no token found. use gettokens.pl');
+  return;
+  # say($meetup->authorize_response->as_string);
+  # my $code = <STDIN>;
+  # chop($code);
+  # say("code is $code");
+  # $access_token = $meetup->get_access_token( $code, resource => $client_id );
+}
 
 my $tag_is_set = undef;
 
@@ -49,39 +79,35 @@ sub say_event {
 
 #{{{ this is so fetch!
 sub fetch_event {
-  my $response = $ua->get($birra_meetup_url);
+  my $response = $access_token->get($birra_meetup_url);
   if ($response->is_success) {
     my $parsed_json = eval { $json->utf8->decode($response->decoded_content) };
     print (CRAP $@) if $@;
 
-    if (scalar @{ $parsed_json->{'results'} } == 0) {
-      return '🍺 No event not created at meetup.com.';
+    if (scalar @{$parsed_json} == 0) {
+      return '🍺 No events created at meetup.com.';
       # now this should never be the case.
     }
     else {
-      #we just need the 1st result.
       #print strftime '%A, %h %d at %H:%M', localtime 1432936800;
-      my $event = shift @{ $parsed_json->{'results'} };
+      my $event = shift @{$parsed_json};
       if ($event->{'status'} eq 'upcoming') {
         my @output;
         push @output, $event->{'name'};
         push @output, get_dates($event->{'time'}/1000);
-        push @output, $event->{'venue'}->{'name'}       . ', '
-                    . $event->{'venue'}->{'address_1'}  . ' '
-                    . $event->{'venue'}->{'address_2'}  . ', '
-                    . ($event->{'venue'}->{'city'}) ? $event->{'venue'}->{'city'} : '';
-
+        push @output, $event->{'venue'}->{'name'} . ', ' . $event->{'venue'}->{'address_1'};
         push @output, $event->{'yes_rsvp_count'} . ' going';
         push @output, $event->{'short_link'};
         push @output, $event->{'time'};
-
-        #return join (' :: ', @output);
         return @output;
       }
     }
+    # save the refreshed token, just in case. Not really needed.
+    my $newtoken = $access_token->session_freeze;
+    store $newtoken, $token_file;
   }
   else {
-    print (CRAP "meetup.com error code: $response->{status_line}");
+    print (CRAP 'meetup.com error code: ' . $response->status_line());
   }
 }
 # }}}
@@ -96,41 +122,7 @@ sub get_dates {
   }
 }
 # }}}
-#{{{ no need to calculate this manually anymore 
-#sub next_birra {
-#  my $today = strftime('%u', localtime);
-#
-#  # odd_week = yes birra ; even_week = no birra
-#  # is this week a birra week? (swap 1 and 0 to toggle)
-#  my $is_birraweek = (strftime('%V', localtime) % 2) ? 0 : 1;
-#
-#  if ($is_birraweek) {
-#    #is it past thusday?
-#    return 'today.' if ($today == 4);
-#
-#    if ($today < 4) {
-#      return 'this Thursday.';
-#    }
-#    else {
-#      #past thursday on a birraweek.
-#      #jump to next thursday, which will be nonbirraweek, then plus one week.
-#      return strftime('%A, %B %d.', localtime(UnixDate('next Thursday', '%s') + 604800));
-#    }
-#  }
-#  else {
-#    #this is NOT a birraweek.
-#    return UnixDate('next Thursday', '%A, %B %d.') if $today == 4;
-#    if ($today < 4) {
-#      #we are between Mon and Wed.
-#      #jump to next thursday on a non birraweek then + 1 week.
-#      return strftime('%A, %B %d.', localtime(UnixDate('next Thursday', '%s') + 604800));
-#    }
-#    else {
-#      return strftime('%A, %B %d.', localtime(UnixDate('next Thursday', '%s')));
-#    }
-#  }
-#}
-#}}}
+
 sub check_tag_for {
   my ($event_time, $chan, $new_part) = @_;
   print (CRAP "event time is $event_time");
@@ -140,7 +132,7 @@ sub check_tag_for {
     my $msecs_until_ends = $event_time - time * 1000 + 14400000 + 10;
     $tag_is_set = timeout_add_once($msecs_until_ends, 'refresh_topic', $chan);
 
-    print (CRAP "refresh topic after $msecs_until_ends :: internal tag: $tag_is_set");
+    print (CRAP "$chan: refresh topic after $msecs_until_ends msecs :: internal tag: $tag_is_set");
   }
   else {
     print (CRAP "internal tag is already set: $tag_is_set");
