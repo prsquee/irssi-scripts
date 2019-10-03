@@ -302,12 +302,9 @@ sub incoming_public {
     #}}}
     #{{{ !setkarma
     if ($cmd eq 'setkarma' and is_sQuEE($mask)) {
-      my ($thingy, $newkarma) = $text =~ /^!setkarma\s+(.+)=(.*)$/;
+      my ($thingy, $newkarma) = $text =~ /^!setkarma\s+(.+)=(.+)$/;
       signal_emit(
-        "karma set",
-        $server, $chan,
-        $thingy,
-        $newkarma
+        "karma set", $server, $chan, $thingy, $newkarma
       ) if (is_loaded('karma') and $thingy and $newkarma);
       return;
     }#}}}

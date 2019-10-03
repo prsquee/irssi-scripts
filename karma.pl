@@ -17,16 +17,16 @@ my $karma_storable = get_irssi_dir() . "/scripts/datafiles/karma.storable";
 our $karma = eval { retrieve($karma_storable) } || [];
 
 my %novelty = (
-  'sQuEE' => '🍺',
-  'sQuEE`' => '🍺',
-  'osx' => '⌘',
-  'OSX' => '⌘',
-  'mac' => '⌘',
+  'sQuEE'     => '🍺',
+  'sQuEE`'    => '🍺',
+  'osx'       => '⌘',
+  'OSX'       => '⌘',
+  'mac'       => '⌘',
   'macintosh' => '⌘',
-  'apple' => '',
-  'iphone' => '📱',
-  'perl' => '🐫 ',
-  'spock' => '🖖',
+  'apple'     => '',
+  'iphone'    => '📱',
+  'perl'      => '🐫 ',
+  'spock'     => '🖖',
 );
 
 #{{{ (╯°□°）╯︵ ɐɯɹɐʞ
@@ -34,7 +34,7 @@ sub flip_karma {
   my ($server, $chan) = @_;
   my $channel = $chan . '_' . $server->{tag};
   my $this_channel = $karma->{$channel};
-  
+
   foreach my $thingy (keys %$this_channel) {
     if ($this_channel->{$thingy} =~ /^-\d+$/) {
       $this_channel->{$thingy} = abs($this_channel->{$thingy});
@@ -76,7 +76,7 @@ sub show_karma {
   elsif (defined($karma->{$channel}->{$thingy})) {
     sayit(
       $server,
-      $chan, 
+      $chan,
       'karma for ' . $thingy . ': ' . $karma->{$channel}->{$thingy}
     );
   }
