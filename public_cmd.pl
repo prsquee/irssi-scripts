@@ -162,12 +162,9 @@ sub incoming_public {
       sayit($server, $chan, 'p' . ${$v}{$1} . 'ng');
       return;
     }#}}}
-    #{{{ !dol[ao]r and !pesos
-    if ($cmd =~ /^dol[aoe]r$/ or $cmd eq 'pesos') {
-      signal_emit(
-                    'showme the money',
-                    $server, $chan, $text
-                 ) if is_loaded('dolar3');
+    #{{{ !dol[ao]r and !euro
+    if ($cmd =~ /^dol[aoe]r$/ or $cmd =~ /^euros?$/) {
+      signal_emit( 'showme the money', $server, $chan, $text) if is_loaded('dolar3');
       return;
     }
     #}}}

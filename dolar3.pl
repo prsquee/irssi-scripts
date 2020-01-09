@@ -10,12 +10,12 @@ use JSON;
 
 #{{{ init and stuff
 
-my $oficial_compra  = undef;
-my $oficial_venta   = undef;
-my $last_fetch      = 0;
-my $bufferme        = '10';  #30mins
-my $lanacion_url    = 'https://api-contenidos.lanacion.com.ar/json/V3/economia/cotizacion/DBNA';
-my $json            = JSON->new();
+my %prices     = ();
+my $last_fetch = 0;
+my $bufferme   = '10';  #30mins
+
+my $json = JSON->new();
+my $bluelytics_url = 'http://api.bluelytics.com.ar/v2/latest';
 
 sub get_price {
   my $url = shift;
@@ -23,15 +23,11 @@ sub get_price {
   $ua->agent(Irssi::settings_get_str('myUserAgent'));
 
   my $raw_result = $ua->get($url)->content();
-  my $result = eval { $json->utf8->decode($raw_result) };
+  %prices = %{ $json->utf8->decode($raw_result) };
 
-  $oficial_compra = $result->{'compra'};
-  $oficial_venta  = $result->{'venta'};
 
-  $oficial_compra =~ s/,/./g;
-  $oficial_venta  =~ s/,/./g;
-
-  $last_fetch = time() if ($oficial_compra and $oficial_venta);
+  $last_fetch = time() if %prices;
+  #print (CRAP Dumper(%prices));
 }
 #}}}
 
@@ -39,52 +35,34 @@ sub get_price {
 sub do_dolar {
   my ($server, $chan, $text) = @_;
   my ($ask, $how_much) = $text =~ /^!(\w+)(\s+\d+(?:\.\d{1,2})?)?/;
-  if ($ask eq 'pesos' and not $how_much) {
-    sayit($server, $chan, 'how much?');
-    return;
-  }
-  get_price($lanacion_url) if (time() - $last_fetch > $bufferme);
+
+  get_price($bluelytics_url) if (time() - $last_fetch > $bufferme);
 
   if ($ask =~ /^dol[oae]r$/) {
     if (!$how_much) {
-      #my $output = '[Oficial] ';
-      my $output = ($oficial_compra and $oficial_venta)
-                 ? 'Compra: ARS $' . $oficial_compra
+      my $output = '[Oficial] $' . sprintf("%.1f", $prices{'oficial'}->{'value_buy'})
+                        . ' - $' . sprintf("%.1f", $prices{'oficial'}->{'value_sell'})
                  . ' :: '
-                 .  'Venta: ARS $' . $oficial_venta
-                 : 'no idea';
+                 . '[Blue] $'    . sprintf("%.1f", $prices{'blue'}->{'value_buy'})
+                        . ' - $' . sprintf("%.1f", $prices{'blue'}->{'value_sell'})
+                 . ' :: '
+                 . '[Solidario] $' . sprintf("%.1f", eval($prices{'oficial'}->{'value_sell'} * 1.3));
 
       sayit($server, $chan, $output);
-      return;
     }
-    elsif ($how_much > 0) {
-      my $pesos = undef;
-      $pesos .= ($oficial_compra)
-              ? 'Compra: ARS $' . sprintf("%.2f", eval($how_much * $oficial_compra))
-              . ' :: '
-              . 'Venta: ARS $' . sprintf("%.2f", eval($how_much * $oficial_venta))
-              : undef;
+  } 
+  elsif ($ask =~ /^euros?$/) {
+    my $euros = '[Euro Oficial] $' . sprintf("%.1f", $prices{'oficial_euro'}->{'value_buy'})
+                     . ' - $' . sprintf("%.1f", $prices{'oficial_euro'}->{'value_sell'})
+               . ' :: '
+               . '[Euro Blue] $'   . sprintf("%.1f", $prices{'blue_euro'}->{'value_buy'})
+                     . ' - $' . sprintf("%.1f", $prices{'blue_euro'}->{'value_sell'})
+               . ' :: '
+               . '[Euro Solidario] $' . sprintf("%.1f", eval($prices{'oficial_euro'}->{'value_sell'} * 1.3));
 
-      $pesos = $pesos || 'no price found, try later.';
-
-      sayit($server, $chan, $pesos) if (!$@);
-      return;
-    }
+    sayit($server, $chan, $euros);
   }
-
-  if ($ask eq 'pesos' and $how_much > 0) {
-    my $dollars = undef;
-    $dollars .= ($oficial_venta)
-              ? 'Compra: USD $' . sprintf("%.2f", eval($how_much / $oficial_compra))
-              . ' :: '
-              . 'Venta USD $' . sprintf("%.2f", eval($how_much / $oficial_venta))
-              : undef;
-
-    $dollars = $dollars || 'no price found, try later.';
-
-    sayit($server, $chan, $dollars) if (!$@);
-    return;
-  }
+  return;
 }
 #}}}
 
