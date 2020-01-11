@@ -611,10 +611,9 @@ sub incoming_public {
     my $url = $1;
     return if ($url =~ /wikipedia|facebook|fbcdn/i);
     #site specific stuff
-    if ($url =~ m{http://www\.imdb\.com/title/(tt\d+)}) {
-        signal_emit('search imdb',
-                    $server, $chan, $1) if ($1 and is_loaded('imdb'));
-        return;
+    if ($url =~ m{https?://www\.imdb\.com/title/(tt\d+)}) {
+      signal_emit('search imdb', $server, $chan, $1) if ($1 and is_loaded('imdb'));
+      return;
     }
     #youtube here
     if ($url =~ /$youtubex/) {
