@@ -10,7 +10,7 @@ use JSON;
 
 #{{{ init and stuff
 
-my %prices     = ();
+my %fetched_prices     = ();
 my $last_fetch = 0;
 my $bufferme   = '10';  #30mins
 
@@ -23,23 +23,26 @@ sub fetch_price {
   $ua->agent(Irssi::settings_get_str('myUserAgent'));
 
   my $raw_result = $ua->get($url)->content();
-  %prices = %{ $json->utf8->decode($raw_result) };
+  %fetched_prices = %{ $json->utf8->decode($raw_result) };
 
-  $last_fetch = time() if %prices;
-  #print (CRAP Dumper(%prices));
+  $last_fetch = time() if %fetched_prices;
 }
 #}}}
-sub calc_currency {
-  my @types = qw(oficial blue);
-  @types = map { $_ . '_euro' } @types if (shift(@_) eq 'euro');
+sub format_currency {
+  my ($type, $prices_ref) = @_; 
+
+  my @exchanges = qw(oficial blue);
+
+  @exchanges = map { $_ . '_euro' } @exchanges if ($type eq 'euro');
 
   my $output = '';
-  foreach my $type (@types) {
-    $output .= '[' . ucfirst($type) . '] $'  . sprintf("%.1f", $prices{$type}->{'value_buy' }) 
-                                    .' - $'  . sprintf("%.1f", $prices{$type}->{'value_sell'})
+
+  foreach my $type (@exchanges) {
+    $output .= '[' . ucfirst($type) . '] $'  . sprintf("%.1f", $prices_ref->{$type}->{'value_buy' }) 
+                                    .' - $'  . sprintf("%.1f", $prices_ref->{$type}->{'value_sell'})
                                     . ' :: ';
   }
-  $output .= '[Solidario] $' . sprintf("%.1f", eval($prices{$types[0]}->{'value_sell'} * 1.3));
+  $output .= '[Solidario] $' . sprintf("%.1f", eval($prices_ref->{$exchanges[0]}->{'value_sell'} * 1.3));
   return $output;
 }
 #{{{ do_dolar
@@ -49,14 +52,21 @@ sub do_dolar {
 
   fetch_price($bluelytics_url) if (time() - $last_fetch > $bufferme);
 
-  if ($ask =~ /^dol[oae]r$/) {
-    my $output = calc_currency('dollar');
-    #if (!$how_much) {
-    sayit($server, $chan, $output);
-  } 
-  elsif ($ask =~ /^euros?$/) {
-    my $euros = calc_currency('euro');
-    sayit($server, $chan, $euros);
+  if (!$how_much) {
+    sayit($server, $chan, format_currency('dollar', \%fetched_prices)) if ($ask =~ /^dol[oae]r$/);
+    sayit($server, $chan, format_currency('euro',   \%fetched_prices)) if ($ask =~ /^euros?$/);
+  }
+  else {
+    my %calculated_prices;
+
+    foreach my $type (keys %fetched_prices) {
+      next if ($type eq 'last_update');
+      foreach my $value (keys %{$fetched_prices{$type}}) {
+        $calculated_prices{$type}->{$value} = $fetched_prices{$type}->{$value} * $how_much;
+      }
+    }
+    sayit($server, $chan, format_currency('dollar', \%calculated_prices)) if ($ask =~ /^dol[oae]r$/);
+    sayit($server, $chan, format_currency('euro',   \%calculated_prices)) if ($ask =~ /^euros?$/);
   }
   return;
 }
