@@ -488,7 +488,7 @@ sub incoming_public {
     } #}}}
     #{{{ #!doge WOW SUCH COMMAND
     if ($cmd =~ m{doge(?:coin)?s?}) {
-      signal_emit('such signal', $server, $chan, $text) if is_loaded('doge');
+      signal_emit('such signal', $server, $chan, 'doge') if is_loaded('blockio');
     }
     #}}}
     ##{{{ !bash bash.org quotes
