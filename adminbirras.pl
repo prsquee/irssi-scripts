@@ -14,9 +14,7 @@ signal_add('birras get','say_event');
 my @months_names = qw(January February March April May June July August September October November December);
 my $birradate = new Date::Manip::Date;
 my $tag_is_set = undef;
-my $birra_venue = 'Location: Genk Beer House, Honduras 5254. Map: https://g.page/GenkBeerHouse';
-my $meetup_link = 'https://www.meetup.com/sysarmy/events/xfsrgrybcdbjb/';
-
+my $birra_venue = ' :: Location: Genk Beer House, Honduras 5254 :: Map: https://g.page/GenkBeerHouse :: Event: https://sysar.my/meetup';
 
 sub say_event {
   my ($server, $chan) = @_;
@@ -26,13 +24,16 @@ sub say_event {
 
   if ($today > $birradate->printf('%e')) {
     $birradate->parse('First Thursday in ' . $months_names[++$this_month]);
-    sayit($server, $chan, 'Next 🍻 on ' . $birradate->printf('%B %d') . ' at 8pm. ' . $birra_venue);
+    sayit($server, $chan, 'Next 🍻 on ' . $birradate->printf('%B %d') . ' at 8pm.' . $birra_venue);
+  }
+  elsif ($today == $birradate->printf('%e')) {
+    sayit($server, $chan, '🍺 + 🍺 = 🍻 IS TONIGHT at 8pm!! 🍺🥳' . $birra_venue);
   }
   else {
-    sayit($server, $chan, 'Next 🍻 on ' . $birradate->printf('%B %d') . ' at 8pm. ' . $birra_venue);
+    sayit($server, $chan, 'Next 🍻 on ' . $birradate->printf('%B %d') . ' at 8pm' . $birra_venue);
   }
-  # we only need the name, date and the link for the topic
-  is_topic_set($chan, '#AdminBirras :: ' . $birradate->printf('%B %d') . ' :: Genk Beer House :: ' . $meetup_link);
+  is_topic_set($chan, '#AdminBirras :: ' . $birradate->printf('%B %d') . ' :: Genk Beer House :: https://sysar.my/meetup');
+  return;
 }
 
 sub is_topic_set {
