@@ -28,23 +28,28 @@ sub say_event {
   }
   elsif ($today == $birradate->printf('%e')) {
     sayit($server, $chan, '🍺 + 🍺 = 🍻 IS TONIGHT at 8pm!! 🍺🥳' . $birra_venue);
+    return;
   }
   else {
     sayit($server, $chan, 'Next 🍻 on ' . $birradate->printf('%B %d') . ' at 8pm' . $birra_venue);
   }
-  is_topic_set($chan, '#AdminBirras :: ' . $birradate->printf('%B %d') . ' :: Genk Beer House :: https://sysar.my/meetup');
+  is_topic_set($chan, '#AdminBirras :: ' . $birradate->printf('%B %d') . ' :: Genk Beer House - Honduras 5254 - CABA :: https://sysar.my/meetup');
   return;
 }
 
 sub is_topic_set {
   my ($chan, $new_part) = @_;
+  print (CRAP "new: $new_part");
 
-  # check current topic, if birra part is equal do nothing
   my $current_topic = decode('utf8', Irssi::Server->channel_find($chan)->{'topic'});
+  $current_topic =~ s/\x{a0}/ /g; 
+  print (CRAP "current: Dumper($current_topic)");
 
-  if ($current_topic =~ /^#(?:adminbirras)/i) {
-    my @current_topic = split(/ \|\| /, $current_topic);
+  if ($current_topic =~ /^#AdminBirras/) {
+    my @current_topic = split / \|\| /, $current_topic;
+    print (CRAP Dumper(@current_topic));
     my $old_part = shift @current_topic;
+    print (CRAP "old: $old_part");
     if ($old_part ne $new_part) {
       unshift @current_topic, $new_part;
       set_topic ($chan, encode('utf8', join(' || ', @current_topic)));
