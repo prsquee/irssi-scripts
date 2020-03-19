@@ -51,3 +51,4 @@ signal_register( { 'excusa add'       => [ 'iobject','string','string'          
 signal_register( { 'birras get'       => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'chix meetup'      => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'need translate'   => [ 'iobject','string','string','string' ]}); #server,chan,$lang,$text
+signal_register( { 'coronavirus'      => [ 'iobject','string'                   ]}); #server,chan

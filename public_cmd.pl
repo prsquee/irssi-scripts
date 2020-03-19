@@ -596,13 +596,16 @@ sub incoming_public {
       );
     }
     #}}}
-    #{{{
+    #{{{ !settopic
     if ($cmd eq 'settopic' and is_sQuEE($mask)) {
       my ($new_topic) = $text =~ /^!settopic +(.*)$/;
       $server->send_message('chanserv', "topic $chan $new_topic", 0);
     }
     ##}}}
-  } #cmd check ends here. begin general text match
+    if ($cmd =~ m{^corona(?:virus)?}) {
+      signal_emit('coronavirus', $server, $chan) if is_loaded('corona');
+    }
+  } #public cmd check ends here. begin general URL match
 
 ################################################################################
   #
