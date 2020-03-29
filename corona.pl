@@ -11,21 +11,27 @@ use utf8;
 signal_add("coronavirus", "fetch_infected");
 
 my $json = JSON->new();
-
-#my $api_url = 'https://corona-stats.online/Argentina?format=json';
-my $api_url = 'https://nicolas17.s3.amazonaws.com/covid-ar.json';
+my $api_url = 'https://corona-stats.online/'; # 'Argentina?format=json';
 my $last_fetch = 0;
 
 sub fetch_infected {
-  my ($server, $chan) = @_;
-  my $ua  = LWP::UserAgent->new( timeout => 8 );
+  my ($server, $chan, $country) = @_;
+  my $ua  = LWP::UserAgent->new( timeout => 5 );
   $ua->agent(Irssi::settings_get_str('myUserAgent'));
 
-  my $raw = $ua->get($api_url)->content();
+  my $raw = $ua->get($api_url . $country . '?format=json')->content();
   #print (CRAP Dumper($raw));
   my $fetched = $json->utf8->decode($raw);
-  $last_fetch = time() if $fetched;
-  my $output = "[Argentina] $fetched->{'cases'} casos confirmados y $fetched->{'deaths'} muertes. Sauce: " . makeashorterlink($fetched->{'source_url'});
+  my $data = shift @{$fetched->{'data'}};
+  #print (CRAP Dumper($fetched));
+  #$last_fetch = time() if $fetched;
+  #print (CRAP Dumper($data));
+  my $output = '[' . $data->{'countryInfo'}->{'country'} . '] '
+              . $data->{'confirmed'} . ' confirmed :: '
+              . $data->{'recovered'} . ' recovered :: '
+              . $data->{'deaths'}    . ' deaths :: '
+              . 'https://corona-stats.online/' . uc($country);
+
   sayit($server, $chan, $output);
 }
 sub sayit { my $s = shift; $s->command("MSG @_");  }

@@ -555,7 +555,9 @@ sub incoming_public {
     ##}}}
     #{{{ !birras
     if ($cmd =~ /^(?:admin)?birras?$/ and $chan =~ /sysarmy(?:-en)?|ssqquuee/) {
-      signal_emit('birras get', $server, $chan) if is_loaded('adminbirras');
+      sayit($server, $chan, "tomá la 🍺 en tu casa!");
+      return;
+      #signal_emit('birras get', $server, $chan) if is_loaded('adminbirras');
     }
     ##}}}
     #{{{ !meetup for linuxchix
@@ -602,8 +604,10 @@ sub incoming_public {
       $server->send_message('chanserv', "topic $chan $new_topic", 0);
     }
     ##}}}
-    if ($cmd =~ m{^corona(?:virus)?}) {
-      signal_emit('coronavirus', $server, $chan) if is_loaded('corona');
+    if ($cmd =~ m{^corona}) {
+      my ($country) = $text=~ m{^!corona(?:virus)?\s+?(\w{2})?};
+      $country = 'AR' if not $country;
+      signal_emit('coronavirus', $server, $chan, $country) if is_loaded('corona');
     }
   } #public cmd check ends here. begin general URL match
 
