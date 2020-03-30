@@ -28,7 +28,7 @@ sub fetch_infected {
   #$last_fetch = time() if $fetched;
   #print (CRAP Dumper($data));
   if ($data) {
-    $output = '[' . $data->{'countryInfo'}->{'country'} . '] '
+    $output = '[' . $data->{'country'} . '] '
                 . $data->{'confirmed'} . ' confirmed :: '
                 . $data->{'recovered'} . ' recovered :: '
                 . $data->{'deaths'}    . ' deaths :: '
