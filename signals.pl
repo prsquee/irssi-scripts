@@ -52,3 +52,4 @@ signal_register( { 'birras get'       => [ 'iobject','string'                   
 signal_register( { 'chix meetup'      => [ 'iobject','string'                   ]}); #server,chan
 signal_register( { 'need translate'   => [ 'iobject','string','string','string' ]}); #server,chan,$lang,$text
 signal_register( { 'coronavirus'      => [ 'iobject','string','string'          ]}); #server,chan,$country
+signal_register( { 'worknowork'       => [ 'iobject','string'                   ]}); #server,chan

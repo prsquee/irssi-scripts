@@ -604,11 +604,18 @@ sub incoming_public {
       $server->send_message('chanserv', "topic $chan $new_topic", 0);
     }
     ##}}}
+    #{{{ !corona
     if ($cmd =~ m{^corona}) {
       my ($country) = $text=~ m{^!corona(?:virus)?\s+?(\w{2})?};
       $country = 'AR' if not $country;
       signal_emit('coronavirus', $server, $chan, $country) if is_loaded('corona');
     }
+    #}}}
+    #{{{ !feriados
+    if ($cmd =~ m{^feriados?}) {
+      signal_emit('worknowork', $server, $chan) if is_loaded('feriados');
+    }
+    #}}}
   } #public cmd check ends here. begin general URL match
 
 ################################################################################
