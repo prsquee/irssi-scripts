@@ -76,6 +76,7 @@ sub incoming_public {
   return if $server->{tag} !~ /$active_networks/;
 
   #check if someone said a command
+  $text =~ s/^<[^>]+> // if $nick eq 'nerdearla';
   if (my ($cmd) = $text =~ /^!(\w+)\b/) {
     #{{{ halps
     if ($cmd =~ /^h[ea]lp$/) {
@@ -274,17 +275,6 @@ sub incoming_public {
       signal_emit('count quotes', $server, $chan);
     }
     #}}}
-    #{{{ !imgur reimgur
-    if ($cmd eq 'imgur') {
-      my ($url) = $text =~ m{^!imgur\s+(https?://.*)$}i;
-
-      signal_emit( 'reimgur', $server, $chan, $url)
-        if $url and is_loaded('reimgur');
-
-      sayit($server, $chan, 'Imguraffe is my best friend!') unless $url;
-      return;
-    }
-    #}}}
     #{{{ karma is a bitch
     if ($cmd eq 'karma') {
       my ($name) = $text =~ /!karma\s+($karma_thingy)/;
@@ -411,28 +401,6 @@ sub incoming_public {
         return;
       }
     } #}}}
-    #{{{ [TWITTER] !follow
-    if ($cmd eq 'follow' and is_sQuEE($mask)) {
-      my ($new_friend) = $text =~ /^!follow\s+@?(\w+)$/;
-      signal_emit(
-        'white rabbit',
-        $server,
-        $chan,
-        $new_friend
-      ) if (is_loaded('twitter'));
-    }
-    #}}}
-    #{{{ [TWITTER] !post tweet stuff to my own account
-    if ($cmd eq 'post' and is_sQuEE($mask)) {
-      my ($tweet_this) = $text =~ /^!post\s+(.*)$/;
-      signal_emit(
-        'shit I say',
-        $server,
-        $chan,
-        $tweet_this
-      ) if (is_loaded('twitter'));
-    }
-    ##}}}
     #{{{ !ddg cuac cuac go
     if ($cmd eq 'ddg') {
       my ($query) = $text =~ /^!ddg\s+(.*)$/;
@@ -560,44 +528,6 @@ sub incoming_public {
       #signal_emit('birras get', $server, $chan) if is_loaded('adminbirras');
     }
     ##}}}
-    #{{{ !meetup for linuxchix
-    if ('meetup' =~ /^${cmd}/ and $chan =~ /linuxchixar|ssqquuee/) {
-      signal_emit('chix meetup', $server, $chan) if is_loaded('chixmeetup');
-    }
-    # }}}
-    #{{{ !translate and the novelty method to match commands.
-    if ('translate' =~ /^${cmd}/) {
-      if ($text eq '!' . $cmd) {
-        sayit($server, $chan, 'I can translate texts with '
-                            . '!tr[anslate] [to:lang] unkown text. '
-                            . '[lang] must be a 2 letters ISO 639-1 language code. '
-                            . 'Supported languages https://goo.gl/29mEVc'
-                          );
-        return;
-      }
-      $text =~ s/^!$cmd\s+//;
-      my $to_this_lang = 'en';
-
-      if ($text =~ /^to:(\w+)\s+/) {
-        $to_this_lang = $1;
-      }
-      my $need_translation = undef;
-      ($need_translation) = $text =~ /^(?:to:\w+\s+)?(.*)$/;
-
-      unless ($need_translation) {
-        sayit($server, $chan, 'I dont have any text to translate.');
-        return;
-      }
-
-      signal_emit(
-        'need translate',
-        $server,
-        $chan,
-        $to_this_lang,
-        $need_translation
-      );
-    }
-    #}}}
     #{{{ !settopic
     if ($cmd eq 'settopic' and is_sQuEE($mask)) {
       my ($new_topic) = $text =~ /^!settopic +(.*)$/;
