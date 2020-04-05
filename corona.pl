@@ -21,23 +21,25 @@ sub fetch_infected {
   $ua->agent(Irssi::settings_get_str('myUserAgent'));
 
   my $raw = $ua->get($api_url . $country . '?format=json')->content();
-  #print (CRAP Dumper($raw));
-  my $fetched = $json->utf8->decode($raw);
-  my $data = shift @{$fetched->{'data'}};
-  #print (CRAP Dumper($fetched));
-  #$last_fetch = time() if $fetched;
-  #print (CRAP Dumper($data));
-  if ($data) {
-    $output = '[' . $data->{'country'} . '] '
-                . $data->{'confirmed'} . ' confirmed :: '
-                . $data->{'recovered'} . ' recovered :: '
-                . $data->{'deaths'}    . ' deaths :: '
-                . 'https://corona-stats.online/' . uc($country);
+  my $fetched = undef;
+  eval { $fetched = $json->utf8->decode($raw) };
+  unless ($@) {
+    my $data = shift @{$fetched->{'data'}};
+    if ($data) {
+      $output = '[' . $data->{'country'} . '] '
+                    . $data->{'confirmed'} . ' confirmed :: '
+                    . $data->{'recovered'} . ' recovered :: '
+                    . $data->{'deaths'}    . ' deaths :: '
+                    . 'https://corona-stats.online/' . uc($country);
 
-   }
-   else {
-     $output = "$country is not a valid country code. https://corona-stats.online";
-   }
-  sayit($server, $chan, $output);
+     }
+     else {
+       $output = "$country is not a valid country code. https://corona-stats.online";
+     }
+    sayit($server, $chan, $output);
+  }
+  else {
+    sayit($server, $chan, 'Country not found.');
+  }
 }
 sub sayit { my $s = shift; $s->command("MSG @_");  }
