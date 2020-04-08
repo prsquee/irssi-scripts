@@ -42,7 +42,7 @@ my $youtubex
     ([^&]{11})                  #the vid id
 )};
 
-my $karma_thingy = qr{[\w\[\]`|\-^.]+}; #thingy can be \w with .{}[]`|\-^
+my $karma_thingy = qr{[\w\[\]`|\-^\\.]+}; #thingy can be \w with .{}[]`|\-^
 my $karmagex
   = qr{(?x-sm:
       ($karma_thingy)
@@ -129,11 +129,11 @@ sub incoming_public {
     #{{{ !short
     if ($cmd eq 'short') {
       my ($url) = $text =~ m{(https?://[^ ]+)}i;
-      if ($url and is_loaded('ggl')) {
-        my $shorten = scalar('Irssi::Script::ggl')->can('do_shortme')->($url);
+      if ($url and is_loaded('tinyurl')) {
+        my $shorten = scalar('Irssi::Script::tinyurl')->can('do_shortme')->($url);
         sayit($server, $chan, "[shorten] $shorten");
       }
-      sayit($server, $chan, 'I can shorten a URL.') if not defined $url;
+      sayit($server, $chan, 'I can shorten a URL with TinyURL.') if not defined $url;
       return;
     }#}}}
     #{{{ googling
@@ -420,11 +420,7 @@ sub incoming_public {
    #{{{ !btc bitcoins
     if ($cmd =~ m{^bi?tc(?:oin)?s?$}) {
       # print(CRAP "btc: $1") if $1;
-      signal_emit('gold digger', $server, $chan, 'btc') if is_loaded('blockio');
-    }#}}}
-   #{{{ !ltc litecoins
-    if ($cmd =~ m{^li?te?c(?:oin)?s?}) {
-      signal_emit('silver digger', $server, $chan, 'ltc') if is_loaded('blockio');
+      signal_emit('gold digger', $server, $chan, 'btc') if is_loaded('coindesk');
     }#}}}
    #{{{ !eth ethereum
     if ($cmd =~ m{^eth(reum)?}) {
@@ -454,11 +450,6 @@ sub incoming_public {
     if ($cmd eq 'bofh') {
       signal_emit('bofh', $server, $chan) if (is_loaded('bofh'));
     } #}}}
-    #{{{ #!doge WOW SUCH COMMAND
-    if ($cmd =~ m{doge(?:coin)?s?}) {
-      signal_emit('such signal', $server, $chan, 'doge') if is_loaded('blockio');
-    }
-    #}}}
     ##{{{ !bash bash.org quotes
     if ($cmd =~ m{^bash\b}) {
       signal_emit('bash quotes', $server,$chan, $text) if is_loaded('bash');
