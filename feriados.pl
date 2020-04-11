@@ -29,34 +29,46 @@ sub fetch_holidays {
 
   my $raw = $ua->get($api_url . $year . '?formato=mensual')->content();
   my $holidays = $json->utf8->decode($raw);
+  # debug
+  #foreach my $d (sort {$a <=> $b} keys)
+  
 
   my $today = new_dt($year,$mon,$mday);
 
   # go to a month that has a holiday
-  unless (%{$$holidays[$mon]}) {
+  while (not %{$$holidays[$mon]}) {
     $mon += 1;
   }
 
-  my $output = undef;
-  foreach my $day (sort {$a <=> $b} keys %{$$holidays[$mon]}) {
-    my $this_holiday = new_dt($year,$mon,$day);
-    next if ($today > $this_holiday);
+  #print (CRAP Dumper($$holidays[$mon]));
 
-    if ($today == $this_holiday) {
-      $output = 'HOY ES FERIADO! ';
+  my $output = undef;
+  while (not defined($output)) {
+    foreach my $day (sort {$a <=> $b} keys %{$$holidays[$mon]}) {
+      my $this_holiday = new_dt($year,$mon,$day);
+      next if ($today > $this_holiday);
+
+      if ($today == $this_holiday) {
+        $output = 'HOY ES FERIADO! ';
+      }
+      else {
+        my $delta = $today->delta_days($this_holiday)->delta_days();
+        $output = $delta == 1 ? 'MAÑANA ES FERIADO! ' : "Faltan $delta días para el $day de $meses[$mon]: ";
+      }
+      if ($output and $$holidays[$mon]{$day}->{'tipo'} eq 'puente') {
+        $day += 1; #this will break if bridge is the last day of a month. It is impossible though.
+        $output .= "Feriado puente con el $day de $meses[$mon]: ";
+      }
+      sayit($server, $chan, $output . "$$holidays[$mon]{$day}->{'motivo'}.");
+      return;
     }
-    else {
-      my $delta = $today->delta_days($this_holiday)->delta_days();
-      $output = $delta == 1 ? 'MAÑANA ES FERIADO! ' : "Faltan $delta días para el $day de $meses[$mon]: ";
-    } 
-    if ($output and $$holidays[$mon]{$day}->{'tipo'} eq 'puente') {
-      $day += 1;
-      $output .= "Feriado puente con el $day de $meses[$mon]: ";
+    $mon += 1 unless $output;
+    if ($mon == 12) {
+      sayit($server,$chan, 'no hay más feriados hasta el próximo año.');
+      return;
+      # december.is $mon = 11
     }
-    sayit($server, $chan, $output . "$$holidays[$mon]{$day}->{'motivo'}.");
-    return;
   }
-  sayit($server,$chan, 'no hay más feriados hasta el próximo año.') unless $output;
 }
 
 sub new_dt {
