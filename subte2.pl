@@ -5,6 +5,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 use XML::LibXML;
+use LWP::UserAgent;
 use utf8;
  
 settings_add_str('bot config', 'subte_agent', '');
