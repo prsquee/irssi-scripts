@@ -11,7 +11,8 @@ use utf8;
 signal_add("coronavirus", "fetch_infected");
 
 my $json = JSON->new();
-my $api_url = 'https://corona-stats.online/'; # 'Argentina?format=json';
+my $api_url = 'https://corona-stats.online/';
+my $jumbo_url = 'https://www.jumbo.com.ar/api/catalog_system/pub/products/search/?fq=skuId:22487';
 my $last_fetch = 0;
 my $output;
 
@@ -37,9 +38,21 @@ sub fetch_infected {
        $output = "$country is not a valid country code. https://corona-stats.online";
      }
     sayit($server, $chan, $output);
+    if (int(rand(12)) == 4) {
+      my $beer_price = fetch_beer();
+      sayit($server, $chan, "Una erveza Corona rubia de 330cc sale \$$beer_price en Jumbo.");
+    }
   }
   else {
-    sayit($server, $chan, 'Country not found.');
+    print (CRAP Dumper($fetched));
+    sayit($server, $chan, 'nope, try later ‾\(°_o)/‾');
   }
+}
+sub fetch_beer {
+  my $ua  = LWP::UserAgent->new( timeout => 5 );
+  $ua->agent(Irssi::settings_get_str('myUserAgent'));
+  my $raw = $ua->get($jumbo_url)->content();
+  my $beer_json = $json->utf8->decode($raw);
+  return $$beer_json[0]->{'items'}[0]->{'sellers'}[0]->{'commertialOffer'}->{'ListPrice'};
 }
 sub sayit { my $s = shift; $s->command("MSG @_");  }
