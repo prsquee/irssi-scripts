@@ -12,7 +12,7 @@ use JSON;
 
 my %fetched_prices     = ();
 my $last_fetch = 0;
-my $bufferme   = '10';  #30mins
+my $bufferme   = '20'; 
 
 my $json = JSON->new();
 my $bluelytics_url = 'http://api.bluelytics.com.ar/v2/latest';
@@ -29,7 +29,7 @@ sub fetch_price {
 }
 #}}}
 sub format_currency {
-  my ($type, $prices_ref) = @_; 
+  my ($type, $prices_ref) = @_;
 
   my @exchanges = qw(oficial blue);
 
@@ -38,7 +38,7 @@ sub format_currency {
   my $output = '';
 
   foreach my $type (@exchanges) {
-    $output .= '[' . ucfirst($type) . '] $'  . sprintf("%.1f", $prices_ref->{$type}->{'value_buy' }) 
+    $output .= '[' . ucfirst($type) . '] $'  . sprintf("%.1f", $prices_ref->{$type}->{'value_buy' })
                                     .' - $'  . sprintf("%.1f", $prices_ref->{$type}->{'value_sell'})
                                     . ' :: ';
   }
@@ -46,15 +46,14 @@ sub format_currency {
   return $output;
 }
 #{{{ do_dolar
-sub do_dolar {
+sub do_euros {
   my ($server, $chan, $text) = @_;
-  my ($ask, $how_much) = $text =~ /^!(\w+)(\s+\d+(?:\.\d{1,2})?)?/;
+  my ($how_much) = $text =~ /^!\w+\s+?(\d+(?:\.\d{1,2})?)?/;
 
   fetch_price($bluelytics_url) if (time() - $last_fetch > $bufferme);
 
   if (!$how_much) {
-    sayit($server, $chan, format_currency('dollar', \%fetched_prices)) if ($ask =~ /^dol[oae]r$/);
-    sayit($server, $chan, format_currency('euro',   \%fetched_prices)) if ($ask =~ /^euros?$/);
+    sayit($server, $chan, format_currency('euro',   \%fetched_prices));
   }
   else {
     my %calculated_prices;
@@ -65,13 +64,12 @@ sub do_dolar {
         $calculated_prices{$type}->{$value} = $fetched_prices{$type}->{$value} * $how_much;
       }
     }
-    sayit($server, $chan, format_currency('dollar', \%calculated_prices)) if ($ask =~ /^dol[oae]r$/);
-    sayit($server, $chan, format_currency('euro',   \%calculated_prices)) if ($ask =~ /^euros?$/);
+    sayit($server, $chan, format_currency('euro',   \%calculated_prices));
   }
   return;
 }
 #}}}
 #{{{ signal and stuff
 sub sayit { my $s = shift; $s->command("MSG @_"); }
-signal_add("showme the money","do_dolar");
+signal_add("showme the euros","do_euros");
 #}}}

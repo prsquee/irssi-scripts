@@ -76,7 +76,7 @@ sub incoming_public {
   return if $server->{tag} !~ /$active_networks/;
 
   #check if someone said a command
-  $text =~ s/^<[^>]+> // if $nick eq 'nerdearla';
+  $text =~ s/^<[^>]+> // if $nick =~ /^nerdearla/;
   if (my ($cmd) = $text =~ /^!(\w+)\b/) {
     #{{{ halps
     if ($cmd =~ /^h[ea]lp$/) {
@@ -164,8 +164,14 @@ sub incoming_public {
       return;
     }#}}}
     #{{{ !dol[ao]r and !euro
-    if ($cmd =~ /^dol[aoe]r$/ or $cmd =~ /^euros?$/) {
-      signal_emit( 'showme the money', $server, $chan, $text) if is_loaded('dolar3');
+    if ($cmd =~ /^euros?$/) {
+      signal_emit( 'showme the euros', $server, $chan, $text) if is_loaded('dolar3');
+      return;
+    }
+    #}}}
+    #{{{ !dol[ao]rsi
+    if ($cmd =~ /^dol[aoe]r$/) {
+      signal_emit( 'showme the usd', $server, $chan, $text) if is_loaded('dolarsi');
       return;
     }
     #}}}
