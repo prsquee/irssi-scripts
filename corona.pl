@@ -40,7 +40,7 @@ sub fetch_infected {
     sayit($server, $chan, $output);
     if (int(rand(12)) == 4) {
       my $beer_price = fetch_beer();
-      sayit($server, $chan, "Una erveza Corona rubia de 330cc sale \$$beer_price en Jumbo.");
+      sayit($server, $chan, "Una cerveza Corona rubia de 330cc sale \$$beer_price en Jumbo.");
     }
   }
   else {
