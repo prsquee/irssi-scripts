@@ -75,8 +75,17 @@ sub incoming_public {
   print (CRAP "im not being used on any network!") if (!$active_networks);
   return if $server->{tag} !~ /$active_networks/;
 
+  #strip out control chars
+  $text =~ s/\x03\d{0,2}(,\d{0,2})?//g; #colors
+  $text =~ s/\x02|\x16|\x1F|\x0F//g;    #bold, inverse, underline and clear
+
+  if ($nick =~ /^nbot/) {
+    $text =~ s#^\[[^\]]+\]\s+<([^>]+)>\s+##;
+    $nick = $1 if $1;
+    $nick =~ s/\s+//g;
+  }
+
   #check if someone said a command
-  $text =~ s/^<[^>]+> // if $nick =~ /^nerdearla/;
   if (my ($cmd) = $text =~ /^!(\w+)\b/) {
     #{{{ halps
     if ($cmd =~ /^h[ea]lp$/) {
