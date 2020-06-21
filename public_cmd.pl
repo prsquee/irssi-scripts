@@ -79,10 +79,11 @@ sub incoming_public {
   $text =~ s/\x03\d{0,2}(,\d{0,2})?//g; #colors
   $text =~ s/\x02|\x16|\x1F|\x0F//g;    #bold, inverse, underline and clear
 
+  my $elsewhere = '';
   if ($nick =~ /^nbot/) {
+    ($elsewhere, $nick) = $text =~ m#^\[([^\]]+)\]\s+<([^>]+)>\s+#;
     $text =~ s#^\[[^\]]+\]\s+<([^>]+)>\s+##;
-    $nick = $1 if $1;
-    $nick =~ s/\s+//g;
+    $nick =~ s#\W#_#g;
   }
 
   #check if someone said a command
@@ -550,6 +551,11 @@ sub incoming_public {
     #{{{ !feriados
     if ($cmd =~ m{^feriados?}) {
       signal_emit('worknowork', $server, $chan) if is_loaded('feriados');
+    }
+    #}}}
+    #{{{ !discord
+    if ($cmd eq 'discord' and $elsewhere ne 'discord' and $chan eq '#sysarmy') {
+        sayit($server, $chan, 'Discord: https://discord.gg/ZcTWE7H');
     }
     #}}}
   } #public cmd check ends here. begin general URL match
