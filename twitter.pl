@@ -79,9 +79,6 @@ sub moment_ago {
   $created_at =~ s| \+\d{4}||g;
 
   my $converted_time = str2time($created_at);
-  # -0300 #my server's timezone
-  $converted_time -= 10800;
-
   my $delta = time - $converted_time;
   return undef unless $delta;
 
@@ -103,6 +100,11 @@ sub moment_ago {
          : $mon <= 97 ? 'almost 8 years ago.'
          : $mon <= 109 ? 'almost 9 years ago.'
          : $mon <= 111 ? 'almost 10 years ago.'
+         : $mon <= 123 ? 'almost 11 years ago.'
+         : $mon <= 135 ? 'almost 12 years ago.'
+         : $mon <= 147 ? 'almost 13 years ago.'
+         : $mon <= 159 ? 'almost 14 years ago.'
+         : $mon <= 171 ? 'almost 15 years ago.'
          : undef;
   }
   elsif ($delta > 86400) {
