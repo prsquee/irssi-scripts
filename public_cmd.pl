@@ -555,7 +555,11 @@ sub incoming_public {
     #}}}
     #{{{ !discord
     if ($cmd eq 'discord' and $elsewhere ne 'discord' and $chan eq '#sysarmy') {
-        sayit($server, $chan, 'Discord: https://discord.gg/ZcTWE7H');
+        sayit($server, $chan, 'Discord: https://sysar.my/discord');
+    }
+    #{{{ !slack
+    if ($cmd eq 'slack' and $elsewhere ne 'slack' and $chan eq '#sysarmy') {
+        sayit($server, $chan, 'Discord: https://sysar.my/slack');
     }
     #}}}
   } #public cmd check ends here. begin general URL match
