@@ -56,7 +56,7 @@ sub fetch_holidays {
         $output = $delta == 1 ? 'MAÑANA ES FERIADO! ' : "Faltan $delta días para el $day de $meses[$mon]: ";
       }
       if ($output and $$holidays[$mon]{$day}->{'tipo'} eq 'puente') {
-        $day += 1; #this will break if bridge is the last day of a month. It is impossible though.
+        $day -= 1; 
         $output .= "Feriado puente con el $day de $meses[$mon]: ";
       }
       sayit($server, $chan, $output . "$$holidays[$mon]{$day}->{'motivo'}.");
