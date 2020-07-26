@@ -434,9 +434,11 @@ sub incoming_public {
       }
     }#}}}
    #{{{ !btc bitcoins
-    if ($cmd =~ m{^bi?tc(?:oin)?s?$}) {
-      # print(CRAP "btc: $1") if $1;
-      signal_emit('gold digger', $server, $chan, 'btc') if is_loaded('coindesk');
+    if ($text =~ m{^!bi?tc(?:oin)?s?\s?(\d+(?:[.,]\d+)?)?$}) {
+      my $howmuch = '1';
+      $howmuch = $1 if $1;
+      $howmuch =~ s/,/./;
+      signal_emit('gold digger', $server, $chan, $howmuch) if is_loaded('coindesk');
     }#}}}
    #{{{ !eth ethereum
     if ($cmd =~ m{^eth(reum)?}) {
