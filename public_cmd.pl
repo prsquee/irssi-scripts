@@ -180,8 +180,11 @@ sub incoming_public {
     }
     #}}}
     #{{{ !dol[ao]rsi
-    if ($cmd =~ /^dol[aoe]r$/) {
-      signal_emit( 'showme the usd', $server, $chan, $text) if is_loaded('dolarsi');
+    if ($text =~ m{^!dol[aoe]r\s?(\d+(?:[.,]\d+)?)?$}) {
+      my $howmuch = '1';
+      $howmuch = $1 if $1;
+      $howmuch =~ tr/,/./;
+      signal_emit( 'showme the usd', $server, $chan, $howmuch) if is_loaded('dolarsi');
       return;
     }
     #}}}
@@ -437,7 +440,7 @@ sub incoming_public {
     if ($text =~ m{^!bi?tc(?:oin)?s?\s?(\d+(?:[.,]\d+)?)?$}) {
       my $howmuch = '1';
       $howmuch = $1 if $1;
-      $howmuch =~ s/,/./;
+      $howmuch =~ tr/,/./;
       signal_emit('gold digger', $server, $chan, $howmuch) if is_loaded('coindesk');
     }#}}}
    #{{{ !eth ethereum

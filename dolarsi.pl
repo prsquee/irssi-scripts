@@ -30,14 +30,12 @@ sub fetch_price {
 #}}}
 #{{{ do_dolar
 sub do_dolarsi {
-  my ($server, $chan, $text) = @_;
-  my ($how_much) = $text =~ /^!\w+\s+?(\d+(?:\.\d{1,2})?)?/;
+  my ($server, $chan, $howmuch) = @_;
 
   fetch_price($dolarsi_url) if (time() - $last_fetch > $bufferme);
 
   my $output = '';
   my $solidario = '';
-  $how_much = 1 if not $how_much;
 
   foreach my $key (@fetched_prices) {
     my $casa = $key->{'casa'};
@@ -46,14 +44,14 @@ sub do_dolarsi {
         my $compra =  $casa->{'compra'}; $compra =~ tr/,/./;
         my $venta  =  $casa->{'venta'};  $venta  =~ tr/,/./;
 
-        $output = $output . "[$type] \$" . sprintf("%.2f", eval($compra * $how_much)) 
-                                . ' - $' . sprintf("%.2f", eval($venta * $how_much)) 
+        $output = $output . "[$type] \$" . sprintf("%.2f", eval($compra * $howmuch))
+                                . ' - $' . sprintf("%.2f", eval($venta * $howmuch))
                                 . ' :: ';
-        $solidario = $venta * 1.3 * $how_much if $type eq 'Dolar Oficial';
+        $solidario = $venta * 1.3 * $howmuch if $type eq 'Dolar Oficial';
       }
     }
   }
-  $output = $output . '[Dolar Solidario] $' . sprintf("%.2f", $solidario); 
+  $output = $output . '[Dolar Solidario] $' . sprintf("%.2f", $solidario);
   sayit($server, $chan, $output);
   return;
 }
