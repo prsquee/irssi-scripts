@@ -441,7 +441,7 @@ sub incoming_public {
       my $howmuch = '1';
       $howmuch = $1 if $1;
       $howmuch =~ tr/,/./;
-      signal_emit('gold digger', $server, $chan, $howmuch) if is_loaded('coindesk');
+      signal_emit('gold digger', $server, $chan, $howmuch) if is_loaded('coinbase');
     }#}}}
    #{{{ !eth ethereum
     if ($cmd =~ m{^eth(reum)?}) {
