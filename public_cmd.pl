@@ -1,5 +1,5 @@
-#public commands
-#FIXME this is getting awfuly bloated.
+# public commands
+# FIXME this is getting awfuly bloated.
 
 use Irssi qw (  print signal_emit
                 signal_add signal_register
@@ -443,9 +443,12 @@ sub incoming_public {
       $howmuch =~ tr/,/./;
       signal_emit('gold digger', $server, $chan, $howmuch) if is_loaded('coinbase');
     }#}}}
-   #{{{ !eth ethereum
-    if ($cmd =~ m{^eth(reum)?}) {
-      signal_emit('ethereum', $server, $chan) if is_loaded('ethereum');
+   #{{{ kraken coins
+    if ($cmd =~ m{^(?:eth)|(?:xlm)|(?:ltc)}) {
+      my ($howmuch) = $text =~ m{(\d+(?:[.,]\d+)?)};
+      $howmuch = '1' if not $howmuch;
+      $howmuch =~ tr/,/./;
+      signal_emit('kraken released', $server, $chan, $cmd, $howmuch) if is_loaded('kraken');
     }#}}}
     #{{{ !clima
     if ($cmd eq 'clima') {
@@ -564,7 +567,7 @@ sub incoming_public {
     }
     #{{{ !slack
     if ($cmd eq 'slack' and $elsewhere ne 'slack' and $chan eq '#sysarmy') {
-        sayit($server, $chan, 'Discord: https://sysar.my/slack');
+        sayit($server, $chan, 'Slack: https://sysar.my/slack');
     }
     #}}}
   } #public cmd check ends here. begin general URL match
