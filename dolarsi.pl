@@ -1,4 +1,4 @@
-#dolar3.plA
+#dolarsi.pl
 
 use Irssi qw(command_bind signal_add print active_win server_find_tag ) ;
 use LWP::UserAgent;
