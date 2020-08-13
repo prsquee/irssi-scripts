@@ -9,12 +9,12 @@ use URI::Escape;
 use Data::Dumper;
 use JSON;
 use utf8;
+use Locale::Country;
 
 settings_add_str('weather', 'weatherkey', '');
 signal_add('weather','check_weather');
 
-my $apiurl = 'http://api.openweathermap.org/data/2.5/weather?';
-my $apikey = '&units=metric&APPID=' . settings_get_str('weatherkey');
+my $apiurl = 'http://api.openweathermap.org/data/2.5/weather?units=metric&appid=' . settings_get_str('weatherkey') . '&';
 
 my %weather = (
   '01d' => '☀️',
@@ -38,17 +38,18 @@ my %weather = (
 );
 
 my $json = JSON->new();
-my $ua   = LWP::UserAgent->new( timeout => 15 );
+my $ua   = LWP::UserAgent->new( timeout => 5 );
 
 sub check_weather {
   my ($server, $chan, $city) = @_;
   my $url = '';
 
   if ($city =~ /^\d+$/) {
-    $url = $apiurl . "id=$city" . $apikey;
+    $url = $apiurl . 'id=' . $city;
   } else {
     $city = uri_escape($city);
-    $url = $apiurl . "q=$city" . $apikey;
+    $url = $apiurl . "q=$city";
+    print (CRAP $apiurl);
   }
 
   $ua->agent(settings_get_str('myUserAgent'));
@@ -66,15 +67,18 @@ sub check_weather {
 
   if ($parsed->{cod} == '200') {
     #my $item = $parsed_json->{list}[0];
-    my $temp        = int($parsed->{main}->{temp});
-    my $min         = int($parsed->{main}->{temp_min});
-    my $max         = int($parsed->{main}->{temp_max});
-    my $humidity    = int($parsed->{main}->{humidity});
-    my $found_city  = $parsed->{name};
-    my $weather     = $parsed->{weather}[0];
-    my $icon        = $weather->{icon};
+    my $temp        = int($parsed->{'main'}->{'temp'});
+    my $min         = int($parsed->{'main'}->{'temp_min'});
+    my $max         = int($parsed->{'main'}->{'temp_max'});
+    my $humidity    = int($parsed->{'main'}->{'humidity'});
+    my $found_city  = $parsed->{'name'};
+    my $country     = code2country($parsed->{'sys'}->{'country'});
+    my $weather     = $parsed->{'weather'}[0];
+    my $icon        = $weather->{'icon'};
+    my $lat         = $parsed->{'coord'}->{'lat'};
+    my $lon         = $parsed->{'coord'}->{'lon'};
 
-    my $out = "${found_city}: ${temp}˚C - $weather{$icon} - min: ${min}˚C, max: ${max}˚C - humidity: ${humidity}% ";
+    my $out = "${found_city}, ${country}: ${temp}˚C - $weather{$icon} - min: ${min}˚C, max: ${max}˚C - humidity: ${humidity}% ";
 
     sayit($server, $chan, $out);
   } else { sayit($server,$chan,"city not found."); }
