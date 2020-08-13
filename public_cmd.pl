@@ -577,7 +577,7 @@ sub incoming_public {
   #{{{ GENERAL URL MATCH
   if ($text =~ m{(https?://[^ ]+)}) {
     my $url = $1;
-    return if ($url =~ /wikipedia|facebook|fbcdn/i);
+    return if ($url =~ /wikipedia|facebook|fbcdn|app.slack/i);
     #site specific stuff
     if ($url =~ m{https?://www\.imdb\.com/title/(tt\d+)}) {
       signal_emit('search imdb', $server, $chan, $1) if ($1 and is_loaded('imdb'));
