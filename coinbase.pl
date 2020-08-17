@@ -22,17 +22,21 @@ sub fetch_coins {
   my $ua  = LWP::UserAgent->new( timeout => 5 );
   $ua->agent(Irssi::settings_get_str('myUserAgent'));
 
+  my $output = '';
+
   my $raw = $ua->get($api_url)->content();
   my $coins = $json->utf8->decode($raw);
-  my $price = $coins->{'data'}->{'amount'};
-  my $coinbase = '[coinbase] $' . sprintf("%.2f", eval($price * $this_much));
-  my $kraken_price = scalar('Irssi::Script::kraken')->can('fetch_prices_for')->('btc');
-  if ($kraken_price) {
-    my $kraken = '[kraken] $' . sprintf("%.2f", eval($kraken_price * $this_much));
-    sayit($server, $chan, join(' :: ', $coinbase, $kraken));
-  }
-  else {
-    sayit($server,$chan, $coinbase);
-  }
+  my $coinbase_price = $coins->{'data'}->{'amount'};
+  $output = '[coinbase] $' . sprintf("%.2f", eval($coinbase_price * $this_much));
+
+  my $kraken_price = scalar('Irssi::Script::kraken')->can('fetch_prices_for')->('btc') if is_loaded('kraken');
+  $output .= ' :: [kraken] $' . sprintf("%.2f", eval($kraken_price * $this_much)) if ($kraken_price);
+
+  my $bitfinex_price = scalar('Irssi::Script::bitfinex')->can('fetch_price')->() if is_loaded('bitfinex');
+  $output .= ' :: [bitfenix] $' . sprintf("%.2f", eval($bitfinex_price * $this_much)) if ($bitfinex_price);
+  sayit($server, $chan, $output);
+
 }
 sub sayit { my $s = shift; $s->command("MSG @_"); }
+sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
+

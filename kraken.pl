@@ -75,8 +75,8 @@ sub fetch_prices_for {
 
   if ( scalar @{$parsed_json->{'error'}} == 0) {
     $coins{$this_coin}->{'last_fetch'} = time;
-    $coins{$this_coin}->{'price'} = $parsed_json->{'result'}->{"$assetpair"}->{'p'}[0];
-    # p[0] is today's volume weighted average price
+    $coins{$this_coin}->{'price'} = $parsed_json->{'result'}->{"$assetpair"}->{'a'}[0];
+    # a[0] is asking price
     return $coins{$this_coin}->{'price'};
   }
   else {
