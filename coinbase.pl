@@ -33,7 +33,7 @@ sub fetch_coins {
   $output .= ' :: [kraken] $' . sprintf("%.2f", eval($kraken_price * $this_much)) if ($kraken_price);
 
   my $bitfinex_price = scalar('Irssi::Script::bitfinex')->can('fetch_price')->() if is_loaded('bitfinex');
-  $output .= ' :: [bitfenix] $' . sprintf("%.2f", eval($bitfinex_price * $this_much)) if ($bitfinex_price);
+  $output .= ' :: [bitfinex] $' . sprintf("%.2f", eval($bitfinex_price * $this_much)) if ($bitfinex_price);
   sayit($server, $chan, $output);
 
 }
