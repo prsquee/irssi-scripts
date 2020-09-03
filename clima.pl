@@ -49,7 +49,6 @@ sub check_weather {
   } else {
     $city = uri_escape($city);
     $url = $apiurl . "q=$city";
-    print (CRAP $apiurl);
   }
 
   $ua->agent(settings_get_str('myUserAgent'));
