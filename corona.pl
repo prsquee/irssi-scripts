@@ -28,9 +28,9 @@ sub fetch_infected {
     my $data = shift @{$fetched->{'data'}};
     if ($data) {
       $output = '[' . $data->{'country'} . '] '
-                    . $data->{'confirmed'} . ' confirmed :: '
-                    . $data->{'recovered'} . ' recovered :: '
-                    . $data->{'deaths'}    . ' deaths :: '
+                    . add_dots($data->{'confirmed'}) . ' confirmed :: '
+                    . add_dots($data->{'recovered'}) . ' recovered :: '
+                    . add_dots($data->{'deaths'}   ) . ' deaths :: '
                     . 'https://corona-stats.online/' . uc($country);
 
      }
@@ -38,21 +38,15 @@ sub fetch_infected {
        $output = "$country is not a valid country code. https://corona-stats.online";
      }
     sayit($server, $chan, $output);
-    if (int(rand(12)) == 4) {
-      my $beer_price = fetch_beer();
-      sayit($server, $chan, "Una cerveza Corona rubia de 330cc sale \$$beer_price en Jumbo.");
-    }
   }
   else {
     print (CRAP Dumper($fetched));
     sayit($server, $chan, 'nope, try later ‾\(°_o)/‾');
   }
 }
-sub fetch_beer {
-  my $ua  = LWP::UserAgent->new( timeout => 5 );
-  $ua->agent(Irssi::settings_get_str('myUserAgent'));
-  my $raw = $ua->get($jumbo_url)->content();
-  my $beer_json = $json->utf8->decode($raw);
-  return $$beer_json[0]->{'items'}[0]->{'sellers'}[0]->{'commertialOffer'}->{'ListPrice'};
+sub add_dots {
+  my $n = scalar reverse shift;
+  $n =~ s/(\d{3})(?=\d)/$1./g;
+  return scalar reverse $n;
 }
 sub sayit { my $s = shift; $s->command("MSG @_");  }
