@@ -24,10 +24,9 @@ sub do_google {
   my ($server, $chan, $query) = @_;
   my $json = $engine->search( uri_encode($query) );
 
-  if ($json->{request}->{page}->{totalResults} > 0) {
+  if (scalar @{ $json->{'items'} } > 0) {
     foreach my $items (@{$json->items}) {
-      my $title = decode("utf8", $items->{title});
-      sayit($server,$chan,"[gugl] $items->{link} - $title");
+      sayit($server, $chan,"[gugl] $items->{'link'} - " . decode("utf8", $items->{'title'}));
     }
   } else {
     sayit($server,$chan,"found nothin'");
