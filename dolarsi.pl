@@ -47,11 +47,11 @@ sub do_dolarsi {
         $output = $output . "[$type] \$" . sprintf("%.2f", eval($compra * $howmuch))
                                 . ' - $' . sprintf("%.2f", eval($venta * $howmuch))
                                 . ' :: ';
-        $solidario = $venta * 1.3 * $howmuch if $type eq 'Dolar Oficial';
+        $solidario = $venta * 1.65 * $howmuch if $type eq 'Dolar Oficial';
       }
     }
   }
-  $output = $output . '[Dolar Solidario] $' . sprintf("%.2f", $solidario);
+  $output = $output . '[Dolar Solidario ahorro] $' . sprintf("%.2f", $solidario);
   sayit($server, $chan, $output);
   return;
 }

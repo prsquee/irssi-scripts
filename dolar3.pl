@@ -42,7 +42,7 @@ sub format_currency {
                                     .' - $'  . sprintf("%.1f", $prices_ref->{$type}->{'value_sell'})
                                     . ' :: ';
   }
-  $output .= '[Solidario] $' . sprintf("%.1f", eval($prices_ref->{$exchanges[0]}->{'value_sell'} * 1.3));
+  $output .= '[Solidario] $' . sprintf("%.1f", eval($prices_ref->{$exchanges[0]}->{'value_sell'} * 1.65));
   return $output;
 }
 #{{{ do_dolar
