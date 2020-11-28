@@ -56,8 +56,16 @@ sub fetch_holidays {
         $output = $delta == 1 ? 'MAÑANA ES FERIADO! ' : "Faltan $delta días para el $day de $meses[$mon]: ";
       }
       if ($output and $$holidays[$mon]{$day}->{'tipo'} eq 'puente') {
-        $day -= 1; 
-        $output .= "Feriado puente con el $day de $meses[$mon]: ";
+        #punte could be before or after.
+        #FIXME: this wont scale if puente is on a friday with monday.
+        $day -= 1;
+        if ($$holidays[$mon]{$day}->{'motivo'}) {
+          $output .= "Feriado puente con el $day de $meses[$mon]: ";
+        }
+        else {
+          $day += 2;
+          $output .= "Feriado puente con el $day de $meses[$mon]: ";
+        }
       }
       sayit($server, $chan, $output . "$$holidays[$mon]{$day}->{'motivo'}.");
       return;
