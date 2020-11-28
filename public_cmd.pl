@@ -538,9 +538,9 @@ sub incoming_public {
     ##}}}
     #{{{ !birras
     if ($cmd =~ /^(?:admin)?birras?$/ and $chan =~ /sysarmy(?:-en)?|ssqquuee/) {
-      sayit($server, $chan, "tomá la 🍺 en tu casa!");
-      return;
+      sayit($server, $chan, "not sure. check https://www.meetup.com/sysarmy/");
       #signal_emit('birras get', $server, $chan) if is_loaded('adminbirras');
+      return;
     }
     ##}}}
     #{{{ !settopic
