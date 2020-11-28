@@ -17,8 +17,8 @@ my $karma_storable = get_irssi_dir() . "/scripts/datafiles/karma.storable";
 our $karma = eval { retrieve($karma_storable) } || [];
 
 my %novelty = (
-  'sQuEE'     => '🍺',
-  'sQuEE`'    => '🍺',
+  'sQuEE'     => '🍷',
+  'sQuEE`'    => '🍷',
   'osx'       => '⌘',
   'OSX'       => '⌘',
   'mac'       => '⌘',
