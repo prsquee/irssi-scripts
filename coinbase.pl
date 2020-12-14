@@ -1,4 +1,5 @@
 # coinbase public api
+# FIX ME this is getting out of hands
 use Irssi qw(signal_add print settings_add_str settings_get_str);
 use strict;
 use warnings;
@@ -34,8 +35,10 @@ sub fetch_coins {
 
   my $bitfinex_price = scalar('Irssi::Script::bitfinex')->can('fetch_price')->() if is_loaded('bitfinex');
   $output .= ' :: [bitfinex] $' . sprintf("%.2f", eval($bitfinex_price * $this_much)) if ($bitfinex_price);
-  sayit($server, $chan, $output);
 
+  my $bitso_price = scalar('Irssi::Script::bitso')->can('fetch_price')->() if is_loaded('bitfinex');
+  $output .= ' :: [bitso] $' . sprintf("%.2f", eval($bitso_price * $this_much)) if ($bitso_price);
+  sayit($server, $chan, $output);
 }
 sub sayit { my $s = shift; $s->command("MSG @_"); }
 sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
