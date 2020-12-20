@@ -36,6 +36,10 @@ sub fetch_coins {
   my $bitfinex_price = scalar('Irssi::Script::bitfinex')->can('fetch_price')->() if is_loaded('bitfinex');
   $output .= ' :: [bitfinex] $' . sprintf("%.2f", eval($bitfinex_price * $this_much)) if ($bitfinex_price);
 
+  my $binance_price = scalar('Irssi::Script::binance')->can('fetch_price')->() if is_loaded('binance');
+  $output .= ' :: [binance] $' . sprintf("%.2f", eval($binance_price * $this_much)) if ($binance_price);
+
+  # $output .= ' :: [bitfinex] $' . sprintf("%.2f", eval($bitfinex_price * $this_much)) if ($bitfinex_price);
   my $bitso_price = scalar('Irssi::Script::bitso')->can('fetch_price')->() if is_loaded('bitfinex');
   $output .= ' :: [bitso] $' . sprintf("%.2f", eval($bitso_price * $this_much)) if ($bitso_price);
   sayit($server, $chan, $output);
