@@ -81,8 +81,8 @@ sub incoming_public {
 
   my $elsewhere = '';
   if ($nick =~ /^nbot/) {
-    ($elsewhere, $nick) = $text =~ m#^\[([^\]]+)\]\s+<([^>]+)>\s+#;
-    $text =~ s#^\[[^\]]+\]\s+<([^>]+)>\s+##;
+    ($nick) = $text =~ m#^<([^>]+)>\s+#;
+    $text =~ s#^<([^>]+)>\s+##;
     $nick =~ s#\W#_#g;
   }
 
@@ -562,11 +562,11 @@ sub incoming_public {
     }
     #}}}
     #{{{ !discord
-    if ($cmd eq 'discord' and $elsewhere ne 'discord' and $chan eq '#sysarmy') {
+    if ($cmd eq 'discord' and $chan eq '#sysarmy') {
         sayit($server, $chan, 'Discord: https://sysar.my/discord');
     }
     #{{{ !slack
-    if ($cmd eq 'slack' and $elsewhere ne 'slack' and $chan eq '#sysarmy') {
+    if ($cmd eq 'slack' and $chan eq '#sysarmy') {
         sayit($server, $chan, 'Slack: https://sysar.my/slack');
     }
     #}}}
