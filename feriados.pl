@@ -6,6 +6,7 @@ use LWP::UserAgent;
 use JSON;
 use Data::Dumper;
 use DateTime;
+use Scalar::Util;
 
 use utf8;
 use Encode qw (encode decode);
@@ -29,9 +30,7 @@ sub fetch_holidays {
 
   my $raw = $ua->get($api_url . $year . '?formato=mensual')->content();
   my $holidays = $json->utf8->decode($raw);
-  # debug
-  #foreach my $d (sort {$a <=> $b} keys)
-  
+  #print (CRAP Dumper($holidays));
 
   my $today = new_dt($year,$mon,$mday);
 
@@ -53,21 +52,29 @@ sub fetch_holidays {
       }
       else {
         my $delta = $today->delta_days($this_holiday)->delta_days();
-        $output = $delta == 1 ? 'MAÑANA ES FERIADO! ' : "Faltan $delta días para el $day de $meses[$mon]: ";
+        $output = $delta == 1 ? 'MAÑANA ES FERIADO! ' : "Faltan $delta días para el $day de $meses[$mon]:";
       }
-      if ($output and $$holidays[$mon]{$day}->{'tipo'} eq 'puente') {
-        #punte could be before or after.
-        #FIXME: this wont scale if puente is on a friday with monday.
+      #print (CRAP "mon: ${mon} ; day: ${day}; ref($$holidays[$mon]{$day}");
+      # check ref type before accessing 'tipo'. There could be a rare two holidays on the same day.
+      if ($output and ref($$holidays[$mon]{$day}) eq 'ARRAY') {
+        foreach my $ref (@{$$holidays[$mon]{$day}}) {
+          $output .= ' ' . $ref->{'motivo'} . '.';
+        }
+        sayit($server, $chan, $output);
+        return;
+      }
+      elsif ($output and $$holidays[$mon]{$day}->{'tipo'} eq 'puente') {
+        #puente could be before or after. Let's hope this wont scale if puente is on a friday with monday.
         $day -= 1;
         if ($$holidays[$mon]{$day}->{'motivo'}) {
-          $output .= "Feriado puente con el $day de $meses[$mon]: ";
+          $output .= " Feriado puente con el $day de $meses[$mon]: ";
         }
         else {
           $day += 2;
-          $output .= "Feriado puente con el $day de $meses[$mon]: ";
+          $output .= " Feriado puente con el $day de $meses[$mon]: ";
         }
       }
-      sayit($server, $chan, $output . "$$holidays[$mon]{$day}->{'motivo'}.");
+      sayit($server, $chan, $output . " $$holidays[$mon]{$day}->{'motivo'}.");
       return;
     }
     $mon += 1 unless $output;
