@@ -39,7 +39,8 @@ my $youtubex
     /                           #the 1st slash
     (?:watch\?\S*v=)?           #this wont be here if it's short uri
     (?:user/.*/)?               #username can be
-    ([^&]{11})                  #the vid id
+    (?:channel/)?               #channel id are 24chars
+    ([^&]{11,})                 #the vid id or channel id
 )};
 
 my $karma_thingy = qr{[\w\[\]`|\-^\\.]+}; #thingy can be \w with .{}[]`|\-^
@@ -444,7 +445,7 @@ sub incoming_public {
       signal_emit('gold digger', $server, $chan, $howmuch) if is_loaded('coinbase');
     }#}}}
    #{{{ kraken coins
-    if ($cmd =~ m{^(?:eth)|(?:xlm)|(?:ltc)}) {
+    if ($cmd =~ m{^(?:eth)|(?:xlm)|(?:ltc)|(?:doge)}) {
       my ($howmuch) = $text =~ m{(\d+(?:[.,]\d+)?)};
       $howmuch = '1' if not $howmuch;
       $howmuch =~ tr/,/./;

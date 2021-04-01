@@ -7,16 +7,18 @@ use strict;
 use Data::Dumper;
 use LWP::UserAgent;
 use JSON;
+use Locale::Country;
 
-#init 
-signal_add("check tubes", "fetch_tubes"); 
+#init
+signal_add("check tubes", "fetch_tubes");
 Irssi::settings_add_str('apikey', 'google_apikey', '');
 
-my %fetched_vids = ();
+my %fetched_ids = ();
 my $json    = JSON->new();
 my $ua      = LWP::UserAgent->new( timeout => '15' );
 
-my $api_url = 'https://www.googleapis.com/youtube/v3/videos?id=';
+my $api_url = 'https://www.googleapis.com/youtube/v3/';
+#'videos?id=';
 my $api_key = '&key=' . settings_get_str('google_apikey');
 my $part    = '&part=contentDetails,snippet,statistics';
 my $field   = '&fields=items('
@@ -26,10 +28,13 @@ my $field   = '&fields=items('
             . ')';
 
 sub fetch_tubes {
-  my($server, $chan, $vid) = @_;
+  my($server, $chan, $id) = @_;
+  #  print (CRAP length($id));
 
-  if (not exists($fetched_vids{$vid})) {
-    my $request_url = $api_url . $vid . $api_key . $part . $field ;
+  if (not exists($fetched_ids{$id})) {
+    my $what = ( length($id) == 11 ? 'videos?id=' . $id . $field : 'channels?id=' . $id );
+    my $request_url = $api_url . $what . $api_key . $part;
+    #print (CRAP $request_url);
 
     $ua->agent(settings_get_str('myUserAgent'));
     my $got = $ua->get($request_url);
@@ -37,27 +42,34 @@ sub fetch_tubes {
       print (CRAP "youtube error code: $got->code - $got->message");
       return;
     }
+
     my $result = eval { $json->utf8->decode($got->decoded_content) };
     return if $@;
 
-    #items comes as an one element array.
-    my $item = shift @{ $result->{'items'} };
+    if ($what =~ /^videos/) {
+      #items comes as an one element array.
+      my $items = shift @{ $result->{'items'} };
 
-    my $title = $item->{'snippet'}->{'title'};
-    my $time  = $item->{'contentDetails'}->{'duration'};
-    my $views = $item->{'statistics'}->{'viewCount'};
+      my $title = $items->{'snippet'}->{'title'};
+      my $time  = $items->{'contentDetails'}->{'duration'};
+      my $views = $items->{'statistics'}->{'viewCount'};
 
-    if ($title) {
-      #print (CRAP $time);
-      $time = format_time($time);
-      my $vid_info = "${time} ${title} - [views $views]";
-      sayit($server, $chan, $vid_info);
-
-      $fetched_vids{$vid} = $vid_info;
+      if ($title) {
+        $time = format_time($time);
+        my $id_info = "${time} ${title} - [views $views]";
+        sayit($server, $chan, $id_info);
+        $fetched_ids{$id} = $id_info;
+      }
     }
-    else { return; }
+    else {
+      my $citems = shift @{ $result->{'items'} };
+      my $channel_name = $citems->{'snippet'}->{'title'};
+      my $country = code2country($citems->{'snippet'}->{'country'});
+      my $subs  = fuzzy_count($citems->{'statistics'}->{'subscriberCount'});
+      sayit ($server, $chan, '[channel] "'. $channel_name . '"' . ' with ' . $subs . ' subscribers.');
+    }
   }
-  else { sayit ($server, $chan, $fetched_vids{$vid}); }
+  else { sayit ($server, $chan, $fetched_ids{$id}); }
 }
 
 sub format_time {
@@ -72,5 +84,11 @@ sub format_time {
         :($time !~ /:/) ? '[00:' . $time . ']'
         : '[' . $time . ']'
         ;
+}
+sub fuzzy_count {
+  my $n = shift;
+  $n =~ s/\d{3}$/K/ if (length($n) <= 6 and length($n) > 4);
+  $n =~ s/\d{6}$/M/ if length($n) > 6;
+  return $n;
 }
 sub sayit { my $s = shift; $s->command("MSG @_"); }
