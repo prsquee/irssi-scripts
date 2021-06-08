@@ -6,7 +6,7 @@ use Irssi qw (  print signal_emit
                 settings_get_str settings_add_str settings_set_str
                 get_irssi_dir
              );
-use v5.20;
+use v5.32;
 use strict;
 use warnings;
 use utf8;
@@ -38,9 +38,9 @@ my $youtubex
     youtu(?:\.be|be\.com)       #matches the short youtube link
     /                           #the 1st slash
     (?:watch\?\S*v=)?           #this wont be here if it's short uri
-    (?:user/.*/)?               #username can be
+    #(?:user/.*/)?              #username can be
     (?:channel/)?               #channel id are 24chars
-    ([^&]{11,})                 #the vid id or channel id
+    ([^\W]{11,24})              #the vid id or channel id
 )};
 
 my $karma_thingy = qr{[\w\[\]`|\-^\\.]+}; #thingy can be \w with .{}[]`|\-^
@@ -115,7 +115,7 @@ sub incoming_public {
       return;
     }#}}}
     #{{{ do this and say that
-    if (($cmd eq 'do' or $cmd eq 'say') and is_master($mask)) {
+    if (($cmd eq 'do' or $cmd eq 'say') and is_sQuEE($mask)) {
       $text =~ s/^!\w+\s//;
       my $serverCmd = ($cmd eq 'say') ? "MSG" : "ACTION";
       $server->command("$serverCmd $chan $text");
@@ -297,13 +297,13 @@ sub incoming_public {
     #}}}
     #{{{ karma is a bitch
     if ($cmd eq 'karma') {
-      my ($name) = $text =~ /!karma\s+($karma_thingy)/;
-      $name = $nick if not defined($name);
-      if ($name eq $server->{nick}) {
+      my ($thingy) = $text =~ /!karma\s+($karma_thingy)/;
+      $thingy = $nick if not defined($thingy);
+      if ($thingy eq $server->{nick}) {
         sayit($server, $chan, 'my karma is over 9000 already!');
         return;
       }
-      signal_emit("karma check", $server, $chan, $name) if is_loaded('karma');
+      signal_emit("karma check", $server, $chan, $thingy) if is_loaded('karma');
       return;
     }
     #}}}
@@ -648,7 +648,8 @@ sub incoming_public {
     $thingy = $nick if ($thingy eq 'me' and $operator eq '--');
 
     #karma scope is per channel
-    my $channel = $chan . '_' . $server->{tag};
+    my $channel = $chan . '_libera';
+    #my $channel = $chan . '_' . $server->{tag};
 
     signal_emit('karma bitch', $thingy, $operator, $channel)
       if (is_loaded('karma') and $thingy and $operator);
@@ -674,7 +675,7 @@ sub is_master {
 }
 sub is_sQuEE {
   #my $mask = shift;
-  return (shift(@_) eq '~sQuEE@unaffiliated/sq/x-3560400') ? 'true' : undef;
+  return (shift(@_) eq '~sQuEE@user/squee') ? 'true' : undef;
 }
 sub is_loaded { return exists($Irssi::Script::{shift(@_).'::'}); }
 sub sayit     { my $s = shift; $s->command("MSG @_"); }

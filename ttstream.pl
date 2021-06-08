@@ -14,21 +14,18 @@ use warnings;
 use AnyEvent::Twitter::Stream;
 use Data::Dumper;
 use HTML::Entities;
+use v5.32;
 
 #mapping ids to channels
 my %channel_for = (
    '57440969'   => '#sysarmy',    #@sysarmy
    '2179429297' => '#sysarmy',    #@nerdear
-   '2920961379' => '#sysarmy',    #@chownealo
    '324991882'  => '#ssqquuee',   #@sqbot
-   '15521218'   => '#ekoparty',   #@ekoparty
 );
 
 #track this
 
-my @eko_hashtags =  ( '#ekoparty', '#eko11' );
-
-my $server = server_find_chatnet("fnode");
+my $server = server_find_chatnet("libera");
 our $sysarmyStreamer = undef;
 
 #{{{ show this
@@ -100,16 +97,6 @@ sub show_tweet {
       if (exists $channel_for{$id}) {
         sayit($server, $channel_for{$id}, $output);
       }
-      else {
-        #the uesr id is not found in the channel hash, so this must be from a
-        #keyword we are tracking
-        #altho keyboard tracking shouldbe another hash.
-        my $eko_keyword_re = join('|', @eko_hashtags);
-        if ($output =~ /$eko_keyword_re/) {
-          sayit($server, '#ekoparty', $output) 
-            unless defined($tweet->{retweeted_status});
-        }
-      }
     }
   }
 }
@@ -131,14 +118,13 @@ sub start_stream {
     token_secret    => settings_get_str('twitter_access_token_secret'),
     method          => 'filter',
     follow          => join(',', keys %channel_for),
-    track           => join(',', @eko_hashtags),
     on_connect      => sub { print (CRAP 'connected to twitter stream.');},
     on_tweet        => \&show_tweet,
     on_eof          => \&restart_stream,
     on_error        => \&restart_stream,
     #on_keepalive   => sub { print (CRAP 'still alive');},
-    on_delete       => sub { print (CRAP 'a tweet was deleted. so sad');},
-    timeout         => 100,
+    #on_delete       => sub { print (CRAP 'a tweet was deleted. so sad');},
+    timeout         => 50,
   );
 }
 
