@@ -38,6 +38,12 @@ my %coins = (
     'decimals'   => 5,
     'asset_name' => 'XLTC'
   },
+  'doge' => {
+    'price'      => 0,
+    'last_fetch' => 0,
+    'decimals'   => 5,
+    'asset_name' => 'XLTC'
+  },
 );
 
 sub toss_coins {
