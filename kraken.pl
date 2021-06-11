@@ -18,31 +18,31 @@ my %coins = (
     'price'      => 0,
     'last_fetch' => 0,
     'decimals'   => 2,
-    'asset_name' => 'XXBT'
+    'asset_pair' => 'XXBTZUSD'
   },
   'xlm' => {
     'price'      => 0,
     'last_fetch' => 0,
     'decimals'   => 5,
-    'asset_name' => 'XXLM'
+    'asset_pair' => 'XXLMZUSD'
   },
   'eth' => {
     'price'      => 0,
     'last_fetch' => 0,
     'decimals'   => 5,
-    'asset_name' => 'XETH'
+    'asset_pair' => 'XETHZUSD'
   },
   'ltc' => {
     'price'      => 0,
     'last_fetch' => 0,
     'decimals'   => 5,
-    'asset_name' => 'XLTC'
+    'asset_pair' => 'XLTCZUSD'
   },
   'doge' => {
     'price'      => 0,
     'last_fetch' => 0,
-    'decimals'   => 5,
-    'asset_name' => 'XLTC'
+    'decimals'   => 2,
+    'asset_pair' => 'XDGUSD'
   },
 );
 
@@ -64,7 +64,7 @@ sub fetch_prices_for {
 
   return $coins{$this_coin}->{'price'} unless time - $coins{$this_coin}->{'last_fetch'} > $buffered_for;
 
-  my $assetpair = $coins{$this_coin}->{'asset_name'} . 'ZUSD';
+  my $assetpair = $coins{$this_coin}->{'asset_pair'};
   my $kraken = 'https://api.kraken.com/0/public/Ticker?pair=' . $assetpair;
 
   $ua->agent(settings_get_str('myUserAgent'));
