@@ -64,17 +64,23 @@ sub fetch_holidays {
         return;
       }
       elsif ($output and $$holidays[$mon]{$day}->{'tipo'} eq 'puente') {
-        #puente could be before or after. Let's hope this wont scale if puente is on a friday with monday.
-        $day -= 1;
-        if ($$holidays[$mon]{$day}->{'motivo'}) {
-          $output .= " Feriado puente con el $day de $meses[$mon]: ";
+        #puente could be very unlikely a day before
+        if ($$holidays[$mon]{$day - 1}->{'motivo'}) {
+          $day -= 1;
+          $output .= " Feriado puente con el $day de $meses[$mon]. ";
         }
-        else {
-          $day += 2;
-          $output .= " Feriado puente con el $day de $meses[$mon]: ";
+        #the most likey case is the next day
+        elsif ($$holidays[$mon]{$day + 1}->{'motivo'}) {
+          $day += 1;
+          $output .= " Feriado puente con el $day de $meses[$mon]. ";
+        }
+        # an edge case, puente is on a friday, then go to monday
+        elsif ($this_holiday->day_name eq 'Friday' and $$holidays[$mon]{$day + 3}->{'motivo'}) {
+          $day += 3;
+          $output .= " Feriado puente con el $day de $meses[$mon]. ";
         }
       }
-      sayit($server, $chan, $output . " $$holidays[$mon]{$day}->{'motivo'}.");
+      sayit($server, $chan, $output . "$$holidays[$mon]{$day}->{'motivo'}.");
       return;
     }
     $mon += 1 unless $output;
