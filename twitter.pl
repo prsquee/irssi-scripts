@@ -165,9 +165,9 @@ sub userbio {
       $user .= " - " . "User since $year" if ($year);
       my $userstats = 'Tweets: '
                     . $r->{statuses_count}
-                    . ' -  Followers: '
+                    . ' - Followers: '
                     . $r->{followers_count}
-                    . ' -  Following: '
+                    . ' - Following: '
                     . $r->{friends_count}
                     ;
       sayit($server, $chan, $user);
