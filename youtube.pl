@@ -56,7 +56,7 @@ sub fetch_tubes {
 
       if ($title) {
         $time = format_time($time);
-        my $id_info = "${time} ${title} - [views $views]";
+        my $id_info = "${time} ${title} - [views " . fuzzy_views($views) . "]";
         sayit($server, $chan, $id_info);
         $fetched_ids{$id} = $id_info;
       }
@@ -65,7 +65,7 @@ sub fetch_tubes {
       my $citems = shift @{ $result->{'items'} };
       my $channel_name = $citems->{'snippet'}->{'title'};
       my $country = code2country($citems->{'snippet'}->{'country'});
-      my $subs  = fuzzy_count($citems->{'statistics'}->{'subscriberCount'});
+      my $subs  = fuzzy_subs($citems->{'statistics'}->{'subscriberCount'});
       sayit ($server, $chan, '[channel] "'. $channel_name . '"' . ' with ' . $subs . ' subscribers.');
     }
   }
@@ -85,10 +85,23 @@ sub format_time {
         : '[' . $time . ']'
         ;
 }
-sub fuzzy_count {
+sub fuzzy_views {
+  my $n = scalar reverse shift;
+  $n =~ s/^\d{3}/K/ if $n =~ /^\d{4,6}$/;
+  $n =~ s/(\d{3})(?=\d)/$1./g if $n =~ /^\d{7,}$/;
+  $n =~ s/^\d{3}\.\d{2}/M/ if $n =~ /[^01]\.\d$/;
+  $n =~ s/^\d{3}\.\d{3}\./M/;
+  $n =~ s/^M\d{3}\./B/;
+
+  return reverse $n;
+
+}
+sub fuzzy_subs {
   my $n = shift;
-  $n =~ s/\d{3}$/K/ if (length($n) <= 6 and length($n) > 4);
-  $n =~ s/\d{6}$/M/ if length($n) > 6;
+  $n =~ s/000/K/g;
+  $n =~ s/KK$/M/;
+  $n =~ s/(\d)M$/.$1M/   if $n =~ s/K00/M/;
+  $n =~ s/(\d\d)M$/.$1M/ if $n =~ s/K0/M/;
   return $n;
 }
 sub sayit { my $s = shift; $s->command("MSG @_"); }

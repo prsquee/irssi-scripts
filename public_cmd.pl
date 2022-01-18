@@ -40,7 +40,7 @@ my $youtubex
     (?:watch\?\S*v=)?           #this wont be here if it's short uri
     #(?:user/.*/)?              #username can be
     (?:channel/)?               #channel id are 24chars
-    ([^\W]{11,24})              #the vid id or channel id
+    ([\w-]{11,24})              #the vid id or channel id
 )};
 
 my $karma_thingy = qr{[\w\[\]`|\-^\\.]+}; #thingy can be \w with .{}[]`|\-^

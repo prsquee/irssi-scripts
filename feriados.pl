@@ -52,13 +52,13 @@ sub fetch_holidays {
       }
       else {
         my $delta = $today->delta_days($this_holiday)->delta_days();
-        $output = $delta == 1 ? 'MAÑANA ES FERIADO! ' : "Faltan $delta días para el $day de $meses[$mon]:";
+        $output = $delta == 1 ? 'MAÑANA ES FERIADO! ' : "Faltan $delta días para el $day de $meses[$mon]: ";
       }
       #print (CRAP "mon: ${mon} ; day: ${day}; ref($$holidays[$mon]{$day}");
       # check ref type before accessing 'tipo'. There could be a rare two holidays on the same day.
       if ($output and ref($$holidays[$mon]{$day}) eq 'ARRAY') {
         foreach my $ref (@{$$holidays[$mon]{$day}}) {
-          $output .= ' ' . $ref->{'motivo'} . '.';
+          $output .= $ref->{'motivo'} . '.';
         }
         sayit($server, $chan, $output);
         return;
