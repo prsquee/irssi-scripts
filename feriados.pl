@@ -46,6 +46,7 @@ sub fetch_holidays {
     foreach my $day (sort {$a <=> $b} keys %{$$holidays[$mon]}) {
       my $this_holiday = new_dt($year,$mon,$day);
       next if ($today > $this_holiday);
+      next if ($this_holiday->day_of_week =~ /[67]/);
 
       if ($today == $this_holiday) {
         $output = 'HOY ES FERIADO! ';
