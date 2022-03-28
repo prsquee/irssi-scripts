@@ -151,7 +151,7 @@ sub incoming_public {
     if ($cmd eq 'google') {
       my ($query) = $text =~ /^!google\s+(.*)$/;
       if (not $query) {
-        sayit($server, $chan, 'too lazy to google it yourself?');
+        sayit($server, $chan, 'LMGTFY');
         return;
       }
       elsif ($query =~ /\bgoogle\b/i) {
@@ -174,18 +174,17 @@ sub incoming_public {
       sayit($server, $chan, 'p' . ${$v}{$1} . 'ng');
       return;
     }#}}}
-    #{{{ !dol[ao]r and !euro
+    #{{{ !euro
     if ($cmd =~ /^euros?$/) {
-      signal_emit( 'showme the euros', $server, $chan, $text) if is_loaded('dolar3');
+      signal_emit( 'showme the euros', $server, $chan, $text) if is_loaded('euro');
       return;
     }
     #}}}
     #{{{ !dol[ao]rsi
-    if ($text =~ m{^!dol[aoe]r\s?(\d+(?:[.,]\d+)?)?$}) {
-      my $howmuch = '1';
-      $howmuch = $1 if $1;
-      $howmuch =~ tr/,/./;
-      signal_emit( 'showme the usd', $server, $chan, $howmuch) if is_loaded('dolarsi');
+    if ($text =~ m{^!(doll?[aeo]rs?|pesos?)\s?(\d+)?$}) {
+      my $coin = $1;
+      my $howmuch = (defined($2) ? $2 : '1');
+      signal_emit( 'showme the usd', $server, $chan, $coin, $howmuch) if is_loaded('dolarsi');
       return;
     }
     #}}}
@@ -551,8 +550,8 @@ sub incoming_public {
     }
     ##}}}
     #{{{ !corona
-    if ($cmd =~ m{^corona}) {
-      my ($country) = $text=~ m{^!corona(?:virus)?\s+?(\w{2})?};
+    if ($cmd =~ m{^covid}) {
+      my ($country) = $text=~ m{^!covid(?:virus)?\s+?(\w{2})?};
       $country = 'AR' if not $country;
       signal_emit('coronavirus', $server, $chan, $country) if is_loaded('corona');
     }

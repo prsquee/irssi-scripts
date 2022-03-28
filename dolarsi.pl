@@ -12,7 +12,7 @@ use JSON;
 
 my @fetched_prices = ();
 my $last_fetch = 0;
-my $bufferme   = '10';  #30mins
+my $bufferme   = '30';  #30mins
 my $json = JSON->new();
 my $dolarsi_url = 'https://www.dolarsi.com/api/api.php?type=valoresprincipales';
 my @types = ("Dolar Oficial", "Dolar Blue", "Dolar Bolsa", "Dolar Contado con Liqui");
@@ -28,14 +28,14 @@ sub fetch_price {
   #print (CRAP Dumper(@fetched_prices));
 }
 #}}}
-#{{{ do_dolar
+#{{{ do_dolarsi
 sub do_dolarsi {
-  my ($server, $chan, $howmuch) = @_;
+  my ($server, $chan, $coin, $thismuch) = @_;
+  my $out = '';
+  my $solidario;
 
   fetch_price($dolarsi_url) if (time() - $last_fetch > $bufferme);
 
-  my $output = '';
-  my $solidario = '';
 
   foreach my $key (@fetched_prices) {
     my $casa = $key->{'casa'};
@@ -44,21 +44,28 @@ sub do_dolarsi {
         my $compra =  $casa->{'compra'}; $compra =~ tr/,/./;
         my $venta  =  $casa->{'venta'};  $venta  =~ tr/,/./;
 
-        $output = $output . "[$type] \$" . add_dots(int(eval($compra * $howmuch)))
-                                . ' - $' . add_dots(int(eval($venta * $howmuch)))
-                                . ' :: ';
-        $solidario = $venta * 1.65 * $howmuch if $type eq 'Dolar Oficial';
+        if ($coin =~ /^dol/) {
+          $out = $out . "[$type] \$" . add_dots(int(eval($compra * $thismuch)))
+                            . ' - $' . add_dots(int(eval($venta * $thismuch)))
+                            . ' :: ';
+
+          $solidario = $venta * 1.65 * $thismuch if $type eq 'Dolar Oficial';
+        }
+        elsif ($coin =~ /^peso/) {
+          $out = $out . "[$type] \$" . add_dots(int(eval($thismuch / $venta))) . ' :: ';
+          $solidario = $thismuch / ($venta * 1.65) if $type eq 'Dolar Oficial';
+        }
       }
     }
   }
-  $output = $output . '[Dolar Solidario ahorro] $' . add_dots(int($solidario));
-  sayit($server, $chan, $output);
-  return;
+  $out = $out . '[Dolar Solidario ahorro] $' . add_dots(int($solidario));
+  sayit($server, $chan, $out);
+
 }
 #}}}
 sub add_dots {
   my $n = scalar reverse shift;
-  $n =~ s/(\d{3})(?=\d)/$1./g if $n =~ /^\d{6,}$/;
+  $n =~ s/(\d{3})(?=\d)/$1./g if $n =~ /^\d{5,}$/;
   return scalar reverse $n;
 }
 #{{{ signal and stuff
