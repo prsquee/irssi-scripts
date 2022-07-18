@@ -184,7 +184,8 @@ sub incoming_public {
     if ($text =~ m{^!(doll?[aeo]rs?|pesos?)\s?(\d+)?$}) {
       my $coin = $1;
       my $howmuch = (defined($2) ? $2 : '1');
-      signal_emit( 'showme the usd', $server, $chan, $coin, $howmuch) if is_loaded('dolarsi');
+      signal_emit( 'showme the usd', $server, $chan, $coin, $howmuch) if is_loaded('dolarya');
+      #signal_emit( 'showme the usd', $server, $chan, $coin, $howmuch) if is_loaded('dolarsi');
       return;
     }
     #}}}
