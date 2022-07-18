@@ -29,13 +29,13 @@ my %coins = (
   'eth' => {
     'price'      => 0,
     'last_fetch' => 0,
-    'decimals'   => 5,
+    'decimals'   => 2,
     'asset_pair' => 'XETHZUSD'
   },
   'ltc' => {
     'price'      => 0,
     'last_fetch' => 0,
-    'decimals'   => 5,
+    'decimals'   => 2,
     'asset_pair' => 'XLTCZUSD'
   },
   'doge' => {
