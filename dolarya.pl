@@ -41,7 +41,7 @@ sub do_dolarya {
 
   fetch_price($dolarya_url) if (time() - $last_fetch > $bufferme);
 
-  foreach my $key (keys %{$types}) {
+  foreach my $key (sort keys %{$types}) {
 	my $evalme = ($coin =~ /^dol/) ? "$prices->{$key} * $thismuch" : "$thismuch / $prices->{$key}" ;
 	$out = $out . $types->{$key} . '$' . add_dots(int(eval($evalme))) . ' :: ';
   }
