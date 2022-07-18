@@ -8,10 +8,12 @@ use Encode qw(decode);
 use URI::Encode qw(uri_encode uri_decode);
 use Data::Dumper;
 use WWW::Google::CustomSearch;
+use JSON;
 
 settings_add_str('gsearch', 'search_apikey', '');
 settings_add_str('gsearch', 'engine_id', '' );
 signal_add("google me","do_google");
+
 
 my $engine = WWW::Google::CustomSearch->new(
   api_key => settings_get_str('search_apikey'),
@@ -20,11 +22,13 @@ my $engine = WWW::Google::CustomSearch->new(
   num     => 4
 );
 
+
 sub do_google {
   my ($server, $chan, $query) = @_;
-  my $json = $engine->search( uri_encode($query) );
+  my $json = $engine->search(uri_encode($query));
 
-  if (exists(&{$json->{'items'}}) and scalar @{ $json->{'items'} } > 0) {
+  print (CRAP Dumper($json));
+  if (scalar @{ $json->{'items'} } > 0) {
     foreach my $items (@{$json->items}) {
       sayit($server, $chan,"[gugl] $items->{'link'} - " . decode("utf8", $items->{'title'}));
     }
