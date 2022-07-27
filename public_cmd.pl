@@ -185,6 +185,10 @@ sub incoming_public {
       my $coin = $1;
       my $howmuch = (defined($2) ? $2 : '1');
       $howmuch =~ s/k/000/g;
+      unless ($howmuch =~ /^\d{1,20}$/) {
+        sayit($server, $chan, "can't hold all these moniez!");
+        return;
+      }
       signal_emit( 'showme the usd', $server, $chan, $coin, $howmuch) if is_loaded('dolarya');
       return;
     }
