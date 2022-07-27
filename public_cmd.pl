@@ -181,11 +181,11 @@ sub incoming_public {
     }
     #}}}
     #{{{ !dol[ao]rsi
-    if ($text =~ m{^!(doll?[aeo]rs?|pesos?)\s?(\d+)?$}) {
+    if ($text =~ m{^!(doll?[aeo]rs?|pesos?)\s?(\d+k*)?$}) {
       my $coin = $1;
       my $howmuch = (defined($2) ? $2 : '1');
+      $howmuch =~ s/k/000/g;
       signal_emit( 'showme the usd', $server, $chan, $coin, $howmuch) if is_loaded('dolarya');
-      #signal_emit( 'showme the usd', $server, $chan, $coin, $howmuch) if is_loaded('dolarsi');
       return;
     }
     #}}}

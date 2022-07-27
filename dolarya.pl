@@ -15,12 +15,13 @@ my $bufferme   = '10';  #10mins
 my $json = JSON->new();
 my $dolarya_url = 'https://criptoya.com/api/dolar';
 my $types = {
-	'oficial'   => "[Oficial] ",
-	'blue'	    => "[Blue] ",
-	'mep' 	    => "[MEP] ",
-	'ccl'	    => "[CCL] ", 
-	'ccb'	    => "[Cripto] ",
-	'solidario' => "[Solidario] ",
+  'oficial'   => "[Oficial] ",
+  'blue'      => "[Blue] ",
+  'mep'       => "[MEP] ",
+  'ccl'     => "[CCL] ",
+  'ccb'     => "[Cripto] ",
+  'solidario' => "[Ahorro] ",
+  'tarjeta' => "[Tarjeta] ",
 };
 
 sub fetch_price {
@@ -40,10 +41,11 @@ sub do_dolarya {
   my $out = '';
 
   fetch_price($dolarya_url) if (time() - $last_fetch > $bufferme);
+  $prices->{'tarjeta'} = eval($prices->{'oficial'} * 1.75);
 
   foreach my $key (sort keys %{$types}) {
-	my $evalme = ($coin =~ /^dol/) ? "$prices->{$key} * $thismuch" : "$thismuch / $prices->{$key}" ;
-	$out = $out . $types->{$key} . '$' . add_dots(int(eval($evalme))) . ' :: ';
+  my $evalme = ($coin =~ /^dol/) ? "$prices->{$key} * $thismuch" : "$thismuch / $prices->{$key}" ;
+  $out = $out . $types->{$key} . '$' . add_dots(int(eval($evalme))) . ' :: ';
   }
   sayit($server, $chan, substr($out, 0, -4));
 }
