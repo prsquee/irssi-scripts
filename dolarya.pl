@@ -43,7 +43,7 @@ sub do_dolarya {
 
   fetch_price($dolarya_url) if (time() - $last_fetch > $bufferme);
   $prices->{'tarjeta'} = eval($prices->{'oficial'} * 1.75); #300USD limit
-  $prices->{'qatar'} = eval($prices->{'tarjeta'} * 1.25);   #F
+  $prices->{'qatar'} = eval($prices->{'oficial'} * 2);   # 35%+45%+25%
 
   foreach my $key (sort keys %{$types}) {
   my $evalme = ($coin =~ /^dol/) ? "$prices->{$key} * $thismuch" : "$thismuch / $prices->{$key}" ;
