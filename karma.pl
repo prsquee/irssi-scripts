@@ -52,13 +52,15 @@ sub flip_karma {
 #{{{ take one and give one
 sub calc_karma {
   my ($thingy, $op, $channel) = @_;
+  $op = '+1' if $op eq '++';
+  $op = '-1' if $op eq '--';
 
   $karma->{$channel}->{$thingy} = 0
     if (not exists($karma->{$channel}->{$thingy})
         or not defined($karma->{$channel}->{$thingy})
   );
   my $evalme = '$karma->{$channel}->{$thingy}' . $op;
-  eval "$evalme";
+  $karma->{$channel}->{$thingy} = eval "$evalme";
   store $karma, $karma_storable;
 }
 #}}}

@@ -640,25 +640,29 @@ sub incoming_public {
  ## KARMA KARMA AND KARMA++
   if ($text =~ /$karmagex/) {
     #fancy karma throttling mechanism.
-    return if (time - $karma_lasttime < $karma_antiflood_time);
+    #return if (time - $karma_lasttime < $karma_antiflood_time);
 
     my $thingy   = $1;
     my $operator = $2;
 
     # check for self karma and apply penalty
-    $operator = '--' if ($thingy eq $nick);
-
-    # replace me with $nick if selft decrementing karma
-    $thingy = $nick if ($thingy eq 'me' and $operator eq '--');
+    $operator = '-1' if ($thingy eq $nick);
 
     #karma scope is per channel
     my $channel = $chan . '_libera';
-    #my $channel = $chan . '_' . $server->{tag};
+
+    # if thingy is an user on irc, gets two karma
+    my $this_channel = $server->channel_find($chan);
+    foreach my $user ($this_channel->nicks()) {
+      if ($thingy eq $user->{nick}) {
+        $operator = '+2';
+      }
+    }
 
     signal_emit('karma bitch', $thingy, $operator, $channel)
       if (is_loaded('karma') and $thingy and $operator);
 
-    $karma_lasttime = time;
+      #$karma_lasttime = time;
   }
 } #incoming puiblic message ends here #}}}
 
