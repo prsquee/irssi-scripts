@@ -21,11 +21,7 @@ my $api_url = 'https://www.googleapis.com/youtube/v3/';
 #'videos?id=';
 my $api_key = '&key=' . settings_get_str('google_apikey');
 my $part    = '&part=contentDetails,snippet,statistics';
-my $field   = '&fields=items('
-            . 'contentDetails(duration),'
-            . 'snippet(title),'
-            . 'statistics(viewCount)'
-            . ')';
+my $field   = '&fields=items(' . 'contentDetails(duration),' . 'snippet(title),' . 'statistics(viewCount)' . ')';
 
 sub fetch_tubes {
   my($server, $chan, $id) = @_;
@@ -98,6 +94,7 @@ sub fuzzy_views {
 }
 sub fuzzy_subs {
   my $n = shift;
+  print (CRAP "subs: $n");
   $n =~ s/000/K/g;
   $n =~ s/KK$/M/;
   $n =~ s/(\d)M$/.$1M/   if $n =~ s/K00/M/;

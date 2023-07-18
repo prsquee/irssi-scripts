@@ -34,7 +34,7 @@ our $twit_users_ref = eval { retrieve($twit_users_file) } || [];
 # static and complex regexes
 my $youtubex
   = qr{(?x-sm:
-    https?://(?:www\.)?         #optional
+    https://(?:w+|m)?\.?      #optional
     youtu(?:\.be|be\.com)       #matches the short youtube link
     /                           #the 1st slash
     (?:watch\?\S*v=)?           #this wont be here if it's short uri
