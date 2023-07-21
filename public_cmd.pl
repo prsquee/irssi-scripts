@@ -24,12 +24,6 @@ settings_add_str('bot config', 'myUserAgent',     '');
 settings_add_str('bot config', 'bot_masters',     '');
 settings_add_str('bot config', 'flip_table_status', '0');
 
-#nick 2 twitter list
-our $twit_users_file
-  = get_irssi_dir() . '/scripts/datafiles/twitternames.storable';
-
-our $twit_users_ref = eval { retrieve($twit_users_file) } || [];
-#print (CRAP Dumper($twit_users_ref));
 
 # static and complex regexes
 my $youtubex
@@ -193,26 +187,6 @@ sub incoming_public {
       return;
     }
     #}}}
-    #{{{ !lt last tweet from a user
-    if ($cmd =~ /^l(?:ast)?t(?:weet)?$/) {
-      my $user = undef;
-      ($user) = $text =~ /^!l(?:ast)?t(?:weet)? @?(\w+)/;
-      if (not defined($user)) {
-        if (not exists($twit_users_ref->{$nick})) {
-          sayit(
-            $server, $chan,
-            "you dont have a twitter handle, so I'll need a twitter username"
-          );
-          return;
-        }
-        else {
-          $user = $twit_users_ref->{$nick};
-        }
-      }
-      signal_emit("last tweet", $server, $chan, $user)
-        if defined($user) and is_loaded('twitter');
-      return;
-    }#}}}
     #{{{ [QUOTE] !qadd and tweet a quote
     if ($cmd eq 'qadd' and is_loaded('quotes')) {
       my ($quote_this) = $text =~ /^!qadd\s(.*)$/;
@@ -230,35 +204,11 @@ sub incoming_public {
       #got the quote here. now send it to file. get the confirmation back.
       my $message_out = undef;
       if (is_loaded('quotes')) {
-        $message_out
-          = scalar('Irssi::Script::quotes')->can('quotes_add')->(
+        $message_out = scalar('Irssi::Script::quotes')->can('quotes_add')->(
               $quote_this,
               $server->{tag},
               $chan
             ) ? 'quote added' : 'cannot add quotes right now';
-
-        if ($chan =~ /sysarmy|ssqquuee/ and is_loaded('sysarmy')) {
-          #gotta tweet this to sysarmIRC
-          #first we remove the @ from ops.
-          $quote_this =~ s/\B@//g;
-
-          #we replace all the nick with @twitternames
-          #keys are irc $nicknames, values are @twitterhandle
-          foreach my $nick (keys %{$twit_users_ref}) {
-            $quote_this =~ s/\b\Q$nick\E\b/\@$twit_users_ref->{$nick}/g;
-          }
-
-          # replace | for \n
-          $quote_this =~ s{(?:\s+)?\|(?:\s+)?}{\n}g;
-
-          #append some branding.
-          $quote_this .= "\n\n" . '#sysarmy';
-
-          #and off we go.
-          my $status = scalar('Irssi::Script::sysarmy')->can('send_to_twitter')->($quote_this);
-
-          $message_out .= $status ? ' and tweeted to @sysarmIRC.' : '';
-        }
         sayit($server, $chan, $message_out);
       }
       else {
@@ -328,103 +278,6 @@ sub incoming_public {
     if ($cmd eq 'flipkarma' && is_master($mask)) {
       signal_emit('karma flip', $server, $chan) if is_loaded('karma');
     }#}}}
-    #{{{ [TWITTER] !mytwitteris
-    if ($cmd eq 'mytwitteris') {
-      #print (CRAP Dumper($twit_users_ref));
-      my ($givenName) = $text =~ /^!mytwitteris\s+(.+)$/;
-      unless ($givenName) {
-        if (not exists ($twit_users_ref->{$nick})) {
-          sayit($server, $chan, "I dunno any twitter handle for $nick. "
-                              . "Add yours with !mytwitteris \@yourtwitter."
-               );
-        }
-        else {
-          sayit($server, $chan, "I remember $nick is "
-                              . "\@$twit_users_ref->{$nick} on twitter");
-          return;
-        }
-      }
-      else {
-        $givenName =~ s/^\@//;
-        $twit_users_ref->{$nick} = $givenName;
-        store $twit_users_ref, $twit_users_file;
-        sayit($server, $chan, 'okay!') if exists $twit_users_ref->{$nick};
-      }
-    }
-    #}}}
-    #{{{ [TWITTER] !ishere
-    if ($cmd eq 'ishere') {
-      my ($givenName) = $text =~ /^!ishere\s+(.+)$/;
-      if ($givenName) {
-        $givenName =~ s/^\@//;
-        #check if given is a nick and has a twitter user
-        if (exists ($twit_users_ref->{$givenName})) {
-          sayit($server, $chan, "I know $givenName is "
-                              . "\@$twit_users_ref->{$givenName} on twitter");
-          return;
-        }
-        #check if given is a twitter and has an ircname
-        foreach my $ircname (keys %$twit_users_ref) {
-          if ($givenName =~ /^$twit_users_ref->{$ircname}$/i) {
-            sayit($server, $chan, "I've been told "
-                         . "\@$givenName is $ircname here on freenode");
-            return;
-          }
-        }
-        sayit($server, $chan, "nope, I dunno any $givenName");
-        return;
-        #so lazy
-      }
-      else {
-        sayit($server, $chan, "I might know who is who on twitter and irc");
-        return;
-       }
-     }
-    #}}}
-    #{{{ [TWITTER] !isnolongerhere
-    if ($cmd eq 'isnolongerhere' and is_master($mask)) {
-      my ($given_name) = $text =~ /^!isnolongerhere\s+(.+)$/;
-      if ($given_name) {
-        $given_name =~ s/^\@//;
-        delete $twit_users_ref->{$given_name};
-        if (not exists $twit_users_ref->{$given_name}) {
-          store $twit_users_ref, $twit_users_file;
-          sayit($server, $chan, 'deleted!');
-        }
-        return;
-      }
-    }#}}}
-    #{{{ [TWITTER] !user (checkout user on twitter)
-    if ($cmd eq 'user') {
-      my ($who) = $text =~ /^!user\s+@?(\w+)/;
-
-      signal_emit('teh fuck is who',
-                  $server, $chan, $who) if $who and is_loaded('twitter');
-
-      sayit($server, $chan, "!user <twitter_username>") if not defined($who);
-      return;
-    }#}}}
-    #{{{ [TWITTER] !tt post tweet to sysarmy
-    if ($cmd eq 'tt' and $chan =~ /sysarmy|ssqquuee/) {
-      if ($text eq '!tt') {
-        sayit($server, $chan, 'send a tweet to @sysARmIRC');
-        return;
-      }
-      if (is_loaded('sysarmy')) {
-        $text =~ s/!tt\s+//;
-        foreach (keys %{$twit_users_ref}) {
-          $text =~ s/\b\Q$_\E\b/\@$twit_users_ref->{$_}/g;
-        }
-        my $status
-          = scalar('Irssi::Script::sysarmy')->can('send_to_twitter')->($text);
-
-        my $message_out = $status ? 'tweet sent.'
-                                  : 'cannot post to twitter right now.';
-
-        sayit($server, $chan, $message_out);
-        return;
-      }
-    } #}}}
     #{{{ !ddg cuac cuac go
     if ($cmd eq 'ddg') {
       my ($query) = $text =~ /^!ddg\s+(.*)$/;
@@ -577,7 +430,6 @@ sub incoming_public {
     #}}}
   } #public cmd check ends here. begin general URL match
 
-################################################################################
   #
   #{{{ GENERAL URL MATCH
   if ($text =~ m{(https?://[^ ]+)}) {
@@ -593,37 +445,14 @@ sub incoming_public {
       signal_emit('check tubes', $server, $chan, $1) if (is_loaded('youtube'));
       return;
     }
-    #show twitter user bio info from an url
-    if ($url =~ m{twitter\.com/(\w+)$}) {
-      signal_emit('teh fuck is who',
-                  $server, $chan, $1) if ($1 and is_loaded('twitter'));
-      return;
-    }
-    #twitter status fetch
-    if ($url =~ m{twitter\.com(?:/\#!)?/[^/]+/status(?:es)?/\d+}) {
-      signal_emit('fetch tweet',
-                  $server, $chan, $url) if (is_loaded('twitter'));
-      return;
-    }
     if ($url =~ m{mercadolibre\.com\.ar/MLA-(\d+)}) {
       my $mla = 'MLA' . $1;
       signal_emit('mercadolibre', $server, $chan, $mla);
       return;
     }
-    #imgur api?
-    if ($url =~ m{https?://i\.imgur\.com/(\w{5,8})h?\.[pjgb]\w{2,}$}) {
-      #h is there for hires
-      $url = "http://imgur.com/$1" if ($1);
-    }
-    #quickmeme
-    if ($url =~ /qkme\.me/) {
-      if ($url =~ m{http://i\.qkme\.me/(\w{6})\.[pjgb]\w{2}$}) {
-          $url = "http://www.quickmeme.com/meme/$1" if ($1);
-      }
-    }
     #any other http link fall here
     signal_emit('check title', $server, $chan, $url);
-  } #}}} URL MATCH ENDS HERE. lo que sigue seria general text match.
+  } #}}} URL MATCH ENDS HERE.
 
   #{{{ do stuff with anything that is not a cmd or a http link
   #
