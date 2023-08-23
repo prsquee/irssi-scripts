@@ -11,7 +11,7 @@ use JSON;
 
 my $prices = '';
 my $last_fetch = 0;
-my $bufferme   = '10';  #10mins
+my $bufferme   = '1';  #10mins
 my $json = JSON->new();
 my $dolarya_url = 'https://criptoya.com/api/dolar';
 my $types = {
@@ -42,12 +42,12 @@ sub do_dolarya {
   my $out = '';
 
   fetch_price($dolarya_url) if (time() - $last_fetch > $bufferme);
-  $prices->{'tarjeta'} = eval($prices->{'oficial'} * 1.75); #300USD limit
-  $prices->{'qatar'} = eval($prices->{'oficial'} * 2);   # 35%+45%+25%
+  $prices->{'tarjeta'} = eval($prices->{'oficial'} * 1.75); #30% PAIS + 45% ganancias + 25% BP
+  #$prices->{'qatar'} = eval($prices->{'oficial'} * 2);   # 35%+45%+25%
 
   foreach my $key (sort keys %{$types}) {
-  my $evalme = ($coin =~ /^dol/) ? "$prices->{$key} * $thismuch" : "$thismuch / $prices->{$key}" ;
-  $out = $out . $types->{$key} . '$' . add_dots(int(eval($evalme))) . ' :: ';
+    my $evalme = ($coin =~ /^dol/) ? "$prices->{$key} * $thismuch" : "$thismuch / $prices->{$key}" ;
+    $out = $out . $types->{$key} . '$' . add_dots(int(eval($evalme))) . ' :: ';
   }
   sayit($server, $chan, substr($out, 0, -4));
 }
