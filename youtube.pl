@@ -21,7 +21,7 @@ my $api_url = 'https://www.googleapis.com/youtube/v3/';
 #'videos?id=';
 my $api_key = '&key=' . settings_get_str('google_apikey');
 my $part    = '&part=contentDetails,snippet,statistics';
-my $field   = '&fields=items(' . 'contentDetails(duration),' . 'snippet(title),' . 'statistics(viewCount)' . ')';
+my $field   = '&fields=items(' . 'contentDetails(duration),' . 'snippet(title,channelTitle),' . 'statistics(viewCount)' . ')';
 
 sub fetch_tubes {
   my($server, $chan, $id) = @_;
@@ -47,12 +47,13 @@ sub fetch_tubes {
       my $items = shift @{ $result->{'items'} };
 
       my $title = $items->{'snippet'}->{'title'};
+      my $chan_title = $items->{'snippet'}->{'channelTitle'};
       my $time  = $items->{'contentDetails'}->{'duration'};
       my $views = $items->{'statistics'}->{'viewCount'};
 
       if ($title) {
         $time = format_time($time);
-        my $id_info = "${time} ${title} - [views " . fuzzy_views($views) . "]";
+        my $id_info = "${time} ${title} - $chan_title [views " . fuzzy_views($views) . "]";
         sayit($server, $chan, $id_info);
         $fetched_ids{$id} = $id_info;
       }

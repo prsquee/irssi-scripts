@@ -20,9 +20,7 @@ my $types = {
   'mep'       => "[MEP] ",
   'ccl'       => "[CCL] ",
   'ccb'       => "[Cripto] ",
-  'solidario' => "[Ahorro] ",
-  'tarjeta'   => "[Tarjeta] ",
-  'qatar'     => "[Qatar] ",
+  'solidario' => "[Tarjeta/Ahorro/Qatar] ",
 };
 
 sub fetch_price {
@@ -42,8 +40,6 @@ sub do_dolarya {
   my $out = '';
 
   fetch_price($dolarya_url) if (time() - $last_fetch > $bufferme);
-  $prices->{'tarjeta'} = eval($prices->{'oficial'} * 1.75); #30% PAIS + 45% ganancias + 25% BP
-  #$prices->{'qatar'} = eval($prices->{'oficial'} * 2);   # 35%+45%+25%
 
   foreach my $key (sort keys %{$types}) {
     my $evalme = ($coin =~ /^dol/) ? "$prices->{$key} * $thismuch" : "$thismuch / $prices->{$key}" ;

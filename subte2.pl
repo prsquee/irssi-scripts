@@ -28,7 +28,7 @@ sub check_subte {
   #my $output = "[Línea $linea] \x02$subtes{$linea}->{status}\x02";
   my $output = "[Línea $linea] " . $subtes{$linea}->{status};
   if ($subtes{$linea}->{freq}) {
-     $output .= ' - cada ' . int($subtes{$linea}->{freq} / 60) . ' mins';
+     $output .= ' - cada ' . sprintf("%.0f", $subtes{$linea}->{freq} / 60) . ' mins';
    }
    sayit ($server, $chan, $output);
   return;
