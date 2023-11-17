@@ -82,16 +82,22 @@ sub format_time {
         : '[' . $time . ']'
         ;
 }
+
 sub fuzzy_views {
-  my $n = scalar reverse shift;
-  $n =~ s/^\d{3}/K/ if $n =~ /^\d{4,6}$/;
-  $n =~ s/(\d{3})(?=\d)/$1./g if $n =~ /^\d{7,}$/;
-  $n =~ s/^\d{3}\.\d{2}/M/ if $n =~ /[^01]\.\d$/;
-  $n =~ s/^\d{3}\.\d{3}\./M/;
-  $n =~ s/^M\d{3}\./B/;
+  my $n = shift;
 
-  return reverse $n;
-
+  if ($n >= 1_000_000_000) {
+    return sprintf("%.1fB", $n / 1_000_000_000);
+  } 
+  elsif ($n >= 1_000_000) {
+    return sprintf("%.1fM", $n / 1_000_000);
+  }
+  elsif ($n >= 1_000) {
+    return sprintf("%.1fK", $n/ 1_000);
+  } 
+  else {
+    return $n;
+  }
 }
 sub fuzzy_subs {
   my $n = shift;
