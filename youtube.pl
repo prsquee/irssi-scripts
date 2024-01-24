@@ -88,13 +88,13 @@ sub fuzzy_views {
 
   if ($n >= 1_000_000_000) {
     return sprintf("%.1fB", $n / 1_000_000_000);
-  } 
+  }
   elsif ($n >= 1_000_000) {
     return sprintf("%.1fM", $n / 1_000_000);
   }
   elsif ($n >= 1_000) {
     return sprintf("%.1fK", $n/ 1_000);
-  } 
+  }
   else {
     return $n;
   }

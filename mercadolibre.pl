@@ -34,9 +34,8 @@ sub fetch_ml {
   my $howmuch   = $currency . ' $' . $price;
   my $city      = $parsed_json->{seller_address}->{city}->{name};
   my $country   = $parsed_json->{seller_address}->{country}->{id};
-  my $sold      = $parsed_json->{sold_quantity};
 
-  my $out = "[$condition] $title :: $howmuch :: $sold sold :: $city :: $country";
+  my $out = "[$condition] $title :: $howmuch :: $city :: $country";
   sayit($server, $chan, $out);
   return;
 }
