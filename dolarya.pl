@@ -11,16 +11,15 @@ use JSON;
 
 my $prices = '';
 my $last_fetch = 0;
-my $bufferme   = '1';  #10mins
+my $bufferme   = '300';  #5mins
 my $json = JSON->new();
 my $dolarya_url = 'https://criptoya.com/api/dolar';
 my $types = {
   'oficial'   => "[Oficial] ",
   'blue'      => "[Blue] ",
   'mep'       => "[MEP] ",
-  'ccl'       => "[CCL] ",
-  'ccb'       => "[Cripto] ",
-  'solidario' => "[Tarjeta/Ahorro/Qatar] ",
+  'usdc'       => "[Cripto] ",
+  'solidario' => "[Tarjeta/Ahorro] ",
 };
 
 sub fetch_price {
@@ -41,17 +40,39 @@ sub do_dolarya {
 
   fetch_price($dolarya_url) if (time() - $last_fetch > $bufferme);
 
-  foreach my $key (sort keys %{$types}) {
-    my $evalme = ($coin =~ /^dol/) ? "$prices->{$key} * $thismuch" : "$thismuch / $prices->{$key}" ;
-    $out = $out . $types->{$key} . '$' . add_dots(int(eval($evalme))) . ' :: ';
-  }
-  sayit($server, $chan, substr($out, 0, -4));
+  my $oficial = '[Oficial] $' . (($coin =~ /^dol/) ? in_dolar('oficial', 'price', $thismuch) : in_pesos('oficial', 'price', $thismuch));
+  my $tarjeta = '[Tarjeta/Ahorro] $' . (($coin =~ /^dol/) ? in_dolar('tarjeta', 'price', $thismuch) : in_pesos('tarjeta', 'price', $thismuch));
+  my $mep = '[MEP] $' . (($coin =~ /^dol/) ? in_dolar('ci', 'price', $thismuch) : in_pesos('ci', 'price', $thismuch));
+
+  my $blue = '[Blue] $' . (($coin =~ /^dol/) ? in_dolar('blue', 'ask', $thismuch) : in_pesos('blue', 'ask', $thismuch)) . '/$'
+                        . (($coin =~ /^dol/) ? in_dolar('blue', 'bid', $thismuch) : in_pesos('blue', 'bid', $thismuch));
+
+  my $usdc = '[Cripto] $' . (($coin =~ /^dol/) ? in_dolar('usdc', 'ask', $thismuch) : in_pesos('usdc', 'ask', $thismuch)) . '/$'
+                          . (($coin =~ /^dol/) ? in_dolar('usdc', 'bid', $thismuch) : in_pesos('usdc', 'bid', $thismuch));
+
+  sayit($server, $chan, join(' :: ', $oficial, $tarjeta, $blue, $usdc, $mep));
 }
 #}}}
+sub in_dolar {
+  my ($k, $p, $n) = @_;
+  return add_dots(sprintf("%.0f",  $prices->{$k}->{$p} * $n))                    if exists $prices->{$k};
+  return add_dots(sprintf("%.0f",  $prices->{'cripto'}->{$k}->{$p} * $n))        if exists $prices->{'cripto'}->{$k};
+  return add_dots(sprintf("%.0f",  $prices->{'mep'}->{'gd30'}->{$k}->{$p} * $n)) if exists $prices->{'mep'}->{'gd30'}->{$k};
+
+}
+
+sub in_pesos {
+  my ($k, $p, $n) = @_;
+  return add_dots(sprintf("%.0f",  $n / $prices->{$k}->{$p})) if exists $prices->{$k};
+  return add_dots(sprintf("%.0f",  $n / $prices->{'cripto'}->{$k}->{$p})) if exists $prices->{'cripto'}->{$k};
+  return add_dots(sprintf("%.0f",  $n / $prices->{'mep'}->{'gd30'}->{$k}->{$p})) if exists $prices->{'mep'}->{'gd30'}->{$k};
+}
+
+
 sub add_dots {
-  my $n = scalar reverse shift;
-  $n =~ s/(\d{3})(?=\d)/$1./g if $n =~ /^\d{5,}$/;
-  return scalar reverse $n;
+  my $n = shift;
+  $n =~ s/(?<=\d)(?=(\d{3})+(?!\d))/./g;
+  return $n;
 }
 #{{{ signal and stuff
 sub sayit { my $s = shift; $s->command("MSG @_"); }
