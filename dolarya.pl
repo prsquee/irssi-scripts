@@ -71,6 +71,7 @@ sub in_pesos {
 
 sub add_dots {
   my $n = shift;
+  return $n if $n =~ /\d{4}/;
   $n =~ s/(?<=\d)(?=(\d{3})+(?!\d))/./g;
   return $n;
 }
