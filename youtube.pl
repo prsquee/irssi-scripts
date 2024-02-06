@@ -53,7 +53,7 @@ sub fetch_tubes {
 
       if ($title) {
         $time = format_time($time);
-        my $id_info = "${time} ${title} - $chan_title [views " . fuzzy_views($views) . "]";
+        my $id_info = "${time} ${title} - $chan_title [views " . fuzzy_count($views) . "]";
         sayit($server, $chan, $id_info);
         $fetched_ids{$id} = $id_info;
       }
@@ -62,7 +62,7 @@ sub fetch_tubes {
       my $citems = shift @{ $result->{'items'} };
       my $channel_name = $citems->{'snippet'}->{'title'};
       my $country = code2country($citems->{'snippet'}->{'country'});
-      my $subs  = fuzzy_subs($citems->{'statistics'}->{'subscriberCount'});
+      my $subs  = fuzzy_count($citems->{'statistics'}->{'subscriberCount'});
       sayit ($server, $chan, '[channel] "'. $channel_name . '"' . ' with ' . $subs . ' subscribers.');
     }
   }
@@ -83,7 +83,7 @@ sub format_time {
         ;
 }
 
-sub fuzzy_views {
+sub fuzzy_count {
   my $n = shift;
 
   if ($n >= 1_000_000_000) {
@@ -93,19 +93,10 @@ sub fuzzy_views {
     return sprintf("%.1fM", $n / 1_000_000);
   }
   elsif ($n >= 1_000) {
-    return sprintf("%.1fK", $n/ 1_000);
+    return sprintf("%dK", $n/ 1_000);
   }
   else {
     return $n;
   }
-}
-sub fuzzy_subs {
-  my $n = shift;
-  print (CRAP "subs: $n");
-  $n =~ s/000/K/g;
-  $n =~ s/KK$/M/;
-  $n =~ s/(\d)M$/.$1M/   if $n =~ s/K00/M/;
-  $n =~ s/(\d\d)M$/.$1M/ if $n =~ s/K0/M/;
-  return $n;
 }
 sub sayit { my $s = shift; $s->command("MSG @_"); }
