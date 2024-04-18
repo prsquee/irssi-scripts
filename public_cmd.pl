@@ -301,6 +301,9 @@ sub incoming_public {
       $howmuch =~ tr/,/./;
       signal_emit('gold digger', $server, $chan, $howmuch) if is_loaded('coinbase');
     }#}}}
+    if ($text =~ m{cr[yi]pto}) {
+      signal_emit('criptoya', $server, $chan) if is_loaded('criptoya');
+    }
    #{{{ kraken coins
     if ($cmd =~ m{^(?:eth)|(?:xlm)|(?:ltc)|(?:doge)}) {
       my ($howmuch) = $text =~ m{(\d+(?:[.,]\d+)?)};
